@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ETF 持股監控</title>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #fff; --text: #1c2026; --muted: #68707d; --line: #e3e6eb;
+  --accent: #2456c7; --up: #c62828; --down: #1b7f3b; --warn: #b26a00;
+  --up-bg: #fdecec; --down-bg: #e8f5ec; --warn-bg: #fff4e0; --hover: #f0f3f8;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171c; --panel: #1c2027; --text: #e6e9ee; --muted: #98a1ae; --line: #2c323c;
+    --accent: #7ea6ff; --up: #ff7b72; --down: #56d37f; --warn: #f0b24a;
+    --up-bg: #3a1f1f; --down-bg: #17321f; --warn-bg: #3a2c12; --hover: #232832;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.5 "Segoe UI", "Microsoft JhengHei", "PingFang TC", sans-serif; }
+header { background: var(--panel); border-bottom: 1px solid var(--line); padding: 12px 20px;
+  display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; position: sticky; top: 0; z-index: 5; }
+h1 { font-size: 17px; margin: 0; }
+h2 { font-size: 15px; margin: 0 0 4px; }
+nav { display: flex; gap: 4px; }
+nav button { border: 0; background: none; color: var(--muted); padding: 6px 12px; border-radius: 6px;
+  font: inherit; cursor: pointer; }
+nav button.on { background: var(--accent); color: #fff; }
+.built { margin-left: auto; color: var(--muted); font-size: 12px; }
+main { max-width: 1200px; margin: 0 auto; padding: 16px 20px 60px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 14px; }
+.controls label { color: var(--muted); display: flex; gap: 6px; align-items: center; }
+select, input[type=text] { font: inherit; color: var(--text); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.card .k { color: var(--muted); font-size: 12px; }
+.card .v { font-size: 22px; font-weight: 600; }
+.card.warn .v { color: var(--warn); }
+.hint { color: var(--muted); font-size: 12px; margin: 0 0 10px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; white-space: nowrap; }
+th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+th { color: var(--muted); font-weight: 500; font-size: 12px; position: sticky; top: 0; background: var(--panel); }
+th.l, td.l { text-align: left; }
+th.sort { cursor: pointer; user-select: none; } th.sort:hover { color: var(--accent); }
+tbody tr:hover { background: var(--hover); }
+tr.click { cursor: pointer; }
+.up { color: var(--up); } .down { color: var(--down); } .muted { color: var(--muted); }
+.tag { display: inline-block; padding: 0 7px; border-radius: 10px; font-size: 12px; }
+.tag.new, .tag.add { background: var(--up-bg); color: var(--up); }
+.tag.out, .tag.cut { background: var(--down-bg); color: var(--down); }
+.tag.late { background: var(--warn-bg); color: var(--warn); }
+.tag.kind { background: var(--hover); color: var(--muted); }
+.tag.rb-cutoff { border: 1px solid var(--warn); color: var(--warn); }
+.tag.rb-announce { border: 1px solid var(--accent); color: var(--accent); }
+.tag.rb-effective { background: var(--accent); color: #fff; }
+.tag.est { opacity: .7; border-style: dashed; }
+.tag.rb-effective.est { border-style: solid; opacity: .6; }
+.day .chips.rb { margin-top: 6px; gap: 3px; }
+.day .chips.rb .tag { font-size: 11px; padding: 0 5px; }
+a.lnk { color: var(--accent); cursor: pointer; text-decoration: none; }
+a.lnk:hover { text-decoration: underline; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; white-space: normal; }
+.empty { color: var(--muted); padding: 20px 0; text-align: center; }
+input[type=number] { font: inherit; color: var(--text); background: var(--panel); width: 64px;
+  border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+/* 燈號：顏色之外一定搭配 ✓／✕ 符號 */
+.light { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+  border-radius: 50%; color: #fff; font-size: 12px; font-weight: 700; flex: none; vertical-align: middle; }
+.light.ok { background: #1f9d4c; } .light.bad { background: #d93025; } .light.none { background: var(--line); color: var(--muted); }
+.light.big { width: 34px; height: 34px; font-size: 18px; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 3px; }
+.dot.ok { background: #1f9d4c; } .dot.bad { background: #d93025; border-radius: 2px; } .dot.none { background: var(--line); }
+#health { margin-left: auto; display: inline-flex; gap: 8px; align-items: center; cursor: pointer;
+  padding: 4px 10px; border: 1px solid var(--line); border-radius: 16px; }
+.built { margin-left: 0; }
+.pipe { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.step { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; gap: 12px; align-items: center; }
+.step.bad { border-color: #d93025; }
+.step .t { font-weight: 600; } .step .m { color: var(--muted); font-size: 12px; white-space: normal; }
+.banner { border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; display: flex; gap: 12px; align-items: center;
+  font-size: 16px; font-weight: 600; background: var(--panel); border: 1px solid var(--line); }
+.banner.bad { border-color: #d93025; }
+.wrap { white-space: normal; }
+/* 日曆 */
+.cal { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 8px; min-width: 780px; }
+.cal.w7 { grid-template-columns: repeat(7, minmax(130px, 1fr)); min-width: 960px; }
+.cal .wd { color: var(--muted); font-size: 12px; text-align: center; padding-bottom: 2px; }
+.day { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 118px; }
+.day.has { cursor: pointer; } .day.has:hover { background: var(--hover); }
+.day.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.day.off { background: none; border-style: dashed; color: var(--muted); }
+.day.blank { border: 0; background: none; }
+.day .dn { font-weight: 600; display: flex; justify-content: space-between; }
+.day .dn span { font-weight: 400; font-size: 12px; color: var(--muted); }
+.bar { display: grid; grid-template-columns: 16px 1fr auto; gap: 6px; align-items: center; font-size: 12px; margin-top: 4px; }
+.bar .track { height: 8px; }
+.bar i { display: block; height: 8px; border-radius: 0 4px 4px 0; min-width: 2px; }
+.bar i.buy { background: var(--up); } .bar i.sell { background: var(--down); }
+.day .top { margin-top: 6px; font-size: 12px; color: var(--muted); line-height: 1.45; overflow: hidden; }
+.day .top div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tag.streak { font-weight: 600; }
+.tag.streak.fromnew { background: var(--up); color: #fff; }
+.day .top .tag.streak { font-size: 11px; padding: 0 4px; margin-right: 3px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ETF 持股監控</h1>
+  <nav id="nav"></nav>
+  <span id="health" onclick="go({tab:'monitor'})"></span>
+  <span class="built" id="built"></span>
+</header>
+<main id="main"></main>
+<script>
+const D = /*__DATA__*/null;
+const TH = 0.005;  // 扣除申贖影響後，股數變動超過 0.5% 才算加減碼
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (n) => (n == null ? "" : Math.round(n).toLocaleString("en-US"));
+const pct = (x, d = 2) => (x == null || !isFinite(x) ? "" : (x > 0 ? "+" : "") + (x * 100).toFixed(d) + "%");
+const signed = (n) => (n == null ? "" : (n > 0 ? "+" : "") + fmt(n));
+const cls = (x) => (x > 0 ? "up" : x < 0 ? "down" : "muted");
+const nameOf = (code) => D.names[code] || code;
+const etfOf = (code) => D.etfs.find((e) => e.code === code);
+const TAGS = { new: "新增", out: "剔除", add: "加碼", cut: "減碼" };
+const tag = (s) => (TAGS[s] ? `<span class="tag ${s}">${TAGS[s]}</span>` : "");
+
+const state = { tab: "overview", date: D.dates[D.dates.length - 1], kind: "全部",
+  etf: D.etfs[0].code, to: null, base: null, onlyChanged: false, q: "", stock: null,
+  month: null, calDay: null, calEtf: "全部", calKind: "全部", minAmt: 0, minPct: 1, calOnlyNewOut: false, calSort: null, calDir: 1,
+  cbMonth: null, cbDay: null, cbHeld: false,
+  revMonth: null, revDay: null, revHeld: false, revSort: "rev", revDir: 1, revQ: "" };
+
+const snap = (etf, date) => (D.snaps[etf] || {})[date];
+const datesOf = (etf) => D.dates.filter((d) => snap(etf, d));
+function prevDate(etf, date) {
+  const ds = datesOf(etf).filter((d) => d < date);
+  return ds[ds.length - 1] || null;
+}
+// 該 ETF 在 date 當天或之前最近一次的快照日
+function lastOnOrBefore(etf, date) {
+  const ds = datesOf(etf).filter((d) => d <= date);
+  return ds[ds.length - 1] || null;
+}
+
+const diffCache = {};
+// 比較同一檔 ETF 兩個日期的持股。flow 是共同持股股數變動比例的中位數，
+// 用來估計申購買回造成的等比例增減；扣掉它之後才是經理人或指數的實際調整。
+function diff(etf, d1, d0) {
+  const key = etf + d1 + d0;
+  if (diffCache[key]) return diffCache[key];
+  const a = snap(etf, d0), b = snap(etf, d1);
+  const m0 = new Map(a.s.map((r) => [r[0], r])), m1 = new Map(b.s.map((r) => [r[0], r]));
+  const ratios = [];
+  for (const [c, r] of m1) { const o = m0.get(c); if (o && o[1] > 0 && r[1] > 0) ratios.push(r[1] / o[1]); }
+  ratios.sort((x, y) => x - y);
+  const n = ratios.length;
+  const flow = n ? (n % 2 ? ratios[(n - 1) / 2] : (ratios[n / 2 - 1] + ratios[n / 2]) / 2) - 1 : 0;
+  const rows = [], counts = { new: 0, out: 0, add: 0, cut: 0 };
+  for (const [c, r] of m1) {
+    const o = m0.get(c);
+    const row = { code: c, q1: r[1], w1: r[2], q0: o ? o[1] : 0, w0: o ? o[2] : null };
+    row.dq = row.q1 - row.q0;
+    if (!o || !(o[1] > 0)) row.status = "new";
+    else {
+      row.raw = row.q1 / row.q0 - 1;
+      row.adj = row.q1 / row.q0 / (1 + flow) - 1;
+      row.status = row.adj > TH ? "add" : row.adj < -TH ? "cut" : "";
+    }
+    rows.push(row);
+  }
+  for (const [c, o] of m0) if (!m1.has(c)) rows.push({ code: c, q1: 0, w1: null, q0: o[1], w0: o[2], dq: -o[1], status: "out" });
+  for (const r of rows) if (r.status) counts[r.status]++;
+  return (diffCache[key] = { flow, rows, counts });
+}
+
+// 把目前頁面記在網址的 # 後面，重新整理或加入書籤時能回到同一個畫面
+const HASH_KEYS = ["tab", "date", "etf", "stock", "calEtf", "month"];
+function readHash() {
+  for (const [k, v] of new URLSearchParams(location.hash.slice(1))) if (HASH_KEYS.includes(k)) state[k] = v;
+  if (!D.dates.includes(state.date)) state.date = D.dates[D.dates.length - 1];
+  if (!etfOf(state.etf)) state.etf = D.etfs[0].code;
+  if (state.calEtf !== "全部" && !etfOf(state.calEtf)) state.calEtf = "全部";
+  if (state.stock && !D.names[state.stock]) state.stock = null;
+  if (state.stock) state.q = state.stock;
+}
+function go(patch) {
+  Object.assign(state, patch);
+  const p = new URLSearchParams();
+  for (const k of HASH_KEYS) if (state[k]) p.set(k, state[k]);
+  history.replaceState(null, "", "#" + p);
+  render(); window.scrollTo(0, 0);
+}
+function openEtf(code) { go({ tab: "etf", etf: code, to: null, base: null }); }
+function openStock(code) { go({ tab: "stock", stock: code, q: code }); }
+const stockLink = (c) => `<a class="lnk" onclick="openStock('${esc(c)}')">${esc(c)}</a>`;
+const etfLink = (c) => `<a class="lnk" onclick="openEtf('${esc(c)}')">${esc(c)}</a>`;
+const options = (list, cur) => list.map((d) => `<option${d === cur ? " selected" : ""}>${esc(d)}</option>`).join("");
+// ETF 下拉選單：依主動／被動／槓桿分組
+const etfGroups = (cur) => ["主動", "被動", "槓桿"].map((k) => `<optgroup label="${k}式">${D.etfs.filter((x) => x.kind === k)
+  .map((x) => `<option value="${x.code}"${x.code === cur ? " selected" : ""}>${x.code} ${esc(x.name)}</option>`).join("")}</optgroup>`).join("");
+
+// ------------------------------------------------------------ 總覽
+function renderOverview() {
+  const date = state.date, latest = D.dates[D.dates.length - 1];
+  const kindOk = (e) => state.kind === "全部" || e.kind === state.kind;
+  let withData = 0, late = 0;
+  const agg = new Map();
+  const body = D.etfs.map((e) => {
+    const d1 = lastOnOrBefore(e.code, date);
+    const isLate = d1 !== date;
+    if (isLate) late++; else withData++;
+    if (!d1) return `<tr><td class="l">${esc(e.code)}</td><td class="l">${esc(e.name)}</td><td class="l" colspan="9"><span class="tag late">無資料</span></td></tr>`;
+    const d0 = prevDate(e.code, d1), s = snap(e.code, d1);
+    const df = d0 ? diff(e.code, d1, d0) : null;
+    if (df && !isLate && kindOk(e)) for (const r of df.rows) if (r.status) {
+      if (!agg.has(r.code)) agg.set(r.code, { new: [], add: [], cut: [], out: [] });
+      agg.get(r.code)[r.status].push(e.code);
+    }
+    const c = df ? df.counts : {};
+    const cell = (n, k) => `<td class="${n ? k : "muted"}">${df ? n : ""}</td>`;
+    return `<tr class="click" onclick="openEtf('${e.code}')">
+      <td class="l">${esc(e.code)}</td><td class="l">${esc(e.name)}</td>
+      <td class="l"><span class="tag kind">${e.kind}</span></td><td class="l">${e.issuer}</td>
+      <td class="l">${d1}${isLate ? ' <span class="tag late">落後</span>' : ""}</td>
+      <td>${s.s.length}</td>${cell(c.new, "up")}${cell(c.out, "down")}${cell(c.add, "up")}${cell(c.cut, "down")}
+      <td class="${df ? cls(df.flow) : ""}">${df ? pct(df.flow) : ""}</td></tr>`;
+  }).join("");
+
+  const moves = [...agg].map(([code, m]) => ({ code, ...m, buy: m.new.length + m.add.length, sell: m.out.length + m.cut.length }))
+    .sort((x, y) => (y.buy + y.sell) - (x.buy + x.sell) || y.buy - x.buy || x.code.localeCompare(y.code)).slice(0, 60);
+  const chips = (m, keys) => keys.flatMap((k) => m[k].map((c) => `<span class="tag ${k}" title="${TAGS[k]}">${etfLink(c)}${k === "new" ? " 新" : k === "out" ? " 剔" : ""}</span>`)).join("");
+  const moveRows = moves.map((m) => `<tr><td class="l">${stockLink(m.code)}</td><td class="l">${esc(nameOf(m.code))}</td>
+    <td class="${m.buy ? "up" : "muted"}">${m.buy}</td><td class="${m.sell ? "down" : "muted"}">${m.sell}</td>
+    <td class="l"><div class="chips">${chips(m, ["new", "add"])}</div></td>
+    <td class="l"><div class="chips">${chips(m, ["out", "cut"])}</div></td></tr>`).join("");
+
+  return `
+  <div class="controls">
+    <label>資料日 <select onchange="go({date:this.value})">${options([...D.dates].reverse(), date)}</select></label>
+  </div>
+  <div class="cards">
+    <div class="card"><div class="k">最新資料日</div><div class="v">${latest}</div></div>
+    <div class="card"><div class="k">${date} 已有資料</div><div class="v">${withData} / ${D.etfs.length} 檔</div></div>
+    <div class="card ${late ? "warn" : ""}"><div class="k">資料落後或缺漏</div><div class="v">${late} 檔</div></div>
+  </div>
+  <div class="panel">
+    <h2>各 ETF 當日異動</h2>
+    <p class="hint">與前一個有資料的交易日比較。「估計申贖」是整體股數的等比例變動；新增、剔除、加碼、減碼的檔數已扣除這個影響。點任一列看明細。</p>
+    <div class="scroll"><table>
+      <thead><tr><th class="l">代號</th><th class="l">名稱</th><th class="l">類型</th><th class="l">投信</th><th class="l">資料日</th>
+      <th>股票檔數</th><th>新增</th><th>剔除</th><th>加碼</th><th>減碼</th><th>估計申贖</th></tr></thead>
+      <tbody>${body}</tbody></table></div>
+  </div>
+  <div class="panel">
+    <h2>個股動向</h2>
+    <div class="controls" style="margin:8px 0">
+      <label>ETF 類型 <select onchange="go({kind:this.value})">${options(["全部", "主動", "被動", "槓桿"], state.kind)}</select></label>
+    </div>
+    <p class="hint">${date} 當天被多檔 ETF 同時調整的個股，依調整的 ETF 檔數排序（最多 60 檔）。</p>
+    ${moveRows ? `<div class="scroll"><table>
+      <thead><tr><th class="l">代號</th><th class="l">名稱</th><th>買進 ETF 數</th><th>賣出 ETF 數</th><th class="l">新增／加碼</th><th class="l">剔除／減碼</th></tr></thead>
+      <tbody>${moveRows}</tbody></table></div>` : `<div class="empty">這一天沒有符合條件的異動</div>`}
+  </div>`;
+}
+
+// ------------------------------------------------------------ ETF 明細
+function renderEtf() {
+  const e = etfOf(state.etf), ds = datesOf(e.code);
+  const to = state.to && ds.includes(state.to) ? state.to : ds[ds.length - 1];
+  const earlier = ds.filter((d) => d < to);
+  const base = state.base && earlier.includes(state.base) ? state.base : earlier[earlier.length - 1];
+  const s = snap(e.code, to);
+  const head = `
+  <div class="controls">
+    <label>ETF <select onchange="go({etf:this.value,to:null,base:null})">${etfGroups(e.code)}</select></label>
+    <label>資料日 <select onchange="go({to:this.value,base:null})">${options([...ds].reverse(), to)}</select></label>
+    ${base ? `<label>比較基準 <select onchange="go({base:this.value})">${options([...earlier].reverse(), base)}</select></label>` : ""}
+    <label><input type="checkbox" ${state.onlyChanged ? "checked" : ""} onchange="go({onlyChanged:this.checked})"> 只看有異動</label>
+  </div>`;
+  let rows, summary = "";
+  if (base) {
+    const df = diff(e.code, to, base);
+    const c = df.counts;
+    summary = `<div class="cards">
+      <div class="card"><div class="k">股票檔數</div><div class="v">${s.s.length}</div></div>
+      <div class="card"><div class="k">新增 / 剔除</div><div class="v"><span class="up">${c.new}</span> / <span class="down">${c.out}</span></div></div>
+      <div class="card"><div class="k">加碼 / 減碼</div><div class="v"><span class="up">${c.add}</span> / <span class="down">${c.cut}</span></div></div>
+      <div class="card"><div class="k">估計申贖影響</div><div class="v ${cls(df.flow)}">${pct(df.flow) || "0.00%"}</div></div>
+    </div>`;
+    rows = df.rows.filter((r) => !state.onlyChanged || r.status)
+      .sort((x, y) => (y.w1 ?? -1) - (x.w1 ?? -1))
+      .map((r) => `<tr><td class="l">${stockLink(r.code)}</td><td class="l">${esc(nameOf(r.code))}</td>
+        <td>${fmt(r.q1)}</td><td>${r.w1 == null ? "" : r.w1.toFixed(2) + "%"}</td>
+        <td class="muted">${fmt(r.q0)}</td><td class="${cls(r.dq)}">${r.dq ? signed(r.dq) : ""}</td>
+        <td class="${cls(r.raw)}">${r.dq ? pct(r.raw) : ""}</td>
+        <td class="${r.status ? cls(r.adj) : "muted"}">${r.adj == null ? "" : pct(r.adj)}</td>
+        <td class="l">${tag(r.status)}</td></tr>`).join("");
+  } else {
+    rows = state.onlyChanged ? "" : s.s.map((r) => `<tr><td class="l">${stockLink(r[0])}</td><td class="l">${esc(nameOf(r[0]))}</td>
+      <td>${fmt(r[1])}</td><td>${r[2] == null ? "" : r[2].toFixed(2) + "%"}</td><td></td><td></td><td></td><td></td><td class="l"></td></tr>`).join("");
+  }
+  const b = base ? snap(e.code, base) : null;
+  const futRows = s.f.map((r) => {
+    const o = b && b.f.find((x) => x[0] === r[0]);
+    const dq = b ? r[2] - (o ? o[2] : 0) : null;
+    return `<tr><td class="l">${esc(r[0])}</td><td class="l">${esc(r[1])}</td><td>${fmt(r[2])}</td>
+      <td class="${cls(dq)}">${dq ? signed(dq) : ""}</td><td>${r[3] == null ? "" : r[3].toFixed(2) + "%"}</td></tr>`;
+  }).join("");
+  const othRows = s.o.map((r) => `<tr><td class="l">${esc(r[0])}</td><td>${fmt(r[1])}</td><td>${r[2] == null ? "" : r[2].toFixed(2) + "%"}</td></tr>`).join("");
+  return head + summary + `
+  <div class="panel">
+    <h2>${esc(e.code)} ${esc(e.name)} <span class="tag kind">${e.kind}</span> <span class="muted" style="font-weight:400">${e.issuer}投信</span></h2>
+    <p class="hint">${base ? `${to} 對比 ${base}。「調整後變動」已扣除申購買回造成的等比例增減，超過 ±0.5% 才標示加碼或減碼。` : "只有一天的資料，尚無法比較。"}</p>
+    ${rows ? `<div class="scroll"><table>
+      <thead><tr><th class="l">代號</th><th class="l">名稱</th><th>股數</th><th>權重</th><th>基準日股數</th><th>股數變動</th><th>變動 %</th><th>調整後變動</th><th class="l">狀態</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>` : `<div class="empty">${s.s.length ? "沒有異動" : "沒有股票部位"}</div>`}
+  </div>
+  ${futRows ? `<div class="panel"><h2>期貨與選擇權</h2><div class="scroll"><table>
+    <thead><tr><th class="l">代號</th><th class="l">名稱</th><th>口數</th><th>口數變動</th><th>權重</th></tr></thead><tbody>${futRows}</tbody></table></div></div>` : ""}
+  ${othRows ? `<div class="panel"><h2>現金與其他資產</h2><div class="scroll"><table>
+    <thead><tr><th class="l">項目</th><th>金額（元）</th><th>權重</th></tr></thead><tbody>${othRows}</tbody></table></div></div>` : ""}`;
+}
+
+// ------------------------------------------------------------ 個股查詢
+function findStocks(q) {
+  q = q.trim();
+  if (!q) return [];
+  if (D.names[q]) return [q];
+  return Object.keys(D.names).filter((c) => c.startsWith(q) || D.names[c].includes(q)).sort().slice(0, 40);
+}
+function renderStock() {
+  const search = `<div class="controls">
+    <label>股票代號或名稱 <input type="text" id="q" value="${esc(state.q)}" placeholder="例如 2330 或 台積電"
+      onkeydown="if(event.key==='Enter'){const m=findStocks(this.value);go({q:this.value,stock:m.length===1?m[0]:null})}"></label>
+    <span class="muted">按 Enter 查詢</span></div>`;
+  if (!state.stock) {
+    const m = findStocks(state.q);
+    if (!state.q.trim()) return search + `<div class="empty">輸入股票代號或名稱，查看哪些 ETF 持有它以及每天的變化</div>`;
+    if (!m.length) return search + `<div class="empty">追蹤的 ETF 在這段期間都沒有持有符合「${esc(state.q)}」的股票</div>`;
+    return search + `<div class="panel"><h2>符合的股票</h2><div class="chips" style="margin-top:8px">${m.map((c) => `<span class="tag kind">${stockLink(c)} ${esc(D.names[c])}</span>`).join("")}</div></div>`;
+  }
+  const code = state.stock;
+  const holders = D.etfs.filter((e) => datesOf(e.code).some((d) => snap(e.code, d).s.some((r) => r[0] === code)));
+  const cur = holders.map((e) => {
+    const ds = datesOf(e.code), d1 = ds[ds.length - 1], d0 = ds[ds.length - 2], first = ds[0];
+    const get = (d) => snap(e.code, d).s.find((r) => r[0] === code);
+    const now = get(d1), r = d0 ? diff(e.code, d1, d0).rows.find((x) => x.code === code) : null;
+    const span = first !== d1 ? diff(e.code, d1, first).rows.find((x) => x.code === code) : null;
+    return { e, d1, first, now, r, span };
+  }).sort((x, y) => ((y.now && y.now[2]) ?? -1) - ((x.now && x.now[2]) ?? -1));
+  const curRows = cur.map(({ e, d1, now, r, span }) => `<tr><td class="l">${etfLink(e.code)}</td><td class="l">${esc(e.name)}</td>
+    <td class="l"><span class="tag kind">${e.kind}</span></td><td class="l">${d1}</td>
+    <td>${now ? fmt(now[1]) : '<span class="muted">已無持股</span>'}</td><td>${now && now[2] != null ? now[2].toFixed(2) + "%" : ""}</td>
+    <td class="${r ? cls(r.dq) : ""}">${r && r.dq ? signed(r.dq) : ""}</td><td class="l">${r ? tag(r.status) : ""}</td>
+    <td class="${span && span.status ? cls(span.adj ?? span.dq) : "muted"}">${span ? (span.adj != null ? pct(span.adj) : "") : ""}</td>
+    <td class="l">${span ? tag(span.status) : ""}</td></tr>`).join("");
+  const first = D.dates[0];
+  const hist = [...D.dates].reverse().map((d) => `<tr><td class="l">${d}</td>${holders.map((e) => {
+    const s = snap(e.code, d);
+    if (!s) return `<td class="muted">–</td>`;
+    const row = s.s.find((r) => r[0] === code), p = prevDate(e.code, d);
+    const r = p ? diff(e.code, d, p).rows.find((x) => x.code === code) : null;
+    const st = r ? r.status : "";
+    const c = st === "new" || st === "add" ? "up" : st === "cut" || st === "out" ? "down" : "";
+    return `<td class="${c}" title="${TAGS[st] || ""}">${row && row[2] != null ? row[2].toFixed(2) : st === "out" ? "剔除" : ""}</td>`;
+  }).join("")}</tr>`).join("");
+  return search + `
+  <div class="panel">
+    <h2>${esc(code)} ${esc(nameOf(code))}</h2>
+    <p class="hint">${holders.length} 檔追蹤中的 ETF 在這段期間持有過。「期間調整」是從 ${first} 起扣除申贖影響後的股數變動。</p>
+    ${curRows ? `<div class="scroll"><table>
+      <thead><tr><th class="l">ETF</th><th class="l">名稱</th><th class="l">類型</th><th class="l">資料日</th><th>股數</th><th>權重</th>
+      <th>單日股數變動</th><th class="l">單日</th><th>期間調整</th><th class="l">期間</th></tr></thead><tbody>${curRows}</tbody></table></div>` : `<div class="empty">沒有 ETF 持有</div>`}
+  </div>
+  ${holders.length ? `<div class="panel"><h2>每日權重（%）</h2>
+    <p class="hint">紅色是當天新增或加碼，綠色是減碼或剔除（已扣除申贖影響）；「–」表示該 ETF 當天沒有資料。</p>
+    <div class="scroll"><table><thead><tr><th class="l">日期</th>${holders.map((e) => `<th title="${esc(e.name)}">${e.code}</th>`).join("")}</tr></thead>
+    <tbody>${hist}</tbody></table></div></div>` : ""}`;
+}
+
+// ------------------------------------------------------------ 異動日曆
+const evCache = {};
+// 某一天所有 ETF 的加減碼事件。share 是這筆調整占該 ETF 淨資產的百分比，
+// amt 是換算的金額（億元）；兩者都已扣除申購買回造成的等比例變動。
+function eventsOn(date) {
+  if (evCache[date]) return evCache[date];
+  const out = [];
+  for (const e of D.etfs) {
+    const s1 = snap(e.code, date), p = s1 && prevDate(e.code, date);
+    if (!p) continue;
+    const s0 = snap(e.code, p), df = diff(e.code, date, p);
+    for (const r of df.rows) {
+      if (!r.status) continue;
+      let share, nav = s1.n;
+      if (r.status === "out") { share = -r.w0; nav = s0.n; }
+      else if (r.status === "new") share = r.w1;
+      else share = r.w1 * (r.q1 - r.q0 * (1 + df.flow)) / r.q1;
+      if (share == null || nav == null) continue;
+      // rel：這筆調整相對於原本持股的比例（原本 100 張、買 50 張就是 +0.5）；新增沒有原持股，剔除是 −1
+      const rel = r.status === "new" ? null : r.status === "out" ? -1 : r.adj;
+      out.push({ etf: e, code: r.code, status: r.status, dq: r.dq, share, rel, amt: share / 100 * nav });
+    }
+  }
+  return (evCache[date] = out.sort((x, y) => Math.abs(y.amt) - Math.abs(x.amt)));
+}
+// 顯示門檻：新增、剔除一律顯示；其餘要「變動占原持股」達到門檻，且金額達到門檻
+const passThreshold = (v) => v.status === "new" || v.status === "out" ||
+  (Math.abs(v.rel) * 100 >= state.minPct && Math.abs(v.amt) >= state.minAmt);
+const calEvents = (date) => eventsOn(date).filter((v) =>
+  (state.calEtf === "全部" || v.etf.code === state.calEtf) &&
+  (state.calKind === "全部" || v.etf.kind === state.calKind) &&
+  (state.calOnlyNewOut ? v.status === "new" || v.status === "out" : passThreshold(v)));
+// 連續買進／賣出天數：同一檔 ETF 對同一檔股票，往前連續幾個交易日都是同方向且達到顯示門檻（含當天）
+const evIndex = {};
+function eventAt(date, etf, code) {
+  const m = evIndex[date] || (evIndex[date] = new Map(eventsOn(date).map((v) => [v.etf.code + "|" + v.code, v])));
+  return m.get(etf + "|" + code);
+}
+// 回傳 {n, fromNew, since}：fromNew 表示這段連續買進的第一天是「新增成分股」
+function streakInfo(v, date) {
+  const ds = datesOf(v.etf.code), sign = Math.sign(v.amt);
+  let n = 1, first = v, since = date;
+  for (let i = ds.indexOf(date) - 1; i >= 0; i--) {
+    const p = eventAt(ds[i], v.etf.code, v.code);
+    if (!p || Math.sign(p.amt) !== sign || !passThreshold(p)) break;
+    n++; first = p; since = ds[i];
+  }
+  return { n, fromNew: n >= 2 && first.status === "new", since };
+}
+const streakOf = (v, date) => streakInfo(v, date).n;
+function streakTag(v, date, short) {
+  const s = streakInfo(v, date);
+  if (s.n < 2) return "";
+  const dir = v.amt > 0 ? "買" : "賣";
+  const title = `${s.since} 起連續 ${s.n} 個交易日${dir === "買" ? "買進" : "賣出"}${s.fromNew ? "，第一天是新增成分股" : ""}`;
+  const text = short ? (s.fromNew ? "新" : "") + "連" + s.n : (s.fromNew ? "新增後" : "") + `連${dir} ${s.n} 天`;
+  return `<span class="tag ${v.amt > 0 ? "add" : "cut"} streak${s.fromNew ? " fromnew" : ""}" title="${title}">${text}</span>`;
+}
+const relText = (v) => (v.status === "new" ? `<span class="muted">占基金</span> ${v.share.toFixed(2)}%` : (v.rel > 0 ? "+" : "−") + (Math.abs(v.rel) * 100).toFixed(1) + "%");
+const yi = (x, d = 1) => (x > 0 ? "+" : x < 0 ? "−" : "") + Math.abs(x).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }) + " 億";
+const yiAbs = (x, d = 1) => Math.abs(x).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }) + " 億";
+function pick(patch) { Object.assign(state, patch); render(); }
+
+// 指數定期審核：{date: [{etf, kind: "announce"|"effective", ev, info}]}，依目前的 ETF／類型篩選
+function rebalMarks() {
+  const out = {};
+  for (const info of D.rebal) {
+    const e = etfOf(info.code);
+    if (!e || (state.calEtf !== "全部" && e.code !== state.calEtf) || (state.calKind !== "全部" && e.kind !== state.calKind)) continue;
+    for (const ev of info.events) for (const kind of ["cutoff", "announce", "effective"]) {
+      if (ev[kind]) (out[ev[kind]] = out[ev[kind]] || []).push({ etf: e, kind, ev, info });
+    }
+  }
+  return out;
+}
+const REBAL_LABEL = { cutoff: "截止", announce: "公告", effective: "生效" };
+const REBAL_DESC = { cutoff: "審核資料截止日（這天收盤後的資料不列入本次審核）", announce: "成分股審核結果公告", effective: "新成分股生效" };
+// 截止日是依編製規則算的，另有自己的推算旗標；公告與生效則看該次審核是否為官方公布
+const markEst = (m) => (m.kind === "cutoff" ? !!m.ev.cutoff_est : !m.ev.verified);
+const markNote = (m) => (m.kind === "cutoff" ? m.ev.cutoff_note : m.ev.note) || "";
+const markChip = (m) => `<span class="tag rb-${m.kind}${markEst(m) ? " est" : ""}" title="${esc(m.info.index)}：${m.ev.weight_only ? "權重上限調整（不換成分股）" : REBAL_DESC[m.kind]}${markEst(m) ? "（推算，非官方公布）" : ""}${markNote(m) ? "。" + esc(markNote(m)) : ""}">${m.etf.code} ${m.ev.weight_only ? "權重" : ""}${REBAL_LABEL[m.kind]}${markEst(m) ? "?" : ""}</span>`;
+
+function renderCalendar() {
+  const marks = rebalMarks();
+  const lastData = D.dates[D.dates.length - 1];
+  // 月份範圍：有資料的月份，加上未來有審核時程的月份
+  const months = [...new Set(D.dates.map((d) => d.slice(0, 7)))];
+  const lastMonth = Object.keys(marks).concat(lastData).sort().pop().slice(0, 7);
+  for (let [y, m] = months[months.length - 1].split("-").map(Number); ;) {
+    if (++m > 12) { m = 1; y++; }
+    const mm = `${y}-${String(m).padStart(2, "0")}`;
+    if (mm > lastMonth) break;
+    months.push(mm);
+  }
+  const month = months.includes(state.month) ? state.month : lastData.slice(0, 7);
+  const inMonth = D.dates.filter((d) => d.startsWith(month));
+  const sel = inMonth.includes(state.calDay) ? state.calDay : inMonth[inMonth.length - 1] || null;
+  const sum = (evs, sign) => evs.reduce((t, v) => t + (Math.sign(v.amt) === sign ? Math.abs(v.amt) : 0), 0);
+  const stats = Object.fromEntries(inMonth.map((d) => { const evs = calEvents(d); return [d, { evs, buy: sum(evs, 1), sell: sum(evs, -1) }]; }));
+  const max = Math.max(1e-9, ...Object.values(stats).flatMap((s) => [s.buy, s.sell]));
+
+  const [y, m] = month.split("-").map(Number), last = new Date(y, m, 0).getDate();
+  let cells = ["一", "二", "三", "四", "五"].map((w) => `<div class="wd">週${w}</div>`).join("");
+  const lead = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+  for (let i = 0; i < (lead >= 5 ? 0 : lead); i++) cells += `<div class="day blank"></div>`;
+  for (let dn = 1; dn <= last; dn++) {
+    const wd = new Date(y, m - 1, dn).getDay();
+    if (wd === 0 || wd === 6) continue;
+    const d = `${month}-${String(dn).padStart(2, "0")}`, st = stats[d];
+    const chips = (marks[d] || []).map(markChip).join("");
+    const rb = chips ? `<div class="chips rb">${chips}</div>` : "";
+    if (!st) { cells += `<div class="day off"><div class="dn">${dn}<span>${d > lastData ? "" : "無資料"}</span></div>${rb}</div>`; continue; }
+    const first = d === D.dates[0];
+    const bar = (lbl, k, v) => `<div class="bar"><span>${lbl}</span><span class="track"><i class="${k}" style="width:${v ? Math.max(2, v / max * 100) : 0}%;${v ? "" : "display:none"}"></i></span><span>${v ? yiAbs(v) : "–"}</span></div>`;
+    const top = st.evs.slice(0, 3).map((v) => `<div>${streakTag(v, d, true)}${esc(nameOf(v.code))} ${yi(v.amt)}（${v.etf.code}）</div>`).join("");
+    const nStreak = st.evs.filter((v) => streakOf(v, d) >= 2).length;
+    cells += `<div class="day has${d === sel ? " sel" : ""}" onclick="pick({calDay:'${d}'})"
+      title="${d}：買進 ${yiAbs(st.buy)}、賣出 ${yiAbs(st.sell)}，共 ${st.evs.length} 筆">
+      <div class="dn">${dn}<span>${first ? "起始日" : st.evs.length + " 筆" + (nStreak ? `・連續 ${nStreak}` : "")}</span></div>
+      ${first ? "" : bar("買", "buy", st.buy) + bar("賣", "sell", st.sell)}<div class="top">${top}</div>${rb}</div>`;
+  }
+
+  // 即將到來的指數審核清單（今天以後）
+  const today = new Date().toISOString().slice(0, 10);
+  const upcoming = Object.entries(marks).filter(([d]) => d >= today).sort().flatMap(([d, ms]) => ms.map((m) => ({ d, ...m })));
+  const shortIndex = (s) => s.split(/[（(;；]/)[0].trim();
+  const shortNote = (s) => (s.length > 70 ? s.slice(0, 70) + "…" : s);
+  const upRows = upcoming.map((m) => `<tr><td class="l">${m.d}</td><td class="l">${markChip(m)}</td><td class="l">${etfLink(m.etf.code)} ${esc(m.etf.name)}</td>
+    <td class="l" title="${esc(m.info.index)}">${esc(shortIndex(m.info.index))}</td><td class="l">${esc(m.info.frequency || "")}</td>
+    <td class="l">${m.kind === "cutoff" ? "審核資料截止日" : (m.ev.weight_only ? "權重調整" : "成分股") + (m.kind === "announce" ? "公告日" : "生效日")}${markEst(m) ? '<span class="muted">（推算）</span>' : ""}</td>
+    <td class="l wrap muted" style="min-width:360px" title="${esc(markNote(m))}">${esc(shortNote(markNote(m)))}</td></tr>`).join("");
+  const upcomingPanel = D.rebal.length ? `<div class="panel">
+    <h2>即將到來的指數定期審核</h2>
+    <p class="hint">被動式 ETF 依指數公司的時程換股：「截止」是審核資料截止日（依編製規則計算，之後的股價與財務資料不列入這次審核），「公告」是成分股審核結果公布的日子，「生效」是新成分股開始適用的交易日（ETF 通常在生效日前一個交易日收盤前完成調整）。
+      標了「?」的是依指數規則推算、尚未經指數公司正式公布的日期。資料來源與規則見各 ETF 公開說明書，存放在 docs\\prospectus。</p>
+    ${upRows ? `<div class="scroll"><table><thead><tr><th class="l">日期</th><th class="l">事件</th><th class="l">ETF</th><th class="l">追蹤指數</th><th class="l">審核頻率</th><th class="l">類型</th><th class="l">備註</th></tr></thead>
+      <tbody>${upRows}</tbody></table></div>` : `<div class="empty">目前篩選條件下沒有未來的審核時程</div>`}
+  </div>` : "";
+
+  const head = `
+  <div class="controls">
+    <label>月份 <select onchange="go({month:this.value,calDay:null})">${options([...months].reverse(), month)}</select></label>
+    <label>ETF <select onchange="pick({calEtf:this.value})"><option value="全部"${state.calEtf === "全部" ? " selected" : ""}>全部</option>${etfGroups(state.calEtf)}</select></label>
+    <label>ETF 類型 <select onchange="pick({calKind:this.value})">${options(["全部", "主動", "被動", "槓桿"], state.calKind)}</select></label>
+    <label>變動占原持股 ≥ <input type="number" min="0" step="0.5" value="${state.minPct}" onchange="pick({minPct:+this.value||0})"> %</label>
+    <label>且 金額 ≥ <input type="number" min="0" step="0.5" value="${state.minAmt}" onchange="pick({minAmt:+this.value||0})"> 億</label>
+    <span class="muted">新增、剔除一律顯示</span>
+    <label><input type="checkbox" ${state.calOnlyNewOut ? "checked" : ""} onchange="pick({calOnlyNewOut:this.checked})"> 只顯示新增或剔除</label>
+  </div>`;
+  const monthLabel = `${state.calEtf === "全部" ? "全部 ETF" : state.calEtf + " " + esc(etfOf(state.calEtf).name)}${state.calKind === "全部" ? "" : "・" + state.calKind}`;
+  const legend = D.rebal.length ? `<span class="tag rb-cutoff">截止</span> 審核資料截止日、<span class="tag rb-announce">公告</span> 指數審核結果公告日、<span class="tag rb-effective">生效</span> 新成分股生效日；帶「?」的是推算日期。` : "";
+  const calPanel = `<div class="panel">
+    <h2>${month} 異動日曆 <span class="muted" style="font-weight:400">${monthLabel}</span></h2>
+    <p class="hint">每格是當天所有 ETF 的加減碼：橫條長度是買進、賣出的合計金額（同一個月內用同一把尺），下方列出金額最大的三筆。
+      只顯示變動占原持股達到門檻的部位（原本 100 張、買 50 張就是 +50%），新增與剔除的成分股一律顯示；金額與比例都已扣除申購買回的影響，是估計值。
+      <span class="tag add streak">連3</span> 表示同一檔 ETF 對這檔股票已連續 3 個交易日同方向買進（紅）或賣出（綠）；
+      <span class="tag add streak fromnew">新連3</span> 表示這段連買的第一天是新增成分股。點任一天看明細。${legend}</p>
+    <div class="scroll"><div class="cal">${cells}</div></div>
+  </div>`;
+  if (!sel) return head + calPanel + upcomingPanel;
+
+  // 明細可點欄位標題排序：第一下由大到小，再點一下反過來；預設依金額絕對值
+  const SORTS = { etf: (v) => v.etf.code, kind: (v) => v.etf.kind, code: (v) => v.code, status: (v) => v.status,
+    dq: (v) => v.dq, amt: (v) => v.amt, rel: (v) => (v.status === "new" ? Infinity : v.rel),
+    streak: (v) => streakOf(v, sel) * Math.sign(v.amt) };
+  const sk = SORTS[state.calSort], evs = [...stats[sel].evs];
+  if (sk) evs.sort((x, y) => { const a = sk(x), b = sk(y); return (a < b ? 1 : a > b ? -1 : 0) * state.calDir; });
+  const th = (key, label, left) => `<th class="sort${left ? " l" : ""}" title="點一下排序" onclick="pick({calSort:'${key}',calDir:state.calSort==='${key}'?-state.calDir:1})">${label}${state.calSort === key ? (state.calDir > 0 ? " ▼" : " ▲") : ""}</th>`;
+  const rows = evs.map((v) => `<tr><td class="l">${etfLink(v.etf.code)}</td><td class="l">${esc(v.etf.name)}</td>
+    <td class="l"><span class="tag kind">${v.etf.kind}</span></td>
+    <td class="l">${stockLink(v.code)}</td><td class="l">${esc(nameOf(v.code))}</td><td class="l">${tag(v.status)}</td>
+    <td class="l">${streakTag(v, sel) || '<span class="muted">–</span>'}</td>
+    <td class="${cls(v.dq)}">${signed(v.dq)}</td><td class="${cls(v.amt)}">${yi(v.amt, 2)}</td>
+    <td class="${cls(v.amt)}">${relText(v)}</td></tr>`).join("");
+  return head + calPanel + `
+  <div class="panel">
+    <h2>${sel} 明細 <span class="muted" style="font-weight:400">${evs.length} 筆，買進 ${yiAbs(stats[sel].buy)} ／ 賣出 ${yiAbs(stats[sel].sell)}</span></h2>
+    ${rows ? `<div class="scroll"><table>
+      <thead><tr>${th("etf", "ETF", 1)}<th class="l">名稱</th>${th("kind", "類型", 1)}${th("code", "股票", 1)}<th class="l">名稱</th>${th("status", "狀態", 1)}
+      ${th("streak", "連續", 1)}${th("dq", "股數變動")}${th("amt", "估計金額")}${th("rel", "占原持股比例")}</tr></thead><tbody>${rows}</tbody></table></div>`
+      : `<div class="empty">${sel === D.dates[0] ? "這是資料的第一天，沒有前一天可以比較" : "這一天沒有達到門檻的異動"}</div>`}
+  </div>` + upcomingPanel;
+}
+
+// ------------------------------------------------------------ 共用：月曆格線
+const pad2 = (n) => String(n).padStart(2, "0");
+const todayStr = () => { const t = new Date(); return `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`; };
+function monthsBetween(first, last) {
+  const out = [];
+  for (let [y, m] = first.split("-").map(Number); ; m++) {
+    if (m > 12) { m = 1; y++; }
+    const mm = `${y}-${pad2(m)}`;
+    if (mm > last) break;
+    out.push(mm);
+  }
+  return out;
+}
+// cellFn(日期字串, 日) 回傳 {html, cls, onclick}；weekend 為 true 時畫七欄（含六日）
+function monthGrid(month, cellFn, weekend) {
+  const [y, m] = month.split("-").map(Number), last = new Date(y, m, 0).getDate(), cols = weekend ? 7 : 5;
+  let cells = ["一", "二", "三", "四", "五", "六", "日"].slice(0, cols).map((w) => `<div class="wd">週${w}</div>`).join("");
+  const lead = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+  for (let i = 0; i < (lead >= cols ? 0 : lead); i++) cells += `<div class="day blank"></div>`;
+  for (let dn = 1; dn <= last; dn++) {
+    const wd = (new Date(y, m - 1, dn).getDay() + 6) % 7;
+    if (wd >= cols) continue;
+    const d = `${month}-${pad2(dn)}`, c = cellFn(d, dn) || {};
+    cells += `<div class="day ${c.cls || "off"}"${c.onclick ? ` onclick="${c.onclick}"` : ""}><div class="dn">${dn}<span>${c.badge || ""}</span></div>${c.html || ""}</div>`;
+  }
+  return `<div class="scroll"><div class="cal${weekend ? " w7" : ""}">${cells}</div></div>`;
+}
+const isWeekend = (d) => { const w = new Date(d + "T00:00:00").getDay(); return w === 0 || w === 6; };
+// 追蹤中的 ETF 裡，目前（各自最新一天）有哪些持有這檔股票
+let holderIndex = null;
+function holdersOf(code) {
+  if (!holderIndex) {
+    holderIndex = new Map();
+    for (const e of D.etfs) {
+      const ds = datesOf(e.code), s = ds.length && snap(e.code, ds[ds.length - 1]);
+      if (s) for (const r of s.s) { if (!holderIndex.has(r[0])) holderIndex.set(r[0], []); holderIndex.get(r[0]).push(e.code); }
+    }
+  }
+  return holderIndex.get(code) || [];
+}
+const MARKETS = { sii: "上市", otc: "上櫃", rotc: "興櫃", pub: "公開發行" };
+const holderChips = (code) => holdersOf(code).map((c) => `<span class="tag kind">${etfLink(c)}</span>`).join(" ") || '<span class="muted">–</span>';
+
+// ------------------------------------------------------------ 可轉債日曆
+// D.cb 每列：[日期, 時間, 代號, 名稱, 市場, 主旨]
+function renderCb() {
+  if (!D.cb.length) return `<div class="empty">還沒有可轉債公告資料</div>`;
+  const list = D.cb.filter((r) => !state.cbHeld || holdersOf(r[2]).length);
+  const months = monthsBetween(D.cb[0][0].slice(0, 7), todayStr().slice(0, 7));
+  const month = months.includes(state.cbMonth) ? state.cbMonth : months[months.length - 1];
+  const inMonth = list.filter((r) => r[0].startsWith(month));
+  const byDay = {};
+  for (const r of inMonth) (byDay[r[0]] = byDay[r[0]] || []).push(r);
+  const sel = byDay[state.cbDay] ? state.cbDay : null;
+  const grid = monthGrid(month, (d) => {
+    const rs = byDay[d];
+    if (!rs) return null;
+    return { cls: "has" + (d === sel ? " sel" : ""), onclick: `pick({cbDay:'${d === sel ? "" : d}'})`, badge: `${rs.length} 筆`,
+      html: `<div class="top">${rs.slice(0, 5).map((r) => `<div>${holdersOf(r[2]).length ? "★ " : ""}${esc(r[2])} ${esc(r[3])}</div>`).join("")}${rs.length > 5 ? `<div>…還有 ${rs.length - 5} 筆</div>` : ""}</div>` };
+  }, inMonth.some((r) => isWeekend(r[0])));
+  const shown = (sel ? byDay[sel] : inMonth).slice().sort((x, y) => (y[0] + y[1]).localeCompare(x[0] + x[1]));
+  const rows = shown.map((r) => { const [y, m, d] = r[0].split("-").map(Number);
+    return `<tr><td class="l">${r[0]}</td><td class="l">${esc(r[1].slice(0, 5))}</td><td class="l">${D.names[r[2]] ? stockLink(r[2]) : esc(r[2])}</td><td class="l">${esc(r[3])}</td>
+      <td class="l">${MARKETS[r[4]] || esc(r[4])}</td><td class="l wrap" style="min-width:380px">${esc(r[5])}</td><td class="l">${holderChips(r[2])}</td>
+      <td class="l"><a class="lnk" target="_blank" rel="noopener" href="https://mops.twse.com.tw/mops/#/web/t05st02?year=${y - 1911}&month=${m}&day=${d}">當日公告</a></td></tr>`; }).join("");
+  return `
+  <div class="controls">
+    <label>月份 <select onchange="pick({cbMonth:this.value,cbDay:null})">${options([...months].reverse(), month)}</select></label>
+    <label><input type="checkbox" ${state.cbHeld ? "checked" : ""} onchange="pick({cbHeld:this.checked})"> 只看追蹤中 ETF 有持有的股票</label>
+  </div>
+  <div class="panel">
+    <h2>${month} 可轉債代收價款公告</h2>
+    <p class="hint">公開資訊觀測站重大訊息中，主旨是「轉換公司債代收價款及存儲專戶行庫」這類的公告（公司發行可轉債時發布）。各公司用語不一，
+      這裡收錄主旨含「轉換公司債」且含「代收」或「存儲」的公告，涵蓋上市、上櫃、興櫃。★ 表示追蹤中的 ETF 目前有持有。點任一天只看當天，再點一次看整個月。</p>
+    ${grid}
+  </div>
+  <div class="panel">
+    <h2>${sel || month} 公告明細 <span class="muted" style="font-weight:400">${shown.length} 筆</span></h2>
+    ${rows ? `<div class="scroll"><table>
+      <thead><tr><th class="l">日期</th><th class="l">時間</th><th class="l">代號</th><th class="l">公司</th><th class="l">市場</th><th class="l">主旨</th><th class="l">持有的 ETF</th><th class="l">原文</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>` : `<div class="empty">這個月沒有符合的公告</div>`}
+  </div>`;
+}
+
+// ------------------------------------------------------------ 營收日曆
+// D.rev 每列：[營收月份, 代號, 名稱, 市場, 產業, 營收(千元), 月增%, 年增%, 累計年增%, 公告日, 時間, 公告日來源]
+const REV_SRC = { mops: "", snapshot: "前一天執行後才申報，沒有確切時間", finmind: "約略日期（第三方資料的入庫日，下午三點後申報的可能晚一天）" };
+const pctCell = (v) => (v == null ? '<td class="muted">–</td>' : `<td class="${cls(v)}">${(v > 0 ? "+" : "") + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</td>`);
+const yiRev = (k) => (k == null ? "–" : (k / 1e5).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+function renderRevenue() {
+  if (!D.rev.length) return `<div class="empty">還沒有月營收資料</div>`;
+  const q = state.revQ.trim();
+  const list = D.rev.filter((r) => (!state.revHeld || holdersOf(r[1]).length) && (!q || r[1].startsWith(q) || r[2].includes(q)));
+  const dated = list.filter((r) => r[9]), unknown = list.filter((r) => !r[9]);
+  const allDates = D.rev.filter((r) => r[9]).map((r) => r[9]).sort();
+  const months = monthsBetween((allDates[0] || todayStr()).slice(0, 7), todayStr().slice(0, 7));
+  const month = months.includes(state.revMonth) ? state.revMonth : months[months.length - 1];
+  const byDay = {};
+  for (const r of dated) if (r[9].startsWith(month)) (byDay[r[9]] = byDay[r[9]] || []).push(r);
+  const days = Object.keys(byDay).sort();
+  const sel = state.revDay === "unknown" ? "unknown" : byDay[state.revDay] ? state.revDay : days[days.length - 1] || null;
+  const grid = monthGrid(month, (d) => {
+    const rs = byDay[d];
+    if (!rs) return null;
+    const up = rs.filter((r) => r[7] > 0).length, down = rs.filter((r) => r[7] < 0).length;
+    const top = [...rs].sort((x, y) => (y[5] || 0) - (x[5] || 0)).slice(0, 3);
+    return { cls: "has" + (d === sel ? " sel" : ""), onclick: `pick({revDay:'${d}'})`, badge: `${rs.length} 家`,
+      html: `<div class="bar" style="grid-template-columns:1fr"><span>年增 <b class="up">${up}</b>　年減 <b class="down">${down}</b></span></div>
+        <div class="top">${top.map((r) => `<div>${esc(r[2])} <span class="${cls(r[7])}">${r[7] == null ? "" : (r[7] > 0 ? "+" : "") + r[7].toFixed(1) + "%"}</span></div>`).join("")}</div>` };
+  }, days.some(isWeekend));
+
+  const SORTS = { time: (r) => r[9] + r[10], code: (r) => r[1], rev: (r) => r[5] ?? -1, mom: (r) => r[6] ?? -1e18, yoy: (r) => r[7] ?? -1e18, cum: (r) => r[8] ?? -1e18 };
+  const sk = SORTS[state.revSort] || SORTS.rev;
+  const shown = (sel === "unknown" ? unknown : sel ? byDay[sel] : []).slice().sort((x, y) => { const a = sk(x), b = sk(y); return (a < b ? 1 : a > b ? -1 : 0) * state.revDir; });
+  const th = (key, label, left) => `<th class="sort${left ? " l" : ""}" title="點一下排序" onclick="pick({revSort:'${key}',revDir:state.revSort==='${key}'?-state.revDir:1})">${label}${state.revSort === key ? (state.revDir > 0 ? " ▼" : " ▲") : ""}</th>`;
+  const rows = shown.map((r) => `<tr>
+    <td class="l">${r[9] ? r[9].slice(5).replace("-", "/") + (r[10] ? " " + esc(r[10]) : "") : '<span class="muted">不明</span>'}${REV_SRC[r[11]] ? ` <span class="tag kind" title="${REV_SRC[r[11]]}">約</span>` : ""}</td>
+    <td class="l">${D.names[r[1]] ? stockLink(r[1]) : esc(r[1])}</td><td class="l">${esc(r[2])}</td><td class="l">${MARKETS[r[3]] || esc(r[3])}</td>
+    <td class="l">${esc(r[4])}</td><td class="l">${r[0]}</td>
+    <td title="${r[5] == null ? "彙總表還沒有這家的數字" : fmt(r[5]) + " 千元"}">${yiRev(r[5])}</td>${pctCell(r[6])}${pctCell(r[7])}${pctCell(r[8])}
+    <td class="l">${holderChips(r[1])}</td></tr>`).join("");
+  const up = shown.filter((r) => r[7] > 0).length, down = shown.filter((r) => r[7] < 0).length;
+  return `
+  <div class="controls">
+    <label>月份 <select onchange="pick({revMonth:this.value,revDay:null})">${options([...months].reverse(), month)}</select></label>
+    <label>代號或名稱 <input type="text" value="${esc(state.revQ)}" placeholder="例如 2330" style="width:120px"
+      onkeydown="if(event.key==='Enter')pick({revQ:this.value})" onblur="if(this.value!==state.revQ)pick({revQ:this.value})"></label>
+    <label><input type="checkbox" ${state.revHeld ? "checked" : ""} onchange="pick({revHeld:this.checked})"> 只看追蹤中 ETF 有持有的股票</label>
+    ${unknown.length ? `<a class="lnk" onclick="pick({revDay:'unknown'})">公告日不明 ${unknown.length} 家</a>` : ""}
+  </div>
+  <div class="panel">
+    <h2>${month} 月營收公告日曆</h2>
+    <p class="hint">每格是當天公布月營收的上市櫃公司家數，以及年增、年減各幾家，下方列出營收最大的三家與年增率。點任一天看明細。
+      公告日是每天從公開資訊觀測站的當日申報清單記下來的（觀測站不提供過去的公告日），標「約」的是補上的約略日期。</p>
+    ${grid}
+  </div>
+  <div class="panel">
+    <h2>${sel === "unknown" ? "公告日不明" : sel || month} 明細 <span class="muted" style="font-weight:400">${shown.length} 家，年增 ${up}、年減 ${down}</span></h2>
+    ${rows ? `<div class="scroll"><table>
+      <thead><tr>${th("time", "公告時間", 1)}${th("code", "代號", 1)}<th class="l">公司</th><th class="l">市場</th><th class="l">產業</th><th class="l">營收月份</th>
+      ${th("rev", "營收（億元）")}${th("mom", "月增率")}${th("yoy", "年增率")}${th("cum", "累計年增率")}<th class="l">持有的 ETF</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>` : `<div class="empty">這個月還沒有公告紀錄</div>`}
+  </div>`;
+}
+
+// ------------------------------------------------------------ 換股規律
+// 把每一次指數審核對照實際持股：新成分股哪天開始出現、舊成分股哪天出清。
+// T 是生效日；持股是每天收盤後的部位，所以「T−1 出現」代表在生效日前一個交易日收盤前買進。
+const PAT_BEFORE = 8, PAT_AFTER = 12;  // 觀察窗：生效日前 8、後 12 個交易日
+const tOff = (n) => (n === 0 ? "T" : n < 0 ? `T−${-n}` : `T+${n}`);
+function eventStats(info, ev) {
+  const code = info.code, ds = datesOf(code);
+  const i0 = ds.findIndex((d) => d >= ev.effective);
+  if (i0 < 1 || ev.effective > ds[ds.length - 1]) return null;  // 還沒發生，或早於資料範圍
+  const from = Math.max(1, i0 - PAT_BEFORE), to = Math.min(ds.length - 1, i0 + PAT_AFTER);
+  const st = { info, ev, eff: ds[i0], added: new Set(), removed: new Set(), firstAdd: null, lastAdd: null, firstRem: null, lastRem: null,
+    peak: null, cutBefore: i0 - PAT_BEFORE < 1, cutAfter: i0 + PAT_AFTER > ds.length - 1 };
+  for (let i = from; i <= to; i++) {
+    const a = new Set(snap(code, ds[i - 1]).s.map((r) => r[0])), b = new Set(snap(code, ds[i]).s.map((r) => r[0]));
+    const adds = [...b].filter((c) => !a.has(c)), rems = [...a].filter((c) => !b.has(c));
+    if (adds.length) { st.firstAdd = st.firstAdd ?? i - i0; st.lastAdd = i - i0; adds.forEach((c) => st.added.add(c)); }
+    if (rems.length) { st.firstRem = st.firstRem ?? i - i0; st.lastRem = i - i0; rems.forEach((c) => st.removed.add(c)); }
+    const amt = eventsOn(ds[i]).filter((v) => v.etf.code === code).reduce((t, v) => t + Math.abs(v.amt), 0);
+    if (amt > 0 && (!st.peak || amt > st.peak.amt)) st.peak = { off: i - i0, date: ds[i], amt };
+  }
+  const offs = [st.firstAdd, st.lastAdd, st.firstRem, st.lastRem].filter((x) => x != null);
+  st.start = offs.length ? Math.min(...offs) : null;
+  st.end = offs.length ? Math.max(...offs) : null;
+  st.dateAt = (off) => ds[i0 + off];
+  return st;
+}
+const rangeText = (xs) => { const lo = Math.min(...xs), hi = Math.max(...xs); return lo === hi ? tOff(lo) : `${tOff(lo)} ～ ${tOff(hi)}`; };
+function renderPatterns() {
+  const all = D.rebal.flatMap((info) => (etfOf(info.code) ? info.events.map((ev) => eventStats(info, ev)).filter(Boolean) : []));
+  if (!all.length) return `<div class="empty">還沒有可以對照的指數審核紀錄</div>`;
+  const swaps = all.filter((s) => s.added.size || s.removed.size);
+  const md = (d) => d.slice(5).replace("-", "/");
+  const cell = (s, off) => (off == null ? '<span class="muted">–</span>' : `${md(s.dateAt(off))} <b>${tOff(off)}</b>`);
+
+  // 整體歸納
+  const codes = (list) => [...new Set(list.map((s) => s.info.code))].join("、") || "無";
+  const withAdd = swaps.filter((s) => s.firstAdd != null);
+  const addT1 = withAdd.filter((s) => s.firstAdd === -1), addEarly = withAdd.filter((s) => s.firstAdd < -1), addLate = withAdd.filter((s) => s.firstAdd >= 0);
+  const withRem = swaps.filter((s) => s.lastRem != null);
+  const remQuick = withRem.filter((s) => s.lastRem <= 0), remSlow = withRem.filter((s) => s.lastRem > 0);
+  const oneDay = swaps.filter((s) => s.start === s.end);
+  const summary = `
+    <li>資料範圍內共對照到 <b>${all.length}</b> 次指數審核，其中 <b>${swaps.length}</b> 次有成分股進出（其餘是只調權重或沒有換股）。</li>
+    <li><b>買進新成分股</b>：${withAdd.length} 次裡有 <b>${addT1.length}</b> 次是在生效日前一個交易日（T−1）首次出現在持股中（${codes(addT1)}）；
+      <b>${addEarly.length}</b> 次更早就開始買（${codes(addEarly)}）；<b>${addLate.length}</b> 次在生效日當天或之後才出現（${codes(addLate)}）。</li>
+    <li><b>賣出舊成分股</b>：${withRem.length} 次裡有 <b>${remQuick.length}</b> 次在生效日當天以前就出清（${codes(remQuick)}）；
+      <b>${remSlow.length}</b> 次是生效後才陸續賣完，也就是有過渡期（${codes(remSlow)}）。</li>
+    <li><b>一天換完</b>的有 <b>${oneDay.length}</b> 次（${codes(oneDay)}），其餘分成多天。</li>`;
+
+  // 每檔 ETF 的規律
+  const perEtf = D.rebal.filter((info) => etfOf(info.code)).map((info) => {
+    const evs = all.filter((s) => s.info === info), sw = evs.filter((s) => s.added.size || s.removed.size);
+    const adds = sw.filter((s) => s.firstAdd != null).map((s) => s.firstAdd), rems = sw.filter((s) => s.lastRem != null).map((s) => s.lastRem);
+    const spans = sw.map((s) => s.end - s.start + 1);
+    const e = etfOf(info.code);
+    const p = info.provider, provider = /富時|FTSE/.test(p) ? "FTSE Russell" : /MSCI/.test(p) ? "MSCI" : /ICE/.test(p) ? "ICE" : /臺灣指數/.test(p) ? "臺灣指數公司" : p.split(/[（(／/]/)[0].trim();
+    return `<tr><td class="l">${etfLink(e.code)} ${esc(e.name)}</td><td class="l" title="${esc(info.index)}">${esc(provider)}</td>
+      <td class="l">${esc(info.frequency)}</td><td>${evs.length}</td><td>${sw.length}</td>
+      <td class="l">${adds.length ? `<b>${rangeText(adds)}</b>` : '<span class="muted">–</span>'}</td>
+      <td class="l">${rems.length ? `<b>${rangeText(rems)}</b>` : '<span class="muted">–</span>'}</td>
+      <td class="l">${spans.length ? (Math.min(...spans) === Math.max(...spans) ? spans[0] : `${Math.min(...spans)}～${Math.max(...spans)}`) + " 個交易日" : '<span class="muted">–</span>'}</td>
+      <td class="l wrap muted" style="min-width:320px" title="${esc(info.rule)}">${esc(info.rule.length > 90 ? info.rule.slice(0, 90) + "…" : info.rule)}</td></tr>`;
+  }).join("");
+
+  // 逐次明細
+  const rows = [...all].sort((x, y) => x.eff.localeCompare(y.eff) || x.info.code.localeCompare(y.info.code)).map((s) => {
+    const e = etfOf(s.info.code), ev = s.ev, none = !s.added.size && !s.removed.size;
+    const names = (set) => [...set].map((c) => `${c} ${nameOf(c)}`).join("、");
+    return `<tr><td class="l">${etfLink(e.code)} ${esc(e.name)}</td>
+      <td class="l">${ev.announce ? md(ev.announce) : "?"} → <b>${md(ev.effective)}</b>${ev.verified ? "" : ' <span class="muted">(推算)</span>'}${ev.weight_only ? ' <span class="tag kind">僅權重</span>' : ""}</td>
+      <td title="${esc(names(s.added))}">${s.added.size || '<span class="muted">0</span>'}</td><td title="${esc(names(s.removed))}">${s.removed.size || '<span class="muted">0</span>'}</td>
+      <td class="l">${cell(s, s.firstAdd)}</td><td class="l">${cell(s, s.lastAdd)}</td>
+      <td class="l">${cell(s, s.firstRem)}</td><td class="l">${cell(s, s.lastRem)}</td>
+      <td class="l">${none ? '<span class="muted">–</span>' : s.end - s.start + 1 + " 天"}</td>
+      <td class="l">${s.peak ? `${md(s.peak.date)} <b>${tOff(s.peak.off)}</b> <span class="muted">${yiAbs(s.peak.amt)}</span>` : '<span class="muted">–</span>'}</td>
+      <td class="l muted">${s.cutBefore || s.cutAfter ? "資料未涵蓋完整期間" : ""}</td></tr>`;
+  }).join("");
+
+  return `
+  <div class="panel">
+    <h2>換股規律：指數審核對照實際持股</h2>
+    <p class="hint">T 是指數的生效日。持股資料是每天收盤後的部位，所以新成分股「在 T−1 出現」代表 ETF 在生效日前一個交易日收盤前就買進了。
+      每次審核觀察生效日前 ${PAT_BEFORE} 個、後 ${PAT_AFTER} 個交易日內成分股的進出。這一頁完全由持股資料自動算出，資料更新後會跟著變。</p>
+    <ul class="wrap" style="margin:0;padding-left:20px;line-height:1.9">${summary}</ul>
+  </div>
+  <div class="panel">
+    <h2>各 ETF 的規律</h2>
+    <p class="hint">「開始買進」是新成分股第一次出現在持股的日子，「賣完」是最後一檔舊成分股消失的日子；多次審核的結果不同時顯示範圍。觀察次數少的 ETF 還不足以當成定論。</p>
+    <div class="scroll"><table>
+      <thead><tr><th class="l">ETF</th><th class="l">指數公司</th><th class="l">頻率</th><th>審核次數</th><th>有換股</th><th class="l">開始買進新成分股</th><th class="l">賣完舊成分股</th><th class="l">換股歷時</th><th class="l">指數規則（公開說明書／編製規則）</th></tr></thead>
+      <tbody>${perEtf}</tbody></table></div>
+  </div>
+  <div class="panel">
+    <h2>逐次明細</h2>
+    <p class="hint">新增、剔除檔數移上去可看是哪些股票。「金額最大日」是該 ETF 在觀察期間內估計加減碼金額合計最高的一天。標「推算」的是依規則推算的審核日期，對照結果僅供參考。</p>
+    <div class="scroll"><table>
+      <thead><tr><th class="l">ETF</th><th class="l">公告 → 生效 (T)</th><th>新增</th><th>剔除</th><th class="l">首次買進</th><th class="l">最後買進</th><th class="l">首次剔除</th><th class="l">最後剔除</th><th class="l">歷時</th><th class="l">金額最大日</th><th class="l">備註</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+  </div>`;
+}
+
+// ------------------------------------------------------------ 監控面板
+const light = (ok, big) => `<span class="light ${ok == null ? "none" : ok ? "ok" : "bad"}${big ? " big" : ""}">${ok == null ? "–" : ok ? "✓" : "✕"}</span>`;
+const fullRuns = () => D.runs.filter((r) => !r.partial);
+const STEP_KEYS = ["fetch", "csv", "cb", "revenue", "site"];
+const STEP_NAMES = { fetch: "資料抓取", csv: "寫入 CSV", cb: "可轉債公告", revenue: "月營收", site: "網站建置" };
+// 最近一個「應該已經跑完」的排程時間：平日的排程時刻，給 45 分鐘執行緩衝
+function expectedRun() {
+  const [h, m] = D.schedule.split(":").map(Number), now = new Date();
+  const t = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
+  while (t.getTime() + 45 * 60000 > now.getTime() || t.getDay() === 0 || t.getDay() === 6) t.setDate(t.getDate() - 1);
+  return t;
+}
+function health() {
+  const runs = fullRuns(), run = runs[runs.length - 1], exp = expectedRun();
+  const p2 = (n) => String(n).padStart(2, "0");
+  const expText = `${exp.getMonth() + 1}/${exp.getDate()} ${p2(exp.getHours())}:${p2(exp.getMinutes())}`;
+  const ran = run && new Date(run.time.replace(" ", "T")) >= exp;
+  const steps = [{ name: "排程執行", ok: !!ran,
+    msg: !run ? "還沒有任何執行紀錄" : ran ? `上次執行 ${run.time}` : `${expText} 的排程沒有執行紀錄（上次是 ${run.time}）` }];
+  for (const k of STEP_KEYS) {
+    if (run && !run.steps[k]) continue;  // 舊的執行紀錄沒有後來才加的步驟
+    if (!run && !["fetch", "csv", "site"].includes(k)) continue;
+    steps.push({ name: STEP_NAMES[k], ok: run ? run.steps[k].ok : null, msg: run ? run.steps[k].msg : "" });
+  }
+  // 抓取失敗的 ETF 逐檔計算，「資料抓取」這一步本身就不重複算
+  const badEtfs = run ? Object.values(run.etfs).filter((s) => !s.ok).length : 0;
+  const bad = steps.filter((s) => s.ok === false && !(s.name === "資料抓取" && badEtfs)).length + badEtfs;
+  return { run, runs, steps, ok: steps.every((s) => s.ok), bad };
+}
+function renderMonitor() {
+  const h = health(), run = h.run, recent = h.runs.slice(-14);
+  const etfRows = D.etfs.map((e) => {
+    const s = run && run.etfs[e.code];
+    const dots = recent.map((r) => { const x = r.etfs[e.code];
+      return `<span class="dot ${!x ? "none" : x.ok ? "ok" : "bad"}" title="${esc(r.time)}${x && x.msg ? "：" + esc(x.msg) : x ? "：正常" : "：沒有執行"}"></span>`; }).join("");
+    return `<tr class="click" onclick="openEtf('${e.code}')"><td class="l">${light(s ? s.ok : null)}</td><td class="l">${esc(e.code)}</td><td class="l">${esc(e.name)}</td>
+      <td class="l">${e.issuer}</td><td class="l">${s && s.date ? s.date : "–"}</td><td>${s && s.stocks != null ? s.stocks : "–"}</td>
+      <td class="l wrap ${s && !s.ok ? "up" : "muted"}">${s ? esc(s.msg || "正常") : "沒有執行紀錄"}</td><td class="l">${dots}</td></tr>`;
+  }).join("");
+  const runRows = [...D.runs].reverse().slice(0, 15).map((r) => `<tr>
+    <td class="l">${esc(r.time)}${r.partial ? ' <span class="tag kind">部分</span>' : ""}</td>
+    ${STEP_KEYS.map((k) => (r.steps[k] ? `<td class="l" title="${esc(r.steps[k].msg)}">${light(r.steps[k].ok)} <span class="muted">${esc(r.steps[k].msg.length > 22 ? r.steps[k].msg.slice(0, 22) + "…" : r.steps[k].msg)}</span></td>` : `<td class="l muted">–</td>`)).join("")}
+    <td class="l">${r.newest || "–"}</td>
+    <td class="l wrap ${r.problems.length ? "up" : "muted"}">${r.problems.length ? esc(r.problems.slice(0, 3).join("；")) + (r.problems.length > 3 ? ` …等 ${r.problems.length} 個` : "") : "無"}</td></tr>`).join("");
+  return `
+  <div class="banner ${h.ok ? "" : "bad"}">${light(h.ok, true)} ${h.ok ? "全部正常：排程有執行，資料與網站都是最新的" : `有 ${h.bad} 個問題需要處理`}</div>
+  <div class="pipe">${h.steps.map((s, i) => `<div class="step ${s.ok === false ? "bad" : ""}">${light(s.ok, true)}
+    <div><div class="t">${i + 1}. ${s.name}</div><div class="m">${esc(s.msg)}</div></div></div>`).join("")}</div>
+  <div class="panel">
+    <h2>各 ETF 抓取狀態</h2>
+    <p class="hint">最近一次完整執行的結果。紅燈代表官網抓取失敗、回傳內容沒有任何部位，或資料日落後其他 ETF。
+      右側是最近 ${recent.length} 次執行的紀錄（圓點正常、方塊失敗），滑鼠移上去可看原因。每個平日 ${D.schedule} 自動執行。</p>
+    <div class="scroll"><table>
+      <thead><tr><th class="l">燈號</th><th class="l">代號</th><th class="l">名稱</th><th class="l">投信</th><th class="l">資料日</th><th>股票檔數</th><th class="l">訊息</th><th class="l">最近執行</th></tr></thead>
+      <tbody>${etfRows}</tbody></table></div>
+  </div>
+  <div class="panel">
+    <h2>執行紀錄</h2>
+    ${runRows ? `<div class="scroll"><table>
+      <thead><tr><th class="l">時間</th>${STEP_KEYS.map((k) => `<th class="l">${STEP_NAMES[k]}</th>`).join("")}<th class="l">最新資料日</th><th class="l">問題</th></tr></thead>
+      <tbody>${runRows}</tbody></table></div>` : `<div class="empty">還沒有執行紀錄</div>`}
+  </div>`;
+}
+
+const TABS = [["overview", "總覽", renderOverview], ["calendar", "異動日曆", renderCalendar], ["cb", "可轉債日曆", renderCb], ["revenue", "營收日曆", renderRevenue], ["patterns", "換股規律", renderPatterns], ["etf", "ETF 明細", renderEtf],
+  ["stock", "個股查詢", renderStock], ["monitor", "監控面板", renderMonitor]];
+function render() {
+  $("#nav").innerHTML = TABS.map(([k, t]) => `<button class="${k === state.tab ? "on" : ""}" onclick="go({tab:'${k}'})">${t}</button>`).join("");
+  $("#main").innerHTML = (TABS.find((t) => t[0] === state.tab) || TABS[0])[2]();
+  const h = health();
+  $("#health").innerHTML = `${light(h.ok)} ${h.ok ? "系統正常" : `${h.bad} 個問題`}`;
+}
+$("#built").textContent = "網站產生時間 " + D.built;
+readHash();
+render();
+</script>
+</body>
+</html>

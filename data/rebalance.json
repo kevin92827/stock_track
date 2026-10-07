@@ -1,0 +1,1337 @@
+[
+ {
+  "code": "0050",
+  "index": "富時臺灣證券交易所臺灣50指數 (FTSE TWSE Taiwan 50 Index)",
+  "provider": "FTSE Russell（與臺灣證券交易所合編；臺灣指數公司網站同步刊載技術通知）",
+  "frequency": "每季",
+  "review_months": [
+   3,
+   6,
+   9,
+   12
+  ],
+  "rule": "FTSE TWSE Taiwan Index Series Ground Rules v5.2 (Aug 2026) 6.1.1/6.1.3: \"The quarterly reviews of the FTSE TWSE Taiwan Index Series take place in March, June, September and December using data from the close of business on the Monday four weeks prior to the review effective date. Any constituent changes will be implemented after the close of business on the third Friday (i.e. effective Monday) of the review month.\" / \"Details of the outcome of the review ... will be published after the close of business on the first Friday of the review month.\" 公開說明書(2026/7/29)原文：「臺灣50指數於每年三、六、九、十二月進行季度審核。使用審核生效日四週前的週一收盤資料。年度審核與三月份的季度審核同時舉行…任何成分股的變動將在審核月份的第三個星期五收盤後生效(亦即生效日為星期一)。」",
+  "events": [
+   {
+    "announce": "2026-06-05",
+    "effective": "2026-06-22",
+    "verified": false,
+    "note": "依規則回推：6/5（第一個星期五）公告；第三個星期五 6/19 端午休市，提前於 6/18 收盤後生效，6/22 起適用",
+    "source": "",
+    "weight_only": false,
+    "cutoff": "2026-05-25",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2026-09-04",
+    "effective": "2026-09-21",
+    "verified": true,
+    "note": "臺灣指數公司技術通知 1312：9/4 公告、9/18 收盤後生效，9/21 起適用",
+    "source": "https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+    "weight_only": false,
+    "cutoff": "2026-08-24",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2026-12-04",
+    "effective": "2026-12-21",
+    "verified": false,
+    "note": "依規則推算：12月第一個星期五(12/4)收盤後公告；第三個星期五(12/18)收盤後生效，故新成分股自次一交易日 2026-12-21(一) 起適用。FTSE 未公布 2026-12 以後逐次日程表。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2026-11-23",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-03-05",
+    "effective": "2027-03-22",
+    "verified": false,
+    "note": "依規則推算：3月第一個星期五(3/5)公告；第三個星期五(3/19)收盤後生效 → 3/22(一)適用。3月同時為年度流動性審核(規則 6.1.2)。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-02-22",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-06-04",
+    "effective": "2027-06-21",
+    "verified": false,
+    "note": "依規則推算：6/4(五)公告；第三個星期五 6/18 收盤後生效 → 6/21(一)適用。2027 端午節為 6/9(三)，不影響。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-05-24",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-09-03",
+    "effective": "2027-09-20",
+    "verified": false,
+    "note": "依規則推算：9/3(五)公告；第三個星期五 9/17 收盤後生效 → 9/20(一)適用。2027 中秋節 9/15(三)，不影響。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-08-23",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-12-03",
+    "effective": "2027-12-20",
+    "verified": false,
+    "note": "依規則推算：12/3(五)公告；第三個星期五 12/17 收盤後生效 → 12/20(一)適用。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-11-22",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   }
+  ],
+  "prospectus_url": "https://www.yuantafunds.com/fund/download/1066台灣卓越50-公開說明書.pdf",
+  "prospectus_file": "docs/prospectus/0050.pdf",
+  "prospectus_date": "2026-07-29（封面刊印日期：中華民國115年7月29日；公開資訊觀測站申報版本 202606）",
+  "sources": [
+   "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1312/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1262/tw",
+   "https://www.yuantaetfs.com/product/detail/0050/download",
+   "https://www.twse.com.tw/downloads/zh/products/indices/IndexS32.pdf"
+  ]
+ },
+ {
+  "code": "0056",
+  "index": "臺灣高股息指數 (FTSE TWSE Taiwan Dividend+ Index)",
+  "provider": "FTSE Russell（與臺灣證券交易所合編；臺灣指數公司網站同步刊載技術通知）",
+  "frequency": "每半年",
+  "review_months": [
+   6,
+   12
+  ],
+  "rule": "FTSE TWSE Taiwan Dividend+ Index Ground Rules v4.2 (Aug 2026) 4.1.1/4.1.2: \"The FTSE TWSE Taiwan Dividend+ Index will be reviewed semi-annually in June and December using data as at the close of business on the Monday four weeks prior to the review effective date. Changes arising from each semi-annual review will be made effective after the close of business on the third Friday (i.e. effective Monday) of the review month.\" 另 4.5: \"The index constituent weights are capped quarterly in March, June, September and December\"；4.6.1: 審核與季度 capping 自生效日起分 5 個交易日過渡。元大官網：「定期調整：半年度審核，於6月及12月第三個星期五後的下一交易日起逐日生效。」公開說明書(2026/7/29)原文：「臺灣高股息指數之定期審核訂於每年六月與十二月第一個星期五，與臺灣50指數及臺灣中型100指數之季度審核同時進行，並分別採用生效日四週前的週一收盤資料為審核依據…成分股定期審核之變動，於審核會議當月第三個星期五後的下一個交易日執行，以連續五個交易日為指數定期審核過渡期。」（成分股審核）；另每季權重上限調整",
+  "events": [
+   {
+    "announce": "2026-06-05",
+    "effective": "2026-06-22",
+    "verified": false,
+    "note": "成分股半年度審核。依規則回推：6/5（第一個星期五）公告；第三個星期五 6/19 端午休市，提前於 6/18 收盤後生效，6/22 起適用",
+    "source": "",
+    "weight_only": false,
+    "cutoff": "2026-05-25",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2026-09-04",
+    "effective": "2026-09-21",
+    "verified": true,
+    "note": "僅季度權重上限調整，非成分股審核。臺灣指數公司技術通知 1312：9/4 公告、9/18 收盤後生效，9/21 起適用",
+    "source": "https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+    "weight_only": true
+   },
+   {
+    "announce": "2026-12-04",
+    "effective": "2026-12-21",
+    "verified": false,
+    "note": "成分股半年度審核。依規則推算：與臺灣指數系列同日，12/4(五)收盤後公告；12/18(五)收盤後生效 → 12/21(一)起適用，並自該日起 5 個交易日過渡期。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-dividend-plus-index-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2026-11-23",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-03-05",
+    "effective": "2027-03-22",
+    "verified": false,
+    "note": "僅季度權重上限調整(quarterly capping)，非成分股審核。依規則推算：3/19(五)收盤後生效 → 3/22(一)適用，5 日過渡。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-dividend-plus-index-ground-rules.pdf",
+    "weight_only": true
+   },
+   {
+    "announce": "2027-06-04",
+    "effective": "2027-06-21",
+    "verified": false,
+    "note": "成分股半年度審核。依規則推算：6/4(五)公告；6/18(五)收盤後生效 → 6/21(一)適用，5 日過渡。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-dividend-plus-index-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-05-24",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-09-03",
+    "effective": "2027-09-20",
+    "verified": false,
+    "note": "僅季度權重上限調整，非成分股審核。依規則推算：9/17(五)收盤後生效 → 9/20(一)適用。2026-09 實例：9/4 公告、9/18 收盤後生效、過渡期 9/21-9/29，成分股無異動。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-dividend-plus-index-ground-rules.pdf",
+    "weight_only": true
+   },
+   {
+    "announce": "2027-12-03",
+    "effective": "2027-12-20",
+    "verified": false,
+    "note": "成分股半年度審核。依規則推算：12/3(五)公告；12/17(五)收盤後生效 → 12/20(一)適用，5 日過渡。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-dividend-plus-index-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-11-22",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   }
+  ],
+  "prospectus_url": "https://www.yuantafunds.com/fund/download/1084台灣高股息-公開說明書.pdf",
+  "prospectus_file": "docs/prospectus/0056.pdf",
+  "prospectus_date": "2026-07-29（封面刊印日期：中華民國115年7月29日；公開資訊觀測站申報版本 202606）",
+  "sources": [
+   "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-dividend-plus-index-ground-rules.pdf",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1312/tw",
+   "https://www.yuantaetfs.com/product/detail/0056/Basic_information",
+   "https://www.twse.com.tw/downloads/zh/products/indices/IndexS33.pdf"
+  ]
+ },
+ {
+  "code": "00713",
+  "index": "臺灣指數公司特選高股息低波動指數 (TIP TAIEX+ Customized High Dividend Minimum Variance Index, IX0104)",
+  "provider": "臺灣指數公司 (Taiwan Index Plus)",
+  "frequency": "每半年",
+  "review_months": [
+   6,
+   12
+  ],
+  "rule": "編製規則(英文版 2025/10/17)：\"The constituents are reviewed twice a year, with the 7th trading day of June and December as the review date; the data cut-off date are the last trading day of May and November.\" / \"The results of the constituent periodic review will become effective following a five-trading-day interval after the review date (not included).\" / \"The index is rebalanced over 8 consecutive trading days starting from the review effective date.\" 元大官網：「每年 2 次進行成分股審核，分別以 6 月及 12 月的第 7 個交易日為審核日，審核資料分別截至 5 月及 11 月最後 1 個交易日。」公開說明書(2026/7/29)原文：「每年2次進行成分股審核，分別以6月及12月的第7個營業日為審核日，審核資料分別截至5月及11月最後1個營業日…成分股定期審核結果，於6月及12月的第7個營業日為審核基準日，審核基準日之後，間隔5個營業日後生效；於指數定期審核生效日(含)起設有8個營業日的指數調整過渡期。」臺灣指數公司定審日程表以「公告日期(收盤後)」與「生效日期」並列，生效日為公告日之次一交易日。",
+  "events": [
+   {
+    "announce": "2026-06-16",
+    "effective": "2026-06-17",
+    "verified": true,
+    "note": "臺灣指數公司當月指數定期審核日程表（官方）",
+    "source": "https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+    "weight_only": false,
+    "cutoff": "2026-05-29",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：5 月最後一個交易日"
+   },
+   {
+    "announce": "2026-12-16",
+    "effective": "2026-12-17",
+    "verified": false,
+    "note": "依規則推算：12 月第 7 個交易日為 12/9(三)（12/1-4、7-9），其後間隔 5 個交易日(12/10、11、14、15、16)，生效日 12/17(四)；臺灣指數公司慣例於生效日前一交易日(12/16)收盤後公告。8 日過渡期約至 12/29（12/25 休市）。2026年12月定審日程表尚未公布（通常於前一月初發布）。驗證：2026-06 官方日程為 6/16 公告、6/17 生效，與此規則吻合。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/752/en",
+    "weight_only": false,
+    "cutoff": "2026-11-30",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：11 月最後一個交易日"
+   },
+   {
+    "announce": "2027-06-17",
+    "effective": "2027-06-18",
+    "verified": false,
+    "note": "依規則推算：2027 端午節 6/9(三)休市，6 月第 7 個交易日為 6/10(四)（6/1-4、7、8、10），間隔 5 個交易日(6/11、14、15、16、17)，生效日 6/18(五)，公告日 6/17 收盤後。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/752/en",
+    "weight_only": false,
+    "cutoff": "2027-05-31",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：5 月最後一個交易日"
+   },
+   {
+    "announce": "2027-12-16",
+    "effective": "2027-12-17",
+    "verified": false,
+    "note": "依規則推算：12 月第 7 個交易日為 12/9(四)（12/1-3、6-9），間隔 5 個交易日(12/10、13、14、15、16)，生效日 12/17(五)，公告日 12/16 收盤後。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/752/en",
+    "weight_only": false,
+    "cutoff": "2027-11-30",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：11 月最後一個交易日"
+   }
+  ],
+  "prospectus_url": "https://www.yuantafunds.com/fund/download/1164台灣高息低波ETF-公開說明書.pdf",
+  "prospectus_file": "docs/prospectus/00713.pdf",
+  "prospectus_date": "2026-07-29（封面刊印日期：中華民國115年7月29日；公開資訊觀測站申報版本 202606）",
+  "sources": [
+   "https://taiwanindex.com.tw/indexes/IX0104",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/219/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/752/en",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1237/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1267/tw",
+   "https://www.yuantaetfs.com/product/detail/00713/Basic_information",
+   "https://taiwanindex.com.tw/downloads/technical_notice"
+  ]
+ },
+ {
+  "code": "00940",
+  "index": "臺灣指數公司特選臺灣價值高息指數 (TIP Taiwan Value High Dividend Index, IX0208)",
+  "provider": "臺灣指數公司 (Taiwan Index Plus)",
+  "frequency": "每半年",
+  "review_months": [
+   5,
+   11
+  ],
+  "rule": "編製規則(英文版 V1.3.0, 2026/04/20；中文版 2026/04/14)：\"The constituents are reviewed twice a year, with the 7th trading day of May and November as the review dates; the data cut-off date is the last trading day of April and October.\" / \"The results of the constituent periodic review will become effective following a five-trading-day interval after the review date (not included).\" / \"The index is rebalanced over 5 consecutive trading days starting from the review effective date.\" 公開說明書(2026/7/29)原文：「每年2次進行成分股定期審核，以5、11月的第7個交易日為審核基準日，審核資料截至前一個月最後一個交易日…成分股定期審核結果，於審核基準日之後，間隔5個交易日後生效；於指數定期審核生效日(含)起設有5個交易日的指數調整過渡期。」臺灣指數公司定審日程表以「公告日期(收盤後)」與「生效日期」並列，生效日為公告日之次一交易日。",
+  "events": [
+   {
+    "announce": "2026-05-19",
+    "effective": "2026-05-20",
+    "verified": true,
+    "note": "臺灣指數公司當月指數定期審核日程表（官方）",
+    "source": "https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+    "weight_only": false,
+    "cutoff": "2026-04-30",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：4 月最後一個交易日"
+   },
+   {
+    "announce": "2026-11-17",
+    "effective": "2026-11-18",
+    "verified": true,
+    "note": "臺灣指數公司「2026年11月指數定期審核日程表」(2026/09/30 發布, 更新日期 2026/10/01)：臺灣指數公司特選臺灣價值高息指數 公告日期(收盤後) 2026/11/17、生效日期 2026/11/18。日程表註1：遇颱風等休市則順延一交易日生效。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1325/tw",
+    "weight_only": false,
+    "cutoff": "2026-10-30",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：10 月最後一個交易日"
+   },
+   {
+    "announce": "2027-05-18",
+    "effective": "2027-05-19",
+    "verified": false,
+    "note": "依規則推算：2027/5/1(六)勞動節補假在 4/30(五)，5 月第 7 個交易日為 5/11(二)（5/3-7、10、11），間隔 5 個交易日(5/12、13、14、17、18)，生效日 5/19(三)，公告日 5/18 收盤後。驗證：2026-05 官方日程為 5/19 公告、5/20 生效，與此規則吻合。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/834/en",
+    "weight_only": false,
+    "cutoff": "2027-04-29",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：4 月最後一個交易日"
+   },
+   {
+    "announce": "2027-11-16",
+    "effective": "2027-11-17",
+    "verified": false,
+    "note": "依規則推算：11 月第 7 個交易日為 11/9(二)（11/1-5、8、9），間隔 5 個交易日(11/10、11、12、15、16)，生效日 11/17(三)，公告日 11/16 收盤後。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/834/en",
+    "weight_only": false,
+    "cutoff": "2027-10-29",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：10 月最後一個交易日"
+   }
+  ],
+  "prospectus_url": "https://www.yuantafunds.com/fund/download/1245元大臺灣價值高息ETF基金-公開說明書.pdf",
+  "prospectus_file": "docs/prospectus/00940.pdf",
+  "prospectus_date": "2026-07-29（封面刊印日期：中華民國115年7月29日；公開資訊觀測站申報版本 202606）",
+  "sources": [
+   "https://taiwanindex.com.tw/indexes/IX0208",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/754/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/834/en",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1325/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1210/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1252/tw",
+   "https://www.yuantaetfs.com/product/detail/00940/Basic_information"
+  ]
+ },
+ {
+  "code": "00919",
+  "index": "臺灣指數公司特選臺灣上市上櫃精選高息指數（簡稱「臺灣精選高息指數」，TIP代碼 IX0170）",
+  "provider": "臺灣指數股份有限公司（臺灣指數公司, TIP）",
+  "frequency": "每半年",
+  "review_months": [
+   5,
+   12
+  ],
+  "rule": "指數編製規則 V1.2.0 伍、一：「每年2次進行成分股定期審核，以5月第17個交易日、12月的第7個交易日為審核基準日，審核資料截至5月的第10個交易日、11月最後一個交易日。…定期審核結果，於審核基準日之後，間隔5個交易日後生效。於指數定期審核生效日(含)起設有8個交易日的指數調整過渡期，將定期審核異動之權重分配在8個交易日內調整。」臺灣指數公司定審日程表的「公告日期(收盤後)」即生效日的前一交易日（審核基準日後第5個交易日收盤後公告，次一交易日生效）。（成分股定期審核每年2次：5月、12月；另有權重定期審核每年2次：2月底、8月底資料截止，3月、9月處理）",
+  "events": [
+   {
+    "announce": "2026-06-02",
+    "effective": "2026-06-03",
+    "verified": true,
+    "note": "臺灣指數公司當月指數定期審核日程表（官方）",
+    "source": "https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+    "weight_only": false,
+    "cutoff": "2026-05-15",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：5 月第 10 個交易日"
+   },
+   {
+    "announce": "2026-12-16",
+    "effective": "2026-12-17",
+    "verified": false,
+    "note": "推算：2026年12月第7個交易日=12/9(三)為審核基準日；其後第5個交易日=12/16(三)收盤後公告，次一交易日12/17(四)生效（12月無其他休市日，12/25行憲紀念日在生效日之後，不影響）。臺灣指數公司2026年12月定審日程表尚未公布（預計11月初公布於 https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3 ）。對照已公布的 2025/12：公告 2025/12/16、生效 2025/12/17，與同一推算法一致。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/786/tw",
+    "weight_only": false,
+    "cutoff": "2026-11-30",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：11 月最後一個交易日"
+   },
+   {
+    "announce": "2027-06-01",
+    "effective": "2027-06-02",
+    "verified": false,
+    "note": "推算：2027年5月第17個交易日=5/25(二)為審核基準日（5/1勞動節為週六，4/30(五)補假不影響5月計數；5月無其他休市日）；其後第5個交易日=6/1(二)收盤後公告，6/2(三)生效。2027年證交所開休市日期表尚未公布，假日依行政院人事行政總處2027年辦公日曆表推估。對照已公布的 2026/5月定審：公告 2026/06/02、生效 2026/06/03，與同一推算法一致。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/786/tw",
+    "weight_only": false,
+    "cutoff": "2027-05-14",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：5 月第 10 個交易日"
+   },
+   {
+    "announce": "2027-12-16",
+    "effective": "2027-12-17",
+    "verified": false,
+    "note": "推算：2027年12月第7個交易日=12/9(四)為審核基準日；其後第5個交易日=12/16(四)收盤後公告，12/17(五)生效（12/24補假、12/25、12/31補假皆在生效日之後，不影響）。2027年證交所休市日尚未正式公布。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/786/tw",
+    "weight_only": false,
+    "cutoff": "2027-11-30",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：11 月最後一個交易日"
+   }
+  ],
+  "prospectus_url": "https://www.capitalfund.com.tw/ECStorge/fund/P195.pdf",
+  "prospectus_file": "docs/prospectus/00919.pdf",
+  "prospectus_date": "完整版公開說明書PDF（14.7MB）無法以現有工具抽出文字，版本日期未確認；同頁簡式公開說明書（https://www.capitalfund.com.tw/ECStorge/fund/SP195.pdf）刊印日期為民國115年7月31日（2026-07-31），資料日期 2026-06-30",
+  "sources": [
+   "https://www.capitalfund.com.tw/etf/product/detail/195",
+   "https://www.capitalfund.com.tw/ECStorge/fund/SP195.pdf",
+   "https://www.taiwanindex.com.tw/indexes/IX0170",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/786/tw",
+   "https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1138/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1210/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1311/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1325/tw",
+   "https://www.twse.com.tw/zh/ETFortune/etfInfo/00919"
+  ]
+ },
+ {
+  "code": "00927",
+  "index": "臺灣指數公司特選臺灣上市上櫃半導體收益指數（簡稱「臺灣半導體收益指數」，TIP代碼 IX0181）",
+  "provider": "臺灣指數股份有限公司（臺灣指數公司, TIP）",
+  "frequency": "每半年",
+  "review_months": [
+   5,
+   12
+  ],
+  "rule": "指數編製規則 V1.0.0 伍、一：「每年2次進行成分股定期審核，以5月的第17個交易日、12月的第7個交易日為審核基準日，審核資料截至5月的第10個交易日、11月最後一個交易日。…成分股定期審核結果，於審核基準日之後，間隔5個交易日後生效。」（無8日過渡期，一次換股）臺灣指數公司定審日程表的「公告日期(收盤後)」即生效日的前一交易日。（成分股定期審核每年2次：5月、12月；此指數無另設權重定期審核）",
+  "events": [
+   {
+    "announce": "2026-06-02",
+    "effective": "2026-06-03",
+    "verified": true,
+    "note": "臺灣指數公司當月指數定期審核日程表（官方）",
+    "source": "https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+    "weight_only": false,
+    "cutoff": "2026-05-15",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：5 月第 10 個交易日"
+   },
+   {
+    "announce": "2026-12-16",
+    "effective": "2026-12-17",
+    "verified": false,
+    "note": "推算：2026年12月第7個交易日=12/9(三)為審核基準日；其後第5個交易日=12/16(三)收盤後公告，12/17(四)生效。臺灣指數公司2026年12月定審日程表尚未公布。對照已公布的 2025/12：公告 2025/12/16、生效 2025/12/17（與00919同日），推算法一致。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/646/tw",
+    "weight_only": false,
+    "cutoff": "2026-11-30",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：11 月最後一個交易日"
+   },
+   {
+    "announce": "2027-06-01",
+    "effective": "2027-06-02",
+    "verified": false,
+    "note": "推算：2027年5月第17個交易日=5/25(二)為審核基準日；其後第5個交易日=6/1(二)收盤後公告，6/2(三)生效。2027年證交所休市日尚未正式公布（依人事行政總處2027年辦公日曆表推估）。對照已公布的 2026/5月定審：公告 2026/06/02、生效 2026/06/03，推算法一致。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/646/tw",
+    "weight_only": false,
+    "cutoff": "2027-05-14",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：5 月第 10 個交易日"
+   },
+   {
+    "announce": "2027-12-16",
+    "effective": "2027-12-17",
+    "verified": false,
+    "note": "推算：2027年12月第7個交易日=12/9(四)為審核基準日；其後第5個交易日=12/16(四)收盤後公告，12/17(五)生效。2027年證交所休市日尚未正式公布。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/646/tw",
+    "weight_only": false,
+    "cutoff": "2027-11-30",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：11 月最後一個交易日"
+   }
+  ],
+  "prospectus_url": "https://www.capitalfund.com.tw/ECStorge/fund/P366.pdf",
+  "prospectus_file": "docs/prospectus/00927.pdf",
+  "prospectus_date": "完整版公開說明書PDF（14.1MB）無法以現有工具抽出文字，版本日期未確認；同頁簡式公開說明書（https://www.capitalfund.com.tw/ECStorge/fund/SP366.pdf）刊印日期為民國115年7月31日（2026-07-31），資料日期 2026-06-30",
+  "sources": [
+   "https://www.capitalfund.com.tw/etf/product/detail/366",
+   "https://www.capitalfund.com.tw/ECStorge/fund/SP366.pdf",
+   "https://www.taiwanindex.com.tw/indexes/IX0181",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/646/tw",
+   "https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1138/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1210/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1311/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1325/tw",
+   "https://www.twse.com.tw/zh/ETFortune/etfInfo/00927"
+  ]
+ },
+ {
+  "code": "00878",
+  "index": "MSCI臺灣ESG永續高股息精選30指數 (MSCI Taiwan Select ESG Sustainability High Yield Top 30 Index)",
+  "provider": "MSCI",
+  "frequency": "每半年",
+  "review_months": [
+   5,
+   11
+  ],
+  "rule": "MSCI 編製規則(Nov 2022 版 §4.1)：\"The Reference Index is rebalanced on a semi-annual basis ... usually as of the close of the last business day of May and November, coinciding with the May and November Semi-Annual Index Review of the MSCI Global Investable Market Indexes. The MSCI Taiwan Select ESG Sustainability High Yield Top 30 Index is generally rebalanced over five days T-4, T-3, T-2, T-1 and T, where T is the effective date\"；\"The pro forma index is in general announced nine business days before the effective date.\"  公開說明書(115.09.01 版, p.30)：「MSCI於每年的5月、11月調整生效日（含當日）前10個交易日發布予指數被授權者，並以生效日（含）前連續5個交易日為過渡期，同時於當月底（次一營業日開盤前）完成生效。」",
+  "events": [
+   {
+    "announce": null,
+    "effective": "2026-06-01",
+    "verified": true,
+    "note": "2026 年 5 月半年度審核於 5/29 收盤後生效（新聞報導 6/1 生效）；公告日未查證",
+    "source": "https://udn.com/news/story/7239/9523267",
+    "weight_only": false
+   },
+   {
+    "announce": "2026-11-11",
+    "effective": "2026-12-01",
+    "verified": true,
+    "note": "MSCI 2026-08-12 公布之 November 2026 Index Review 官方日期：Announcement 11-11-2026 / Effective 12-01-2026（11/30 收盤後實施，12/1 起適用）。本指數依規則於 T-4~T 共 5 個交易日分批調整權重。MSCI 公告於公告日歐美時間晚間發布（台北時間約次日清晨）。2026-12-01 為 TWSE 正常交易日。",
+    "source": "https://www.msci.com/eqb/pressreleases/archive/ir_dates.csv",
+    "weight_only": false
+   },
+   {
+    "announce": "2027-05-10",
+    "effective": "2027-05-28",
+    "verified": true,
+    "note": "MSCI 官方日期：May 2027 Index Review Announcement 05-10-2027 / Effective 05-28-2027（5/27 收盤後實施；因 5/31 為美國 Memorial Day，MSCI 提前至 5 月最後一個營業日前實施）。本指數於 T-4~T 共 5 個交易日分批調整。2027-05-28 為 TWSE 正常交易日。",
+    "source": "https://www.msci.com/eqb/pressreleases/archive/ir_dates.csv",
+    "weight_only": false
+   },
+   {
+    "announce": "2027-11-11",
+    "effective": "2027-12-01",
+    "verified": true,
+    "note": "MSCI 官方日期：November 2027 Index Review Announcement 11-11-2027 / Effective 12-01-2027（11/30 收盤後實施）。本指數於 T-4~T 共 5 個交易日分批調整。2027-12-01 為 TWSE 正常交易日。",
+    "source": "https://www.msci.com/eqb/pressreleases/archive/ir_dates.csv",
+    "weight_only": false
+   }
+  ],
+  "prospectus_url": "https://cwapi.cathaysite.com.tw/uploads/11datademand/02__online/88090913_1.pdf",
+  "prospectus_file": "docs/prospectus/00878.pdf",
+  "prospectus_date": "中華民國115年9月1日 (2026-09-01) 刊印（國泰台灣高股息傘型基金公開說明書，00878 為其子基金；伺服器 Last-Modified 2026-09-01）",
+  "sources": [
+   "https://www.msci.com/eqb/pressreleases/archive/ir_dates.csv",
+   "https://www.msci.com/eqb/pressreleases/archive/ir_dates.pdf",
+   "https://www.msci.com/eqb/methodology/meth_docs/MSCI_Taiwan_Select_ESG_Sustainability_High_Yield_Top_30_Index_Nov2022.pdf",
+   "https://www.msci.com/indexes/index/731943/msci-taiwan-select-esg-sustainability-high-yield-top-30-index",
+   "https://cwapi.cathaysite.com.tw/api/Fund/GetFundDataDownload?fundCode=CN",
+   "https://www.cathaysite.com.tw/ETF/products/00878"
+  ]
+ },
+ {
+  "code": "00881",
+  "index": "臺灣指數公司特選臺灣上市上櫃FactSet科技龍頭通訊指數 (TIP FactSet Taiwan Technology Leader & Communications Index, 指數代碼 IX0139)",
+  "provider": "臺灣指數公司 (Taiwan Index Plus Corp.)",
+  "frequency": "每半年",
+  "review_months": [
+   4,
+   10
+  ],
+  "rule": "指數編製規則「伍、一、成分股定期審核調整」：「1.每年2次進行成分股定期審核，以4月及10月的第7個交易日為審核基準日，審核資料截至3月及9月最後1個交易日。每次定期審核後選取固定的成分股檔數30檔。2.成分股定期審核結果，於審核基準日之後，間隔5個交易日後生效。」臺灣指數公司定審日程表以生效日前一交易日為「公告日期(收盤後)」。公開說明書(115.07.29 版, p.17)同文：「A)每年2次進行成分股審核，以4月及10月的第7個交易日為審核基準日，審核資料截至3月及9月最後1個交易日。…B)成分股定期審核結果，於審核基準日之後，間隔5個交易日後生效。」",
+  "events": [
+   {
+    "announce": "2026-04-20",
+    "effective": "2026-04-21",
+    "verified": true,
+    "note": "實際生效日 4/21；公告日依臺灣指數公司慣例為生效日前一交易日收盤後",
+    "source": "",
+    "weight_only": false,
+    "cutoff": "2026-03-31",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：3 月最後一個交易日"
+   },
+   {
+    "announce": "2026-10-19",
+    "effective": "2026-10-20",
+    "verified": true,
+    "note": "臺灣指數公司「2026年10月指數定期審核日程表」(更新日期 2026/09/01)：公告日期(收盤後) 2026/10/19、生效日期 2026/10/20。審核基準日=10 月第 7 個交易日 2026-10-12（10/9 國慶補假休市）。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1311/tw",
+    "weight_only": false,
+    "cutoff": "2026-09-30",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：9 月最後一個交易日"
+   },
+   {
+    "announce": "2027-04-20",
+    "effective": "2027-04-21",
+    "verified": false,
+    "note": "推算：依 116 年政府行政機關辦公日曆表（兒童節及清明節 4/3–4/6 連假），2027 年 4 月交易日為 4/1、4/2、4/7、4/8、4/9、4/12、4/13，第 7 個交易日（審核基準日）=2027-04-13；間隔 5 個交易日（4/14、15、16、19、20）後生效=2027-04-21，公告日=生效日前一交易日 2027-04-20 收盤後。TWSE 2027 開休市表尚未公布，臺灣指數公司日程表通常於前一月月初公布。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/303/tw",
+    "weight_only": false,
+    "cutoff": "2027-03-31",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：3 月最後一個交易日"
+   },
+   {
+    "announce": "2027-10-19",
+    "effective": "2027-10-20",
+    "verified": false,
+    "note": "推算：依 116 年辦公日曆表（國慶日 10/9–10/11 連假，10/11 補假），2027 年 10 月交易日為 10/1、10/4、10/5、10/6、10/7、10/8、10/12，審核基準日=2027-10-12；間隔 5 個交易日（10/13、14、15、18、19）後生效=2027-10-20，公告日 2027-10-19 收盤後。TWSE 2027 開休市表尚未公布。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/303/tw",
+    "weight_only": false,
+    "cutoff": "2027-09-30",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：9 月最後一個交易日"
+   }
+  ],
+  "prospectus_url": "https://cwapi.cathaysite.com.tw/uploads/11datademand/02__online/88114133_1.pdf",
+  "prospectus_file": "docs/prospectus/00881.pdf",
+  "prospectus_date": "中華民國115年7月29日 (2026-07-29) 刊印（伺服器 Last-Modified 2026-07-29；PDF 為 AES-256 加密、空使用者密碼，文字以自製解密器擷取）",
+  "sources": [
+   "https://taiwanindex.com.tw/indexes/IX0139",
+   "https://backend.taiwanindex.com.tw/api/indexes/IX0139",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/303/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1311/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1325/tw",
+   "https://taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+   "https://www.ettoday.net/news/20260521/3169805.htm",
+   "https://cwapi.cathaysite.com.tw/api/Fund/GetFundDataDownload?fundCode=CR"
+  ]
+ },
+ {
+  "code": "00922",
+  "index": "MSCI臺灣領袖50精選指數 (MSCI Taiwan Leaders 50 Select Index)",
+  "provider": "MSCI",
+  "frequency": "每半年",
+  "review_months": [
+   5,
+   11
+  ],
+  "rule": "MSCI 編製規則(May 2022 版 §4.1)：\"The Index is rebalanced on a semi-annual basis, as of the close of the last business day of May and November, coinciding with the May and November Semi-Annual Index Review of the MSCI Global Investable Market Indexes. The pro forma Indexes are in general announced nine business days before the effective date.\"（本指數規則未採分批(staggered)實施）。公開說明書(115.07.29 版)：「本指數採用半年度調整，於每年5月及11月重新針對合格樣本，進行市值、獲利性、低碳轉型風險等面向進行篩選，若現有指數成分證券有不符上述標準者，將會被剔除，並於每年的5月、11月底之前9個交易日公告新增或剔除之成份證券，並於當月底生效。此外MSCI台灣指數(即本指數之母體指數)調整刪除成分股時，本指數亦將隨之調整。」",
+  "events": [
+   {
+    "announce": null,
+    "effective": "2026-06-01",
+    "verified": false,
+    "note": "2026 年 5 月半年度審核於 5/29 收盤後生效（新聞報導 6/1 生效）；公告日未查證；與 00878 同為 MSCI 5 月半年度審核",
+    "source": "",
+    "weight_only": false
+   },
+   {
+    "announce": "2026-11-11",
+    "effective": "2026-12-01",
+    "verified": true,
+    "note": "MSCI 官方日期：November 2026 Index Review Announcement 11-11-2026 / Effective 12-01-2026（11/30 收盤後實施，12/1 起適用）。MSCI 公告於公告日歐美時間晚間發布（台北時間約次日清晨）。2026-12-01 為 TWSE 正常交易日。",
+    "source": "https://www.msci.com/eqb/pressreleases/archive/ir_dates.csv",
+    "weight_only": false
+   },
+   {
+    "announce": "2027-05-10",
+    "effective": "2027-05-28",
+    "verified": true,
+    "note": "MSCI 官方日期：May 2027 Index Review Announcement 05-10-2027 / Effective 05-28-2027（5/27 收盤後實施；因 5/31 美國 Memorial Day 提前）。2027-05-28 為 TWSE 正常交易日。",
+    "source": "https://www.msci.com/eqb/pressreleases/archive/ir_dates.csv",
+    "weight_only": false
+   },
+   {
+    "announce": "2027-11-11",
+    "effective": "2027-12-01",
+    "verified": true,
+    "note": "MSCI 官方日期：November 2027 Index Review Announcement 11-11-2027 / Effective 12-01-2027（11/30 收盤後實施）。2027-12-01 為 TWSE 正常交易日。",
+    "source": "https://www.msci.com/eqb/pressreleases/archive/ir_dates.csv",
+    "weight_only": false
+   }
+  ],
+  "prospectus_url": "https://cwapi.cathaysite.com.tw/uploads/11datademand/02__online/88385923_1.pdf",
+  "prospectus_file": "docs/prospectus/00922.pdf",
+  "prospectus_date": "中華民國115年7月29日 (2026-07-29) 刊印（伺服器 Last-Modified 2026-07-29；PDF 為 AES-256 加密、空使用者密碼，文字以自製解密器擷取）",
+  "sources": [
+   "https://www.msci.com/eqb/pressreleases/archive/ir_dates.csv",
+   "https://www.msci.com/indexes/documents/methodology/3_MSCI_Taiwan_Leaders_50_Select_Index_Methodology_20220601.pdf",
+   "https://www.msci.com/indexes/index/747195/msci-taiwan-leaders-50-select-index",
+   "https://cwapi.cathaysite.com.tw/api/Fund/GetFundDataDownload?fundCode=DO"
+  ]
+ },
+ {
+  "code": "006208",
+  "index": "富時臺灣證券交易所臺灣50指數 (FTSE TWSE Taiwan 50 Index)",
+  "provider": "FTSE Russell (富時羅素) 與臺灣證券交易所合編；技術通知由臺灣指數公司轉載",
+  "frequency": "每季",
+  "review_months": [
+   3,
+   6,
+   9,
+   12
+  ],
+  "rule": "公開說明書：「臺灣50指數於每年之三月、六月、九月與十二月第一個星期五進行季度審核結果公告…審核後有關成分股之變動，則在審核當月第三個星期五收盤生效。」FTSE Ground Rules v5.2 6.1.1: \"The quarterly reviews ... take place in March, June, September and December using data from the close of business on the Monday four weeks prior to the review effective date. Any constituent changes will be implemented after the close of business on the third Friday (i.e. effective Monday) of the review month.\" 6.1.3: \"...published after the close of business on the first Friday of the review month\".",
+  "events": [
+   {
+    "announce": "2026-06-05",
+    "effective": "2026-06-22",
+    "verified": false,
+    "note": "依規則回推：6/5（第一個星期五）公告；第三個星期五 6/19 端午休市，提前於 6/18 收盤後生效，6/22 起適用",
+    "source": "",
+    "weight_only": false,
+    "cutoff": "2026-05-25",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2026-09-04",
+    "effective": "2026-09-21",
+    "verified": true,
+    "note": "臺灣指數公司技術通知 1312：9/4 公告、9/18 收盤後生效，9/21 起適用",
+    "source": "https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+    "weight_only": false,
+    "cutoff": "2026-08-24",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2026-12-04",
+    "effective": "2026-12-21",
+    "verified": false,
+    "note": "推算：依 FTSE TWSE Taiwan Index Series Ground Rules v5.2 (Aug 2026) 6.1.1/6.1.3，審核結果於審核月第一個星期五 (2026-12-04) 收盤後公告；成分股變動於第三個星期五 (2026-12-18) 收盤後生效，故新成分股自次一交易日 2026-12-21 (星期一) 起適用。資料截止日為生效日前四週的星期一 (2026-11-23)。官方時程 (臺灣指數公司技術通知／FTSE Technical Releases) 尚未公布此次日期；2026/09 實際案例：9/4 公告、9/18 收盤後生效、9/21 起適用，與規則一致。若遇颱風等休市將順延。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2026-11-23",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-03-05",
+    "effective": "2027-03-22",
+    "verified": false,
+    "note": "推算：依 FTSE TWSE Taiwan Index Series Ground Rules v5.2 (Aug 2026) 6.1.1/6.1.3，審核結果於審核月第一個星期五 (2027-03-05) 收盤後公告；成分股變動於第三個星期五 (2027-03-19) 收盤後生效，故新成分股自次一交易日 2027-03-22 (星期一) 起適用。資料截止日為生效日前四週的星期一 (2027-02-22)。官方時程 (臺灣指數公司技術通知／FTSE Technical Releases) 尚未公布此次日期；2026/09 實際案例：9/4 公告、9/18 收盤後生效、9/21 起適用，與規則一致。若遇颱風等休市將順延。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-02-22",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-06-04",
+    "effective": "2027-06-21",
+    "verified": false,
+    "note": "推算：依 FTSE TWSE Taiwan Index Series Ground Rules v5.2 (Aug 2026) 6.1.1/6.1.3，審核結果於審核月第一個星期五 (2027-06-04) 收盤後公告；成分股變動於第三個星期五 (2027-06-18) 收盤後生效，故新成分股自次一交易日 2027-06-21 (星期一) 起適用。資料截止日為生效日前四週的星期一 (2027-05-24)。官方時程 (臺灣指數公司技術通知／FTSE Technical Releases) 尚未公布此次日期；2026/09 實際案例：9/4 公告、9/18 收盤後生效、9/21 起適用，與規則一致。若遇颱風等休市將順延。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-05-24",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-09-03",
+    "effective": "2027-09-20",
+    "verified": false,
+    "note": "推算：依 FTSE TWSE Taiwan Index Series Ground Rules v5.2 (Aug 2026) 6.1.1/6.1.3，審核結果於審核月第一個星期五 (2027-09-03) 收盤後公告；成分股變動於第三個星期五 (2027-09-17) 收盤後生效，故新成分股自次一交易日 2027-09-20 (星期一) 起適用。資料截止日為生效日前四週的星期一 (2027-08-23)。官方時程 (臺灣指數公司技術通知／FTSE Technical Releases) 尚未公布此次日期；2026/09 實際案例：9/4 公告、9/18 收盤後生效、9/21 起適用，與規則一致。若遇颱風等休市將順延。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-08-23",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-12-03",
+    "effective": "2027-12-20",
+    "verified": false,
+    "note": "推算：依 FTSE TWSE Taiwan Index Series Ground Rules v5.2 (Aug 2026) 6.1.1/6.1.3，審核結果於審核月第一個星期五 (2027-12-03) 收盤後公告；成分股變動於第三個星期五 (2027-12-17) 收盤後生效，故新成分股自次一交易日 2027-12-20 (星期一) 起適用。資料截止日為生效日前四週的星期一 (2027-11-22)。官方時程 (臺灣指數公司技術通知／FTSE Technical Releases) 尚未公布此次日期；2026/09 實際案例：9/4 公告、9/18 收盤後生效、9/21 起適用，與規則一致。若遇颱風等休市將順延。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-11-22",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   }
+  ],
+  "prospectus_url": "https://etrade.fsit.com.tw/homelink/Prospectus/40.pdf",
+  "prospectus_file": "docs/prospectus/006208.pdf",
+  "prospectus_date": "中華民國115年9月1日 (2026-09-01) 刊印",
+  "sources": [
+   "https://www.fubon.com/asset-management/fund/download/fund_prospectus",
+   "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+   "https://www.twse.com.tw/downloads/zh/products/indices/IndexS32.pdf",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1312/tw",
+   "https://www.taiwanindex.com.tw/downloads/technical_notice",
+   "https://research.ftserussell.com/Products/index-notices/home/getnotices/?id=TWSE-TAIWAN"
+  ]
+ },
+ {
+  "code": "0052",
+  "index": "臺灣證券交易所臺灣資訊科技指數 (FTSE TWSE Taiwan Technology Index)",
+  "provider": "臺灣證券交易所與富時國際有限公司 (FTSE Russell) 合作編製 (FTSE TWSE Taiwan Index Series 之一)；技術通知由臺灣指數公司轉載",
+  "frequency": "每季",
+  "review_months": [
+   3,
+   6,
+   9,
+   12
+  ],
+  "rule": "公開說明書：「成分股於3月、6月、9月及12月辦理季審核，使用審核生效日四週前的週一收盤資料。任何成分股的變動會在舉行當月第3個星期五收盤生效。」資訊科技指數成分股 = 臺灣50 + 臺灣中型100 中 ICB 科技類股，臺灣50／中型100 定審變動自動套用 (Ground Rules 5.5.1, 6.3.5)；公告時點依 Ground Rules 6.1.3 為審核月第一個星期五收盤後。",
+  "events": [
+   {
+    "announce": "2026-06-05",
+    "effective": "2026-06-22",
+    "verified": false,
+    "note": "依規則回推：6/5（第一個星期五）公告；第三個星期五 6/19 端午休市，提前於 6/18 收盤後生效，6/22 起適用",
+    "source": "",
+    "weight_only": false,
+    "cutoff": "2026-05-25",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2026-09-04",
+    "effective": "2026-09-21",
+    "verified": true,
+    "note": "臺灣指數公司技術通知 1312：9/4 公告、9/18 收盤後生效，9/21 起適用",
+    "source": "https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+    "weight_only": false,
+    "cutoff": "2026-08-24",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2026-12-04",
+    "effective": "2026-12-21",
+    "verified": false,
+    "note": "推算：依 FTSE TWSE Taiwan Index Series Ground Rules v5.2 (Aug 2026) 6.1.1/6.1.3，審核結果於審核月第一個星期五 (2026-12-04) 收盤後公告；成分股變動於第三個星期五 (2026-12-18) 收盤後生效，故新成分股自次一交易日 2026-12-21 (星期一) 起適用。資料截止日為生效日前四週的星期一 (2026-11-23)。官方時程 (臺灣指數公司技術通知／FTSE Technical Releases) 尚未公布此次日期；2026/09 實際案例：9/4 公告、9/18 收盤後生效、9/21 起適用，與規則一致。若遇颱風等休市將順延。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2026-11-23",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-03-05",
+    "effective": "2027-03-22",
+    "verified": false,
+    "note": "推算：依 FTSE TWSE Taiwan Index Series Ground Rules v5.2 (Aug 2026) 6.1.1/6.1.3，審核結果於審核月第一個星期五 (2027-03-05) 收盤後公告；成分股變動於第三個星期五 (2027-03-19) 收盤後生效，故新成分股自次一交易日 2027-03-22 (星期一) 起適用。資料截止日為生效日前四週的星期一 (2027-02-22)。官方時程 (臺灣指數公司技術通知／FTSE Technical Releases) 尚未公布此次日期；2026/09 實際案例：9/4 公告、9/18 收盤後生效、9/21 起適用，與規則一致。若遇颱風等休市將順延。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-02-22",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-06-04",
+    "effective": "2027-06-21",
+    "verified": false,
+    "note": "推算：依 FTSE TWSE Taiwan Index Series Ground Rules v5.2 (Aug 2026) 6.1.1/6.1.3，審核結果於審核月第一個星期五 (2027-06-04) 收盤後公告；成分股變動於第三個星期五 (2027-06-18) 收盤後生效，故新成分股自次一交易日 2027-06-21 (星期一) 起適用。資料截止日為生效日前四週的星期一 (2027-05-24)。官方時程 (臺灣指數公司技術通知／FTSE Technical Releases) 尚未公布此次日期；2026/09 實際案例：9/4 公告、9/18 收盤後生效、9/21 起適用，與規則一致。若遇颱風等休市將順延。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-05-24",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-09-03",
+    "effective": "2027-09-20",
+    "verified": false,
+    "note": "推算：依 FTSE TWSE Taiwan Index Series Ground Rules v5.2 (Aug 2026) 6.1.1/6.1.3，審核結果於審核月第一個星期五 (2027-09-03) 收盤後公告；成分股變動於第三個星期五 (2027-09-17) 收盤後生效，故新成分股自次一交易日 2027-09-20 (星期一) 起適用。資料截止日為生效日前四週的星期一 (2027-08-23)。官方時程 (臺灣指數公司技術通知／FTSE Technical Releases) 尚未公布此次日期；2026/09 實際案例：9/4 公告、9/18 收盤後生效、9/21 起適用，與規則一致。若遇颱風等休市將順延。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-08-23",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   },
+   {
+    "announce": "2027-12-03",
+    "effective": "2027-12-20",
+    "verified": false,
+    "note": "推算：依 FTSE TWSE Taiwan Index Series Ground Rules v5.2 (Aug 2026) 6.1.1/6.1.3，審核結果於審核月第一個星期五 (2027-12-03) 收盤後公告；成分股變動於第三個星期五 (2027-12-17) 收盤後生效，故新成分股自次一交易日 2027-12-20 (星期一) 起適用。資料截止日為生效日前四週的星期一 (2027-11-22)。官方時程 (臺灣指數公司技術通知／FTSE Technical Releases) 尚未公布此次日期；2026/09 實際案例：9/4 公告、9/18 收盤後生效、9/21 起適用，與規則一致。若遇颱風等休市將順延。",
+    "source": "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+    "weight_only": false,
+    "cutoff": "2027-11-22",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：生效日四週前的星期一"
+   }
+  ],
+  "prospectus_url": "https://etrade.fsit.com.tw/homelink/Prospectus/27.pdf",
+  "prospectus_file": "docs/prospectus/0052.pdf",
+  "prospectus_date": "中華民國115年9月1日 (2026-09-01) 刊印",
+  "sources": [
+   "https://www.fubon.com/asset-management/fund/download/fund_prospectus",
+   "https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-twse-taiwan-index-series-ground-rules.pdf",
+   "https://www.twse.com.tw/downloads/zh/products/indices/IndexS32.pdf",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1312/tw",
+   "https://www.taiwanindex.com.tw/downloads/technical_notice",
+   "https://research.ftserussell.com/Products/index-notices/home/getnotices/?id=TWSE-TAIWAN"
+  ]
+ },
+ {
+  "code": "00692",
+  "index": "臺灣證券交易所公司治理100指數 (TWSE Corporate Governance 100 Index)",
+  "provider": "臺灣證券交易所 (指數維護／技術通知由臺灣指數公司發布)",
+  "frequency": "每年",
+  "review_months": [
+   7
+  ],
+  "rule": "編製規則 五(一)（2023.04 修訂，公開說明書同文）：「自指數發布日之隔年起，每年一次（7月）進行成分股審核，以審核月份的第3個交易日之收盤資料為審核依據…成分股定期審核結果，由臺灣證券交易所於審核月份的第7個交易日發布技術通知。技術通知發布後，經間隔5個交易日，自第6個交易日起生效（亦即於審核月份的第13個交易日起生效）。」實務上臺灣指數公司於生效日前一交易日收盤後 (17:00) 發布對外公告，例：「成分股異動或權重調整將自2026年7月17日(星期五)交易結束後生效(亦即自2026年7月20日(星期一)起生效)」。",
+  "events": [
+   {
+    "announce": "2026-07-17",
+    "effective": "2026-07-20",
+    "verified": true,
+    "note": "臺灣指數公司公告：7/17 公告、7/20 生效",
+    "source": "https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+    "weight_only": false,
+    "cutoff": "2026-07-03",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：7 月第 3 個交易日"
+   },
+   {
+    "announce": "2027-07-16",
+    "effective": "2027-07-19",
+    "verified": false,
+    "note": "推算：依「臺灣證券交易所公司治理100指數」編製規則 五(一)，每年 7 月審核，以 7 月第 3 個交易日 (2027-07-05) 收盤資料為審核依據，自 7 月第 13 個交易日 (2027-07-19, 星期一) 起生效。規則文字為第 7 個交易日 (2027-07-09) 發布技術通知，但近年臺灣指數公司對外公告(新聞稿／指數定期審核結果) 皆在生效日前一交易日 17:00 (收盤後) 發布，故 announce 採 2027-07-16 (第 12 個交易日)；實例：2026/07/17 公告→2026/07/20 生效 (7/10 颱風休市，7/20 為第 13 個交易日)，2025/07/16 公告→2025/07/17 生效，2022/07/18 公告→2022/07/19 生效。2027 年 7 月無國定假日；若遇颱風等休市則順延一交易日。官方 2027 日程尚未公布。",
+    "source": "https://www.taiwanindex.com.tw/news/441",
+    "weight_only": false,
+    "cutoff": "2027-07-05",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：7 月第 3 個交易日"
+   }
+  ],
+  "prospectus_url": "https://etrade.fsit.com.tw/homelink/Prospectus/64.pdf",
+  "prospectus_file": "docs/prospectus/00692.pdf",
+  "prospectus_date": "中華民國115年9月1日 (2026-09-01) 刊印",
+  "sources": [
+   "https://www.fubon.com/asset-management/fund/download/fund_prospectus",
+   "https://www.twse.com.tw/downloads/zh/products/indices/IndexS04.pdf",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/15/tw",
+   "https://taiwanindex.com.tw/indexes/CG100",
+   "https://www.taiwanindex.com.tw/news/441",
+   "https://www.taiwanindex.com.tw/news/442",
+   "https://www.taiwanindex.com.tw/news/216",
+   "https://www.taiwanindex.com.tw/downloads/technical_notice"
+  ]
+ },
+ {
+  "code": "00929",
+  "index": "臺灣指數公司特選臺灣上市上櫃科技優息指數（簡稱「特選臺灣科技優息指數」，TIP代碼 IX0179）",
+  "provider": "臺灣指數股份有限公司（臺灣指數公司, TIP）",
+  "frequency": "每半年",
+  "review_months": [
+   6,
+   12
+  ],
+  "rule": "指數編製規則 V2.2.1 伍、一：「每年2次進行成分股定期審核，6月及12月第7個交易日為審核資料截止日，其後第7個交易日為審核基準日。…定期審核結果，於審核基準日之後，間隔5個交易日後生效；於指數定期審核生效日(含)起設有8個交易日的指數調整過渡期，將定期審核異動之權重分配在8個交易日內調整。」臺灣指數公司定審日程表的「公告日期(收盤後)」即生效日的前一交易日。（成分股定期審核每年2次：6月、12月；另有權重定期審核每年2次：2月底、8月底資料截止，3月、9月處理）",
+  "events": [
+   {
+    "announce": "2026-06-26",
+    "effective": "2026-06-29",
+    "verified": true,
+    "note": "臺灣指數公司當月指數定期審核日程表（官方）",
+    "source": "https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+    "weight_only": false,
+    "cutoff": "2026-06-09",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：6 月第 7 個交易日"
+   },
+   {
+    "announce": "2026-12-28",
+    "effective": "2026-12-29",
+    "verified": false,
+    "note": "推算：2026年12月第7個交易日=12/9(三)為資料截止日；其後第7個交易日=12/18(五)為審核基準日；其後第5個交易日（12/21、22、23、24、28，12/25行憲紀念日休市）=12/28(一)收盤後公告，12/29(二)生效。臺灣指數公司2026年12月定審日程表尚未公布。對照已公布的 2025/12（12/25休市）：公告 2025/12/26、生效 2025/12/29；2026/6：公告 2026/06/26、生效 2026/06/29，皆與同一推算法一致。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/634/tw",
+    "weight_only": false,
+    "cutoff": "2026-12-09",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：12 月第 7 個交易日"
+   },
+   {
+    "announce": "2027-06-28",
+    "effective": "2027-06-29",
+    "verified": false,
+    "note": "推算：2027年6月第7個交易日=6/10(四)為資料截止日（6/9端午節休市）；其後第7個交易日=6/21(一)為審核基準日；其後第5個交易日=6/28(一)收盤後公告，6/29(二)生效。2027年證交所休市日尚未正式公布（端午節依人事行政總處2027年辦公日曆表為6/9）。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/634/tw",
+    "weight_only": false,
+    "cutoff": "2027-06-10",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：6 月第 7 個交易日"
+   },
+   {
+    "announce": "2027-12-28",
+    "effective": "2027-12-29",
+    "verified": false,
+    "note": "推算：2027年12月第7個交易日=12/9(四)為資料截止日；其後第7個交易日=12/20(一)為審核基準日；其後第5個交易日（12/21、22、23、27、28；12/24(五)為行憲紀念日補假休市、12/25為週六）=12/28(二)收盤後公告，12/29(三)生效。若證交所2027年行事曆未將12/24列為休市日，則改為 12/27 公告、12/28 生效。2027年證交所休市日尚未正式公布。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/634/tw",
+    "weight_only": false,
+    "cutoff": "2027-12-09",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：12 月第 7 個交易日"
+   }
+  ],
+  "prospectus_url": "https://www.fhtrust.com.tw/docUpload/Prospectus/ETF21.pdf",
+  "prospectus_file": "docs/prospectus/00929.pdf",
+  "prospectus_date": "完整版公開說明書PDF（17.0MB）無法以現有工具抽出文字，版本日期未確認；同頁簡式公開說明書（https://www.fhtrust.com.tw/docUpload/Prospectus_Brief/ETF21.pdf）刊印日期為民國115年7月24日（2026-07-24），資料日期 2026-06-30",
+  "sources": [
+   "https://www.fhtrust.com.tw/ETF/etf_detail/ETF21",
+   "https://www.fhtrust.com.tw/docUpload/Prospectus_Brief/ETF21.pdf",
+   "https://www.fhtrust.com.tw/docUpload/ETF_indexRebalance/ETF21.pdf",
+   "https://www.fhtrust.com.tw/docUpload/ETF_Rule/ETF21.pdf",
+   "https://www.taiwanindex.com.tw/indexes/IX0179",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/634/tw",
+   "https://www.taiwanindex.com.tw/downloads/technical_notice?category_id=3",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1138/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1237/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1311/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1325/tw",
+   "https://www.twse.com.tw/zh/ETFortune/etfInfo/00929"
+  ]
+ },
+ {
+  "code": "00891",
+  "index": "ICE FactSet 臺灣 ESG 永續關鍵半導體指數 (ICE FactSet Taiwan ESG Leading Semiconductor Index, ICEFSTL)；公開說明書/TWSE 稱「NYSE FactSet臺灣ESG永續關鍵半導體指數」",
+  "provider": "ICE Data Indices, LLC",
+  "frequency": "每季",
+  "review_months": [
+   1,
+   4,
+   7,
+   10
+  ],
+  "rule": "公開說明書：「係依據每年一、四、七與十月的第三個星期五之前的三個指數營業日(參考日)之收盤價及財務資料進行成分股的審核…季度調整為1、4、7、10月調整當月的第三個星期五的營業日結束後宣布…指數訂於每年一、四、七與十月的第三個星期五之後的五個營業日的下一指數營業日開盤調整生效(生效日)」。中信投信產品頁另述為「審核基準日次營業日公布」。",
+  "events": [
+   {
+    "announce": "2026-04-17",
+    "effective": "2026-04-27",
+    "verified": false,
+    "note": "依規則回推：4 月第三個星期五公告，其後 5 個營業日的下一營業日生效",
+    "source": "",
+    "weight_only": false,
+    "cutoff": "2026-04-14",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：第三個星期五之前第 3 個營業日（公開說明書寫法有歧義）"
+   },
+   {
+    "announce": "2026-07-17",
+    "effective": "2026-07-27",
+    "verified": true,
+    "note": "7/17 審核、7/27 生效，與新聞報導一致",
+    "source": "",
+    "weight_only": false,
+    "cutoff": "2026-07-14",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：第三個星期五之前第 3 個營業日（公開說明書寫法有歧義）"
+   },
+   {
+    "announce": "2026-10-16",
+    "effective": "2026-10-27",
+    "verified": false,
+    "note": "推算。2026年10月第3個星期五=10/16（審核基準日，收盤後公布；中信產品頁說法為次營業日10/19公布）。其後5個營業日為10/19–10/23，再下一指數營業日為10/27（10/26為光復節補假休市）。ICE 未公開 2026-2027 時程表（需登入 indices.ice.com），日期依公開說明書規則推算。驗證：2026年7月審核（第3個星期五7/17→7/27生效）與新聞一致。",
+    "source": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=E&co_id=A00026&filename=202608_A00026_E54_10.pdf",
+    "weight_only": false,
+    "cutoff": "2026-10-13",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：第三個星期五之前第 3 個營業日（公開說明書寫法有歧義）"
+   },
+   {
+    "announce": "2027-01-15",
+    "effective": "2027-01-25",
+    "verified": false,
+    "note": "推算。2027年1月第3個星期五=1/15；其後5個營業日1/18–1/22，下一營業日1/25生效。",
+    "source": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=E&co_id=A00026&filename=202608_A00026_E54_10.pdf",
+    "weight_only": false,
+    "cutoff": "2027-01-12",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：第三個星期五之前第 3 個營業日（公開說明書寫法有歧義）"
+   },
+   {
+    "announce": "2027-04-16",
+    "effective": "2027-04-26",
+    "verified": false,
+    "note": "推算。2027年4月第3個星期五=4/16；其後5個營業日4/19–4/23，下一營業日4/26生效。",
+    "source": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=E&co_id=A00026&filename=202608_A00026_E54_10.pdf",
+    "weight_only": false,
+    "cutoff": "2027-04-13",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：第三個星期五之前第 3 個營業日（公開說明書寫法有歧義）"
+   },
+   {
+    "announce": "2027-07-16",
+    "effective": "2027-07-26",
+    "verified": false,
+    "note": "推算。2027年7月第3個星期五=7/16；其後5個營業日7/19–7/23，下一營業日7/26生效。",
+    "source": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=E&co_id=A00026&filename=202608_A00026_E54_10.pdf",
+    "weight_only": false,
+    "cutoff": "2027-07-13",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：第三個星期五之前第 3 個營業日（公開說明書寫法有歧義）"
+   },
+   {
+    "announce": "2027-10-15",
+    "effective": "2027-10-26",
+    "verified": false,
+    "note": "推算。2027年10月第3個星期五=10/15；其後5個營業日10/18–10/22，下一營業日為10/26（10/25光復節休市，依2027年政府行事曆）。",
+    "source": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=E&co_id=A00026&filename=202608_A00026_E54_10.pdf",
+    "weight_only": false,
+    "cutoff": "2027-10-12",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：第三個星期五之前第 3 個營業日（公開說明書寫法有歧義）"
+   }
+  ],
+  "prospectus_url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=E&co_id=A00026&filename=202608_A00026_E54_10.pdf",
+  "prospectus_file": "docs/prospectus/00891.pdf",
+  "prospectus_date": "中華民國115年8月刊印 (2026-08)",
+  "sources": [
+   "https://www.ctbcinvestments.com.tw/Product/ETFDetail/19",
+   "https://www.twse.com.tw/zh/ETFortune/etfInfo/00891",
+   "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=E&co_id=A00026&filename=202608_A00026_E54_10.pdf",
+   "https://www.ice.com/publicdocs/equity_indices/notices/ICEFSTL_Methodology_Updates_20210416.pdf",
+   "https://www.ice.com/market-data/indices/equity-indices/rebalance-schedules",
+   "https://udn.com/news/story/7240/9653427",
+   "https://www.stockfeel.com.tw/00891-中信關鍵半導體-etf/",
+   "https://www.ettoday.net/news/20260521/3169805.htm"
+  ]
+ },
+ {
+  "code": "009816",
+  "index": "臺灣指數公司特選臺灣TOP 50指數 (TIP Customized Taiwan TOP 50 Index)，指數代號 IX0230",
+  "provider": "臺灣指數公司 (Taiwan Index Plus Corp.)",
+  "frequency": "每季",
+  "review_months": [
+   2,
+   5,
+   8,
+   11
+  ],
+  "rule": "編製規則 V1.0.1：「每年4次進行成分股定期審核，以2、5、8、11月的第7個交易日為審核基準日，審核資料截至前一個月最後一個交易日…成分股定期審核結果，於審核基準日之後，間隔5個交易日後生效。」臺灣指數公司日程表之「公告日期(收盤後)」=審核基準日後第5個交易日，「生效日期」=其次一交易日。",
+  "events": [
+   {
+    "announce": "2026-05-19",
+    "effective": "2026-05-20",
+    "verified": false,
+    "note": "依規則回推：5 月第 7 個交易日（5/12）為審核基準日，間隔 5 個交易日後生效；與同月官方日程的 00940 相同",
+    "source": "",
+    "weight_only": false,
+    "cutoff": "2026-04-30",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：4 月最後一個交易日"
+   },
+   {
+    "announce": "2026-08-18",
+    "effective": "2026-08-19",
+    "verified": false,
+    "note": "依規則回推：8 月第 7 個交易日為審核基準日，間隔 5 個交易日後生效",
+    "source": "",
+    "weight_only": false,
+    "cutoff": "2026-07-31",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：7 月最後一個交易日"
+   },
+   {
+    "announce": "2026-11-17",
+    "effective": "2026-11-18",
+    "verified": true,
+    "note": "臺灣指數公司「2026年11月指數定期審核日程表」(2026/09/30 公布)：公告日期(收盤後) 2026/11/17、生效日期 2026/11/18（日程表以「特選臺灣TOP 50報酬指數」列示，價格指數同步審核）。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1325/tw",
+    "weight_only": false,
+    "cutoff": "2026-10-30",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：10 月最後一個交易日"
+   },
+   {
+    "announce": "2027-02-25",
+    "effective": "2027-02-26",
+    "verified": false,
+    "note": "推算。2027年2月交易日：2/1、2/11、2/12、2/15、2/16、2/17、2/18（假設證交所依2025/2026慣例於春節假期前2個營業日2/2–2/3僅辦理結算不交易；政府春節假期2/4–2/10），第7個交易日=2/18為審核基準日；其後第5個交易日2/25收盤後公告，2/26生效。若證交所2027年僅休2/3一天，則提前一個交易日為2/24公告、2/25生效。證交所2027年休市表尚未公布。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/938/tw",
+    "weight_only": false,
+    "cutoff": "2027-01-29",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：1 月最後一個交易日"
+   },
+   {
+    "announce": "2027-05-18",
+    "effective": "2027-05-19",
+    "verified": false,
+    "note": "推算。2027年5月第7個交易日=5/11（5/1勞動節補假在4/30）；其後第5個交易日5/18收盤後公告，5/19生效。與2026年5月官方日程(5/19公告、5/20生效)同一算法。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/938/tw",
+    "weight_only": false,
+    "cutoff": "2027-04-29",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：4 月最後一個交易日"
+   },
+   {
+    "announce": "2027-08-17",
+    "effective": "2027-08-18",
+    "verified": false,
+    "note": "推算。2027年8月第7個交易日=8/10；其後第5個交易日8/17收盤後公告，8/18生效。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/938/tw",
+    "weight_only": false,
+    "cutoff": "2027-07-30",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：7 月最後一個交易日"
+   },
+   {
+    "announce": "2027-11-16",
+    "effective": "2027-11-17",
+    "verified": false,
+    "note": "推算。2027年11月第7個交易日=11/9；其後第5個交易日11/16收盤後公告，11/17生效。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/938/tw",
+    "weight_only": false,
+    "cutoff": "2027-10-29",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：10 月最後一個交易日"
+   }
+  ],
+  "prospectus_url": "https://www.kgifund.com.tw/Upload/Files/ManageFileUploadProspectus/J023.pdf",
+  "prospectus_file": "docs/prospectus/009816.pdf",
+  "prospectus_date": "中華民國115年7月31日刊印 (2026-07-31)",
+  "sources": [
+   "https://www.kgifund.com.tw/Upload/Activity/KGI009816/",
+   "https://www.kgifund.com.tw/Upload/Files/ManageFileUploadProspectus/J023.pdf",
+   "https://taiwanindex.com.tw/indexes/IX0230",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/938/tw",
+   "https://taiwanindex.com.tw/downloads/technical_notice?count=50&page=1&category_id=3",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1325/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1179/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1210/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1286/tw",
+   "https://www.ettoday.net/news/20260521/3169805.htm",
+   "https://money.udn.com/money/story/5607/9105340"
+  ]
+ },
+ {
+  "code": "00918",
+  "index": "臺灣指數公司特選臺灣上市上櫃優選股利高填息30指數（簡稱「特選臺灣優利高填息30指數」），指數代號 IX0172",
+  "provider": "臺灣指數公司 (Taiwan Index Plus Corp.)",
+  "frequency": "每半年",
+  "review_months": [
+   6,
+   12
+  ],
+  "rule": "編製規則 V1.0.0／公開說明書：「每年2次進行成分股定期審核，以6、12月的第17個交易日為審核基準日，審核資料截至6、12月的第10個交易日…成分股定期審核結果，於審核基準日之後，間隔5個交易日後生效。」臺灣指數公司日程表之「公告日期(收盤後)」=審核基準日後第5個交易日，「生效日期」=其次一交易日。",
+  "events": [
+   {
+    "announce": "2026-07-01",
+    "effective": "2026-07-02",
+    "verified": false,
+    "note": "依規則回推：6 月第 17 個交易日為審核基準日，間隔 5 個交易日後生效",
+    "source": "",
+    "weight_only": false,
+    "cutoff": "2026-06-12",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：6 月第 10 個交易日"
+   },
+   {
+    "announce": "2026-12-31",
+    "effective": "2027-01-04",
+    "verified": false,
+    "note": "推算（臺灣指數公司「2026年12月指數定期審核日程表」預計約2026/11/02公布，尚未發布）。2026年12月第17個交易日=12/23（12/25行憲紀念日休市）；其後第5個交易日=12/31（12/24、12/28、12/29、12/30、12/31）收盤後公告，次一交易日2027/01/04生效（1/1元旦、1/2–1/3週末）。同算法與2025年12月官方日程(12/31公告、2026/01/02生效)一致。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/592/tw",
+    "weight_only": false,
+    "cutoff": "2026-12-14",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：12 月第 10 個交易日"
+   },
+   {
+    "announce": "2027-07-01",
+    "effective": "2027-07-02",
+    "verified": false,
+    "note": "推算。2027年6月第17個交易日=6/24（6/9端午節休市）；其後第5個交易日=7/1收盤後公告，7/2生效。與2026年6月官方日程(7/1公告、7/2生效)同一算法。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/592/tw",
+    "weight_only": false,
+    "cutoff": "2027-06-15",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：6 月第 10 個交易日"
+   },
+   {
+    "announce": "2028-01-03",
+    "effective": "2028-01-04",
+    "verified": false,
+    "note": "推算；審核月份為2027年12月，但公告/生效落在2028年1月。2027年12月第17個交易日=12/23；12/24（行憲紀念日補假）與12/31（2028元旦補假，依人事行政總處2027年行事曆）休市，其後第5個交易日=2028/01/03收盤後公告，2028/01/04生效。若證交所12/31照常交易，則為12/31公告、2028/01/03生效。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/592/tw",
+    "weight_only": false,
+    "cutoff": "2027-12-14",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：12 月第 10 個交易日"
+   }
+  ],
+  "prospectus_url": "https://www.uobam.com.tw/UploadFile/Fund.file02/202608/1787294595323_5.大華銀優利高填息ETF_公開說明書_2026Q2(兼任異動).pdf",
+  "prospectus_file": "docs/prospectus/00918.pdf",
+  "prospectus_date": "中華民國115年8月刊印 (2026-08，版本 2026Q2 兼任異動)",
+  "sources": [
+   "https://www.uobam.com.tw/fund/etf/88329556",
+   "https://www.uobam.com.tw/UploadFile/Fund.file02/202608/1787294595323_5.大華銀優利高填息ETF_公開說明書_2026Q2(兼任異動).pdf",
+   "https://taiwanindex.com.tw/indexes/IX0172",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/592/tw",
+   "https://taiwanindex.com.tw/downloads/technical_notice?count=50&page=1&category_id=3",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1138/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1237/tw",
+   "https://www.ettoday.net/news/20260521/3169805.htm"
+  ]
+ },
+ {
+  "code": "00935",
+  "index": "臺灣指數公司特選臺灣上市上櫃FactSet創新科技50指數（簡稱「臺灣創新科技50指數」, TIP FactSet Taiwan Innovative Technology 50 Index），指數代號 IX0194",
+  "provider": "臺灣指數公司 (Taiwan Index Plus Corp.)，與 FactSet 合作編製",
+  "frequency": "每半年",
+  "review_months": [
+   4,
+   10
+  ],
+  "rule": "編製規則（2026/09/15 版）／公開說明書：「每年進行2次成分股定期審核，以4、10月的第7個交易日為審核基準日，審核資料截至前一個月最後一個交易日…成分股定期審核結果，於審核基準日之後，間隔5個交易日後生效。」臺灣指數公司日程表之「公告日期(收盤後)」=審核基準日後第5個交易日，「生效日期」=其次一交易日。",
+  "events": [
+   {
+    "announce": "2026-04-20",
+    "effective": "2026-04-21",
+    "verified": false,
+    "note": "依規則回推：4 月第 7 個交易日（4/13）為審核基準日，間隔 5 個交易日後生效；與同規則的 00881 實際日期相同",
+    "source": "",
+    "weight_only": false,
+    "cutoff": "2026-03-31",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：3 月最後一個交易日"
+   },
+   {
+    "announce": "2026-10-19",
+    "effective": "2026-10-20",
+    "verified": true,
+    "note": "臺灣指數公司「2026年10月指數定期審核日程表」(2026/09/01 公布)：公告日期(收盤後) 2026/10/19、生效日期 2026/10/20。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1311/tw",
+    "weight_only": false,
+    "cutoff": "2026-09-30",
+    "cutoff_est": false,
+    "cutoff_note": "依編製規則計算：9 月最後一個交易日"
+   },
+   {
+    "announce": "2027-04-20",
+    "effective": "2027-04-21",
+    "verified": false,
+    "note": "推算。2027年4月交易日：4/1、4/2、4/7、4/8、4/9、4/12、4/13（4/3–4/6兒童節及清明節連假），第7個交易日=4/13；其後第5個交易日4/20收盤後公告，4/21生效。與2026年4月官方日程(4/20公告、4/21生效)同一算法。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/696/tw",
+    "weight_only": false,
+    "cutoff": "2027-03-31",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：3 月最後一個交易日"
+   },
+   {
+    "announce": "2027-10-19",
+    "effective": "2027-10-20",
+    "verified": false,
+    "note": "推算。2027年10月交易日：10/1、10/4–10/8、10/12（10/11國慶日補假），第7個交易日=10/12；其後第5個交易日10/19收盤後公告，10/20生效。",
+    "source": "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/696/tw",
+    "weight_only": false,
+    "cutoff": "2027-09-30",
+    "cutoff_est": true,
+    "cutoff_note": "依編製規則計算：9 月最後一個交易日"
+   }
+  ],
+  "prospectus_url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=E&co_id=A00032&filename=202606_A00032_E72_4.pdf",
+  "prospectus_file": "docs/prospectus/00935.pdf",
+  "prospectus_date": "中華民國115年07月30日刊印 (2026-07-30)",
+  "sources": [
+   "https://www.twse.com.tw/zh/ETFortune/etfInfo/00935",
+   "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=E&co_id=A00032&filename=202606_A00032_E72_4.pdf",
+   "https://www.nomurafunds.com.tw/ETFWEB/overview",
+   "https://taiwanindex.com.tw/indexes/IX0194",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/IndexFiles/696/tw",
+   "https://taiwanindex.com.tw/downloads/technical_notice?count=50&page=1&category_id=3",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1311/tw",
+   "https://backend.taiwanindex.com.tw/api/downloadFile/TechnicalNotices/1198/tw",
+   "https://www.ettoday.net/news/20260521/3169805.htm"
+  ]
+ }
+]

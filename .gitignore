@@ -1,0 +1,10 @@
+# 公開說明書 PDF 太大（150MB+），不進 git
+docs/prospectus/
+# 舊的網站輸出位置（現在輸出到 docs/index.html 給 GitHub Pages 用）
+site/
+# 執行時的暫存與記錄
+__pycache__/
+*.tmp
+data/last_run.txt
+data/update_log.txt
+data/revenue_state.json
