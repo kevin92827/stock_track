@@ -28,6 +28,9 @@ nav { display: flex; gap: 4px; }
 nav button { border: 0; background: none; color: var(--muted); padding: 6px 12px; border-radius: 6px;
   font: inherit; cursor: pointer; }
 nav button.on { background: var(--accent); color: #fff; }
+nav button.caltab { font-weight: 700; font-size: 15px; color: var(--text); border: 1px solid var(--line); background: var(--bg); }
+nav button.caltab.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+nav .sep { width: 1px; height: 22px; background: var(--line); margin: 0 10px; align-self: center; }
 .built { margin-left: auto; color: var(--muted); font-size: 12px; }
 main { max-width: 1200px; margin: 0 auto; padding: 16px 20px 60px; }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
@@ -130,7 +133,7 @@ const etfOf = (code) => D.etfs.find((e) => e.code === code);
 const TAGS = { new: "新增", out: "剔除", add: "加碼", cut: "減碼" };
 const tag = (s) => (TAGS[s] ? `<span class="tag ${s}">${TAGS[s]}</span>` : "");
 
-const state = { tab: "overview", date: D.dates[D.dates.length - 1], kind: "全部",
+const state = { tab: "calendar", date: D.dates[D.dates.length - 1], kind: "全部",
   etf: D.etfs[0].code, to: null, base: null, onlyChanged: false, q: "", stock: null,
   month: null, calDay: null, calEtf: "全部", calKind: "全部", minAmt: 0, minPct: 1, calOnlyNewOut: false, calSort: null, calDir: 1,
   cbMonth: null, cbDay: null, cbHeld: false,
@@ -384,7 +387,7 @@ function renderStock() {
     <tbody>${hist}</tbody></table></div></div>` : ""}`;
 }
 
-// ------------------------------------------------------------ 異動日曆
+// ------------------------------------------------------------ ETF 日曆
 const evCache = {};
 // 某一天所有 ETF 的加減碼事件。share 是這筆調整占該 ETF 淨資產的百分比，
 // amt 是換算的金額（億元）；兩者都已扣除申購買回造成的等比例變動。
@@ -536,7 +539,7 @@ function renderCalendar() {
   const monthLabel = `${state.calEtf === "全部" ? "全部 ETF" : state.calEtf + " " + esc(etfOf(state.calEtf).name)}${state.calKind === "全部" ? "" : "・" + state.calKind}`;
   const legend = D.rebal.length ? `<span class="tag rb-cutoff">截止</span> 審核資料截止日、<span class="tag rb-announce">公告</span> 指數審核結果公告日、<span class="tag rb-effective">生效</span> 新成分股生效日；帶「?」的是推算日期。` : "";
   const calPanel = `<div class="panel">
-    <h2>${month} 異動日曆 <span class="muted" style="font-weight:400">${monthLabel}</span></h2>
+    <h2>${month} ETF 日曆 <span class="muted" style="font-weight:400">${monthLabel}</span></h2>
     <p class="hint">每格是當天所有 ETF 的加減碼：橫條長度是買進、賣出的合計金額（同一個月內用同一把尺），下方列出金額最大的三筆。
       只顯示變動占原持股達到門檻的部位（原本 100 張、買 50 張就是 +50%），新增與剔除的成分股一律顯示；金額與比例都已扣除申購買回的影響，是估計值。
       <span class="tag add streak">連3</span> 表示同一檔 ETF 對這檔股票已連續 3 個交易日同方向買進（紅）或賣出（綠）；
@@ -882,10 +885,12 @@ function renderMonitor() {
   </div>`;
 }
 
-const TABS = [["overview", "總覽", renderOverview], ["calendar", "異動日曆", renderCalendar], ["cb", "可轉債日曆", renderCb], ["revenue", "營收日曆", renderRevenue], ["patterns", "換股規律", renderPatterns], ["etf", "ETF 明細", renderEtf],
+// 三個日曆放最前面並加強顯示；第四個欄位 true 代表日曆分頁
+const TABS = [["calendar", "ETF 日曆", renderCalendar, true], ["cb", "可轉債日曆", renderCb, true], ["revenue", "營收日曆", renderRevenue, true],
+  ["overview", "總覽", renderOverview], ["patterns", "換股規律", renderPatterns], ["etf", "ETF 明細", renderEtf],
   ["stock", "個股查詢", renderStock], ["monitor", "監控面板", renderMonitor]];
 function render() {
-  $("#nav").innerHTML = TABS.map(([k, t]) => `<button class="${k === state.tab ? "on" : ""}" onclick="go({tab:'${k}'})">${t}</button>`).join("");
+  $("#nav").innerHTML = TABS.map(([k, t, , cal], i) => `${i === 3 ? '<span class="sep"></span>' : ""}<button class="${cal ? "caltab " : ""}${k === state.tab ? "on" : ""}" onclick="go({tab:'${k}'})">${cal ? "📅 " : ""}${t}</button>`).join("");
   $("#main").innerHTML = (TABS.find((t) => t[0] === state.tab) || TABS[0])[2]();
   const h = health();
   $("#health").innerHTML = `${light(h.ok)} ${h.ok ? "系統正常" : `${h.bad} 個問題`}`;
