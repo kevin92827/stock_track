@@ -167,7 +167,7 @@ def backfill_finmind(month=None, limit=280):
     # 這些日子有觀測站的當日申報清單。FinMind 說某家是這天，但它不在清單裡，
     # 代表其實是前一天下午三點後申報、被 FinMind 記成隔天，所以往前修正一天。
     covered = {r["announce_date"] for r in rows.values() if r["date_source"] == "mops"}
-    done = 0
+    done, found = 0, {}
     for _, code in todo:
         r = requests.get(FINMIND, params={"dataset": "TaiwanStockMonthRevenue", "data_id": code, "start_date": start},
                          timeout=30)
@@ -179,9 +179,14 @@ def backfill_finmind(month=None, limit=280):
                 date = str(x["create_time"])[:10]
                 if date in covered:
                     date = (dt.date.fromisoformat(date) - dt.timedelta(days=1)).isoformat()
-                rows[(month, code)].update(announce_date=date, announce_time="", date_source="finmind")
+                found[(month, code)] = date
                 done += 1
         time.sleep(1.0)
+    # 查詢花很久，期間每日排程可能也改了檔案：存檔前重新讀一次，只套用這裡查到的日期
+    rows = load()
+    for key, date in found.items():
+        if key in rows and not rows[key]["announce_date"]:
+            rows[key].update(announce_date=date, announce_time="", date_source="finmind")
     save(rows)
     left = sum(k[0] == month and not r["announce_date"] for k, r in rows.items())
     return f"補了 {done} 家約略公告日，還有 {left} 家不明"
