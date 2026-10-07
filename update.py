@@ -199,6 +199,14 @@ def extra_steps(run):
         run["problems"].append(f"月營收: {steps['revenue']['msg']}")
     print(f"月營收：{steps['revenue']['msg']}")
 
+    try:
+        import prices
+        steps["prices"] = {"ok": True, "msg": prices.update(prices.needed_days())}
+    except Exception as e:
+        steps["prices"] = {"ok": False, "msg": f"{type(e).__name__}: {e}"[:200]}
+        run["problems"].append(f"每日行情: {steps['prices']['msg']}")
+    print(f"每日行情：{steps['prices']['msg']}")
+
     steps["site"] = site
 
 

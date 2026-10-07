@@ -119,13 +119,17 @@ def update():
     yesterday = (today - dt.timedelta(days=1)).isoformat()
     ran_yesterday = state.get("last_run") in (yesterday, today_str)
 
-    months = sorted({prev_month(today)} | {m for m, _ in filed})
+    main_month = prev_month(today)
+    months = sorted({main_month} | {m for m, _ in filed})
     new_dates = 0
     for month in months:
         had_month = any(k[0] == month for k in rows)  # 這個營收月份以前抓過，才分得出誰是新出現的
         for market in MARKETS:
             for s in summary(month, market):
                 key = (month, s["code"])
+                # 非當期月份只更新今天有申報（例如更正）的公司，不把整個月的彙總表都收進來
+                if month != main_month and key not in filed and key not in rows:
+                    continue
                 is_new = key not in rows
                 row = rows.setdefault(key, blank(month, s["code"], s["name"], market))
                 row.update(s, market=market)

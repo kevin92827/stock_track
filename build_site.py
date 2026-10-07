@@ -14,6 +14,7 @@ RUNS_PATH = os.path.join(BASE, "data", "runs.json")
 REBAL_PATH = os.path.join(BASE, "data", "rebalance.json")
 CB_PATH = os.path.join(BASE, "data", "cb_announcements.csv")
 REV_PATH = os.path.join(BASE, "data", "monthly_revenue.csv")
+PX_PATH = os.path.join(BASE, "data", "prices.csv")
 MAX_REV_MONTHS = 8  # 網站載入最近幾個營收月份
 TEMPLATE_PATH = os.path.join(BASE, "site_template.html")
 OUT_PATH = os.path.join(BASE, "docs", "index.html")  # GitHub Pages 從 docs/ 資料夾發布
@@ -92,7 +93,30 @@ def main():
             cb = [[r["date"], r["time"], r["code"], r["name"], r["market"], r["subject"]] for r in csv.DictReader(f)]
         cb.sort()
 
-    # 月營收：[營收月份, 代號, 名稱, 市場, 產業, 營收(千元), 月增%, 年增%, 累計年增%, 公告日, 時間, 公告日來源]
+    # 每日行情 {date: {code: (close, pct, shares)}}，給營收日曆算當日漲跌幅與市值
+    px = {}
+    if os.path.exists(PX_PATH):
+        with open(PX_PATH, encoding="utf-8-sig", newline="") as f:
+            for r in csv.DictReader(f):
+                px.setdefault(r["date"], {})[r["code"]] = (num(r["close"]), num(r["pct"]), num(r["shares"]))
+    px_dates = sorted(px)
+
+    def price_info(code, day, time_):
+        """-> [公告日漲跌%, 市值(億), 次一交易日漲跌%, 次一交易日]；收盤後公告的才附次一交易日"""
+        q = px.get(day, {}).get(code)
+        pct = q[1] if q else None
+        mcap = round(q[0] * q[2] / 1e8, 1) if q and q[0] and q[2] else None
+        nxt_pct = nxt = None
+        if time_ and time_ > "13:30":
+            later = [d for d in px_dates if d > day]
+            if later:
+                nq = px.get(later[0], {}).get(code)
+                if nq:
+                    nxt, nxt_pct = later[0], nq[1]
+        return [pct, mcap, nxt_pct, nxt]
+
+    # 月營收：[營收月份, 代號, 名稱, 市場, 產業, 營收(千元), 月增%, 年增%, 累計年增%, 公告日, 時間, 公告日來源,
+    #          公告日漲跌%, 市值(億), 次一交易日漲跌%, 次一交易日]
     rev = []
     if os.path.exists(REV_PATH):
         with open(REV_PATH, encoding="utf-8-sig", newline="") as f:
@@ -100,7 +124,8 @@ def main():
                 pct = lambda s: round(float(s), 2) if s not in ("", None) else None
                 rev.append([r["revenue_month"], r["code"], r["name"], r["market"], r["industry"],
                             int(float(r["revenue"])) if r["revenue"] else None, pct(r["mom"]), pct(r["yoy"]),
-                            pct(r["cum_yoy"]), r["announce_date"], r["announce_time"], r["date_source"]])
+                            pct(r["cum_yoy"]), r["announce_date"], r["announce_time"], r["date_source"]]
+                           + (price_info(r["code"], r["announce_date"], r["announce_time"]) if r["announce_date"] else [None] * 4))
         keep_months = sorted({r[0] for r in rev})[-MAX_REV_MONTHS:]
         rev = [r for r in rev if r[0] in keep_months]
 
