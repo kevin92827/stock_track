@@ -1,9 +1,10 @@
 """把各投信查到的指數審核時程 JSON 合併成 data/rebalance.json。
 
-    python merge_rebalance.py <來源資料夾>
+    python merge_rebalance.py <來源資料夾>          從零建立（會覆蓋 data/rebalance.json）
+    python merge_rebalance.py <來源資料夾> --add    只新增或取代來源裡有的 ETF，其餘保留
 
 來源資料夾裡每個 .json 都是 [{code, index, provider, frequency, review_months, rule, events, ...}]。
-之後要手動修改日期，直接改 data/rebalance.json 再執行 build_site.py 即可。
+之後要手動修改日期，直接改 data/rebalance.json 再執行 compute_cutoff.py、build_site.py 即可。
 """
 
 import datetime as dt
@@ -26,8 +27,11 @@ def check_date(s, where):
     return s
 
 
-def main(src_dir):
+def main(src_dir, add=False):
     merged = {}
+    if add and os.path.exists(OUT):
+        with open(OUT, encoding="utf-8") as f:
+            merged = {x["code"]: x for x in json.load(f)}
     for path in sorted(glob.glob(os.path.join(src_dir, "*.json"))):
         with open(path, encoding="utf-8") as f:
             items = json.load(f)
@@ -73,4 +77,4 @@ def main(src_dir):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], add="--add" in sys.argv)

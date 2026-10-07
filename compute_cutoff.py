@@ -100,14 +100,53 @@ def ice_00891(eff, ev):              # 第三個星期五（公告日）之前�
     return DAYS[i - 3], "第三個星期五之前第 3 個營業日（公開說明書寫法有歧義）"
 
 
+def tip_00923(eff, ev):              # 3、6、9、12 月第 7 個交易日（12 月的審核到隔年 1 月才生效）
+    y, m = (eff.year, eff.month) if eff.month in (3, 6, 9, 12) else ((eff.year - 1, 12) if eff.month == 1 else (eff.year, eff.month - 1))
+    return nth_td(y, m, 7)
+
+
+def tip_00939(eff, ev):              # 只有 5 月的成分股審核有資料截止日：5 月第 10 個交易日
+    if eff.month in (5, 6):
+        return nth_td(eff.year, 5, 10)
+    raise IndexError("權重審核沒有單一截止日")
+
+
+def nth_weekday(year, month, weekday, n):
+    d = dt.date(year, month, 1)
+    d += dt.timedelta(days=(weekday - d.weekday()) % 7)
+    return d + dt.timedelta(weeks=n - 1)
+
+
+def ice_00892(eff, ev):              # 4、10 月第三個星期五收盤為資料基準日
+    m = 4 if eff.month in (4, 5) else 10
+    return nth_weekday(eff.year, m, 4, 3).isoformat(), f"{m} 月第三個星期五收盤"
+
+
+def ftse_00888(eff, ev):             # 股價資料截至審查月第一個星期五前的星期三
+    m = 3 if eff.month in (3, 4) else 9
+    return (nth_weekday(eff.year, m, 4, 1) - dt.timedelta(days=2)).isoformat(), f"{m} 月第一個星期五前的星期三"
+
+
+def ice_00961(eff, ev):              # 5、11 月第 20 個日曆日為基準日（非營業日則提前）
+    m = 5 if eff.month in (5, 6) else 11
+    d = dt.date(eff.year, m, 20).isoformat()
+    cutoff = max(x for x in DAYS if x <= d)
+    return cutoff, f"{m} 月 20 日（非營業日則提前）"
+
+
 RULES = {
     "0050": ftse, "006208": ftse, "0052": ftse, "0056": ftse,
     "00713": tip_last_prev, "00940": tip_last_prev, "00881": tip_last_prev, "00935": tip_last_prev,
     "009816": tip_last_prev, "00919": tip_00919, "00927": tip_00919, "00929": tip_00929,
     "00918": tip_00918, "00692": twse_00692, "00891": ice_00891,
+    # 2026/10 擴大追蹤範圍後新增
+    "00850": tip_last_prev, "00923": tip_00923, "00900": tip_last_prev, "00892": ice_00892,
+    "009802": tip_last_prev, "00939": tip_00939, "00896": tip_last_prev, "00934": tip_last_prev,
+    "00915": tip_00918, "00888": ftse_00888, "00947": tip_last_prev, "00961": ice_00961,
+    "00905": tip_last_prev,
     # 00878、00922（MSCI）：手上的編製規則沒有寫單一的資料截止日，不計算
 }
-ALWAYS_EST = {"00891"}
+ALWAYS_EST = {"00891", "00892", "00888", "00961"}
 
 
 def main():
