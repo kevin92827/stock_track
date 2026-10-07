@@ -80,8 +80,8 @@ def norm_date(v):
     if m:
         d = dt.datetime(1970, 1, 1) + dt.timedelta(milliseconds=int(m.group(1)), hours=8)
         return d.date().isoformat()
-    m = re.search(r"(\d{4})[-/]?(\d{2})[-/]?(\d{2})", s)
-    return f"{m.group(1)}-{m.group(2)}-{m.group(3)}" if m else None
+    m = re.search(r"(\d{4})(\d{2})(\d{2})", s) or re.search(r"(\d{4})[-/](\d{1,2})[-/](\d{1,2})", s)
+    return f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}" if m else None
 
 
 def _cells(fragment):
@@ -205,16 +205,22 @@ def fetch_fubon(fund_id, day=None):
     m = re.search(r"資料日期：\s*([\d/]+)", r.text)
     if not m:
         return None
-    rows = []
+    # 頁面是好幾張表：股票、期貨、基金（槓桿型會持有貨幣市場基金）、其他項目、附買回債券明細。
+    # 用各表的標題列判斷目前在哪一張表。
+    rows, table = [], None
     for c in _cells(r.text):
-        if any("合計" in x for x in c):
+        if c[0] in ("股票代碼", "期貨代碼", "基金代碼", "項目", "代號"):
+            table = {"股票代碼": "stock", "期貨代碼": "future", "基金代碼": "fund", "項目": "other"}.get(c[0])
             continue
-        if len(c) == 5 and num(c[2]) is not None and num(c[4]) is not None:
-            kind = "stock" if re.fullmatch(r"\d{4,6}[A-Z]?", c[0]) else "future"
-            rows.append((kind, c[0], c[1], num(c[2]), num(c[4]), num(c[3])))
-        elif len(c) == 2 and re.search(r"\d", c[1]) and not re.search(r"\d{4}/\d{2}", c[1]):
+        if table is None or any("合計" in x for x in c):
+            continue
+        if table in ("stock", "future") and len(c) == 5 and num(c[2]) is not None and num(c[4]) is not None:
+            rows.append((table, c[0], c[1], num(c[2]), num(c[4]), num(c[3])))
+        elif table == "fund" and len(c) == 5:
+            rows.append(("other", "", c[1], None, num(c[4]), num(c[3])))
+        elif table == "other" and len(c) == 2 and re.search(r"\d", c[1]):
             rows.append(("other", "", re.sub(r"\s*\(TWD\)", "", c[0]), None, None, num(c[1])))
-    if not any(x[0] == "stock" for x in rows):
+    if not any(x[0] in ("stock", "future") for x in rows):
         return None
     return norm_date(m.group(1)), rows
 
@@ -387,7 +393,118 @@ def fetch_nomura(fund_id, day=None):
     return (date, rows) if date and rows else None
 
 
+# ---------------------------------------------------------------- 永豐
+def fetch_sinopac(fund_id, day=None):
+    # hDate 是 PCF 適用日（次一交易日）；持股屬於頁面上的「資料日期」。沒有金額與現金列。
+    r = _request("POST", f"https://sitc.sinopac.com/SinopacEtfs/Etfs/Pcf/{fund_id}",
+                 data={"fundId": fund_id, "hDate": day.isoformat() if day else "", "op": "1"})
+    r.raise_for_status()
+    t = r.text
+    if "無此PCF資料" in t:
+        return None
+    m = re.search(r"資料日期：\s*([\d/]+)", t)
+    if not m:
+        return None
+    rows = []
+    for tbl in re.findall(r'<table class="tab_sh tab_sh-w[^"]*"[^>]*>(.*?)</table>', t, re.S):
+        for c in _cells(tbl):
+            if len(c) == 4 and num(c[2]) is not None and num(c[3]) is not None:
+                rows.append(("stock", c[0].strip(), c[1].strip(), num(c[2]), num(c[3]), None))
+            elif len(c) == 5 and num(c[3]) is not None and num(c[4]) is not None:
+                rows.append(("future", f"{c[0].strip()}{re.sub(r'\D', '', c[2])}", c[1].strip(), num(c[3]), num(c[4]), None))
+    return (norm_date(m.group(1)), rows) if rows else None
+
+
+# ---------------------------------------------------------------- 台新
+def fetch_taishin(fund_id, day=None):
+    # DataDate 是清單適用日 D（持股為 D-1 收盤）；超過最新日期會靜默回最新一期，所以要核對 PUB_DATE。
+    # 持股資料日取頁面「YYYY/M/D每基數實際申購總價金」那一列的日期。
+    q = day or (dt.date.today() + dt.timedelta(days=7))
+    r = _request("GET", f"https://www.tsit.com.tw/ETF/Home/Pcf/{fund_id}",
+                 params={"FundType": "ALL", "DataDate": q.isoformat()})
+    r.raise_for_status()
+    t = r.text
+    pub = re.search(r'id="PUB_DATE"[^>]*value="([^"]*)"', t)
+    if not pub or (day and pub.group(1) != day.isoformat()):
+        return None
+    m = re.search(r"(\d{4}/\d{1,2}/\d{1,2})\s*每基數實際申購總價金", t)
+    if not m:
+        return None
+    rows, table = [], None
+    for c in _cells(t):
+        if c[0] in ("期貨代號", "代號"):
+            table = "future" if c[0] == "期貨代號" else "stock"
+            continue
+        if table is None or any("合計" in x for x in c):
+            continue
+        if table == "stock" and len(c) == 4 and num(c[2]) is not None and num(c[3]) is not None:
+            rows.append(("stock", c[0].replace("TT", "").strip(), c[1].strip(), num(c[2]), num(c[3]), None))
+        elif table == "future" and len(c) == 5 and num(c[3]) is not None and num(c[4]) is not None:
+            rows.append(("future", f"{c[0].strip()}{re.sub(r'\D', '', c[2])}", c[1].strip(), num(c[3]), num(c[4]), None))
+    return (norm_date(m.group(1)), rows) if rows else None
+
+
+# ---------------------------------------------------------------- 富蘭克林華美
+def fetch_ftft(fund_id, day=None):
+    # fund_id 是內部 ftftId（Fund/List 可查）；date 是資產評價日（台灣日期）。非交易日回 200 空內容。
+    if day is None:
+        return _walk_back(fetch_ftft, fund_id)
+    r = _request("GET", f"https://www.ftft.com.tw/official/api/etf/shares/{fund_id}",
+                 params={"date": day.strftime("%Y%m%d")})
+    r.raise_for_status()
+    if not r.content.strip():
+        return None
+    j = r.json()
+    # AssetDate 是 UTC 的 16:00（= 台灣隔天 00:00），所以台灣日期要加 8 小時
+    ad = j.get("AssetDate")
+    if not ad:
+        return None
+    date = (dt.datetime.fromisoformat(ad.replace("Z", "+00:00")) + dt.timedelta(hours=8)).date().isoformat()
+    rows = []
+    for x in j.get("Secs") or []:
+        rows.append(("stock", str(x["SecuritiesCode"]).strip(), (x.get("SecuritiesName") or "").strip(),
+                     num(x.get("Shares")), num(x.get("WeightingPercentage")), num(x.get("MarketValue"))))
+    for x in j.get("Futs") or []:
+        rows.append(("future", f"{x.get('FutCode', '').strip()}{re.sub(r'\D', '', x.get('ContractDate') or '')}",
+                     (x.get("FutName") or "").strip(), num(x.get("Lot")), num(x.get("WeightingPercentage")), None))
+    for x in j.get("Categories") or []:
+        if x.get("AssetCategory") not in ("股票", "期貨"):
+            rows.append(("other", "", x.get("AssetCategory", ""), None, None, num(x.get("AssetValue"))))
+    return (date, rows) if any(r[0] in ("stock", "future") for r in rows) else None
+
+
+# ---------------------------------------------------------------- 安聯
+_ALLIANZ = "https://etf.allianzgi.com.tw/webapi/api"
+
+
+def fetch_allianz(fund_id, day=None):
+    # 要先拿 XSRF token（24 小時有效）；Date 是清單日（T+1），持股屬於 CNavDt（T）。沒有金額與現金列。
+    s = _session()
+    if not hasattr(_local, "allianz_token"):
+        _request("GET", f"{_ALLIANZ}/AntiForgery/GetAntiForgeryToken")
+        _local.allianz_token = s.cookies.get("X-XSRF-TOKEN")
+    r = _request("POST", f"{_ALLIANZ}/Fund/GetFundTradeInfo",
+                 json={"FundNo": fund_id, "Date": day.isoformat() if day else None},
+                 headers={"X-XSRF-TOKEN": _local.allianz_token})
+    r.raise_for_status()
+    j = r.json()
+    if j.get("StatusCode") != 0 or not j.get("Entries"):
+        return None
+    e = j["Entries"]
+    date = norm_date(e.get("CNavDt"))
+    rows = []
+    for t in e.get("DynamicTableData") or []:
+        title = (t.get("TableTitle") or "").split(" ")[0]
+        for c in t.get("Rows") or []:
+            if title == "股票" and len(c) >= 5:
+                rows.append(("stock", c[1].strip(), c[2].strip(), num(c[3]), num(c[4]), None))
+            elif title == "期貨" and len(c) >= 6:
+                rows.append(("future", f"{c[1].strip()}{re.sub(r'\D', '', c[5])}", c[2].strip(), num(c[3]), num(c[4]), None))
+    return (date, rows) if date and rows else None
+
+
 FETCHERS = {
+    "sinopac": fetch_sinopac, "taishin": fetch_taishin, "ftft": fetch_ftft, "allianz": fetch_allianz,
     "yuanta": fetch_yuanta, "capital": fetch_capital, "cathay": fetch_cathay,
     "fubon": fetch_fubon, "uni": fetch_uni, "fuhhwa": fetch_fuhhwa, "ctbc": fetch_ctbc,
     "kgi": fetch_kgi, "uob": fetch_uob, "nomura": fetch_nomura,

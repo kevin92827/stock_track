@@ -205,7 +205,7 @@ const stockLink = (c) => `<a class="lnk" onclick="openStock('${esc(c)}')">${esc(
 const etfLink = (c) => `<a class="lnk" onclick="openEtf('${esc(c)}')">${esc(c)}</a>`;
 const options = (list, cur) => list.map((d) => `<option${d === cur ? " selected" : ""}>${esc(d)}</option>`).join("");
 // ETF 下拉選單：依主動／被動／槓桿分組
-const etfGroups = (cur) => ["主動", "被動", "槓桿"].map((k) => `<optgroup label="${k}式">${D.etfs.filter((x) => x.kind === k)
+const etfGroups = (cur) => ["主動", "被動", "槓桿", "反向"].map((k) => `<optgroup label="${k}式">${D.etfs.filter((x) => x.kind === k)
   .map((x) => `<option value="${x.code}"${x.code === cur ? " selected" : ""}>${x.code} ${esc(x.name)}</option>`).join("")}</optgroup>`).join("");
 
 // ------------------------------------------------------------ 總覽
@@ -263,7 +263,7 @@ function renderOverview() {
   <div class="panel">
     <h2>個股動向</h2>
     <div class="controls" style="margin:8px 0">
-      <label>ETF 類型 <select onchange="go({kind:this.value})">${options(["全部", "主動", "被動", "槓桿"], state.kind)}</select></label>
+      <label>ETF 類型 <select onchange="go({kind:this.value})">${options(["全部", "主動", "被動", "槓桿", "反向"], state.kind)}</select></label>
     </div>
     <p class="hint">${date} 當天被多檔 ETF 同時調整的個股，依調整的 ETF 檔數排序（最多 60 檔）。</p>
     ${moveRows ? `<div class="scroll"><table>
@@ -530,7 +530,7 @@ function renderCalendar() {
   <div class="controls">
     <label>月份 <select onchange="go({month:this.value,calDay:null})">${options([...months].reverse(), month)}</select></label>
     <label>ETF <select onchange="pick({calEtf:this.value})"><option value="全部"${state.calEtf === "全部" ? " selected" : ""}>全部</option>${etfGroups(state.calEtf)}</select></label>
-    <label>ETF 類型 <select onchange="pick({calKind:this.value})">${options(["全部", "主動", "被動", "槓桿"], state.calKind)}</select></label>
+    <label>ETF 類型 <select onchange="pick({calKind:this.value})">${options(["全部", "主動", "被動", "槓桿", "反向"], state.calKind)}</select></label>
     <label>變動占原持股 ≥ <input type="number" min="0" step="0.5" value="${state.minPct}" onchange="pick({minPct:+this.value||0})"> %</label>
     <label>且 金額 ≥ <input type="number" min="0" step="0.5" value="${state.minAmt}" onchange="pick({minAmt:+this.value||0})"> 億</label>
     <span class="muted">新增、剔除一律顯示</span>
