@@ -33,8 +33,15 @@ def main(src_dir, add=False):
         with open(OUT, encoding="utf-8") as f:
             merged = {x["code"]: x for x in json.load(f)}
     for path in sorted(glob.glob(os.path.join(src_dir, "*.json"))):
-        with open(path, encoding="utf-8") as f:
-            items = json.load(f)
+        try:
+            with open(path, encoding="utf-8-sig") as f:
+                items = json.load(f)
+        except ValueError:
+            print(f"略過 {os.path.basename(path)}（不是有效的 JSON）")
+            continue
+        if not isinstance(items, list) or not all(isinstance(x, dict) and "code" in x for x in items):
+            print(f"略過 {os.path.basename(path)}（不是審核時程格式）")
+            continue
         for it in items:
             code = it["code"]
             if code not in PASSIVE:
