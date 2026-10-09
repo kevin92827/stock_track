@@ -7,6 +7,7 @@ import os
 import statistics
 
 from etfs import ETFS, ISSUER_NAMES
+from compute_cutoff import HOLIDAYS  # 行情還沒有的日子，用休市日清單判斷下一個交易日
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE, "data", "holdings.csv")
@@ -109,7 +110,7 @@ def main():
         if later:
             return later[0]
         d = dt.date.fromisoformat(day) + dt.timedelta(days=1)
-        while d.weekday() >= 5:
+        while d.weekday() >= 5 or d.isoformat() in HOLIDAYS:
             d += dt.timedelta(days=1)
         return d.isoformat()
 
