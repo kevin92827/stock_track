@@ -101,22 +101,35 @@ def main():
                 px.setdefault(r["date"], {})[r["code"]] = (num(r["close"]), num(r["pct"]), num(r["shares"]))
     px_dates = sorted(px)
 
+    trading = set(px_dates) | set(dates)
+
+    def next_trading_day(day):
+        """day 之後第一個交易日；超出已知範圍就用下一個平日"""
+        later = [d for d in px_dates if d > day]
+        if later:
+            return later[0]
+        d = dt.date.fromisoformat(day) + dt.timedelta(days=1)
+        while d.weekday() >= 5:
+            d += dt.timedelta(days=1)
+        return d.isoformat()
+
+    def effective_day(day, time_):
+        """市場能反應這則公告的第一個交易日：13:30 收盤前公告且當天有交易 → 當天；否則下一個交易日。
+        沒有時間的（匯入的歷史資料）一律當作收盤後公告，因為實際上 96% 的公司都在收盤後申報。"""
+        if time_ and time_ <= "13:30" and day in trading:
+            return day
+        return next_trading_day(day)
+
     def price_info(code, day, time_):
-        """-> [公告日漲跌%, 市值(億), 次一交易日漲跌%, 次一交易日]；收盤後公告的才附次一交易日"""
-        q = px.get(day, {}).get(code)
+        """-> [生效日漲跌%, 生效日市值(億), 生效日, None]"""
+        eff = effective_day(day, time_)
+        q = px.get(eff, {}).get(code)
         pct = q[1] if q else None
         mcap = round(q[0] * q[2] / 1e8, 1) if q and q[0] and q[2] else None
-        nxt_pct = nxt = None
-        if time_ and time_ > "13:30":
-            later = [d for d in px_dates if d > day]
-            if later:
-                nq = px.get(later[0], {}).get(code)
-                if nq:
-                    nxt, nxt_pct = later[0], nq[1]
-        return [pct, mcap, nxt_pct, nxt]
+        return [pct, mcap, eff, None]
 
     # 月營收：[營收月份, 代號, 名稱, 市場, 產業, 營收(千元), 月增%, 年增%, 累計年增%, 公告日, 時間, 公告日來源,
-    #          公告日漲跌%, 市值(億), 次一交易日漲跌%, 次一交易日, 是否歷史新高, 之前最高單月營收(千元), 其月份]
+    #          生效日漲跌%, 生效日市值(億), 生效日(市場能反應的第一個交易日), 保留, 是否歷史新高, 之前最高單月營收(千元), 其月份]
     rev = []
     if os.path.exists(REV_PATH):
         with open(REV_PATH, encoding="utf-8-sig", newline="") as f:
