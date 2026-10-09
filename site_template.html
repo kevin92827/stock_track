@@ -692,7 +692,7 @@ function renderRevenue() {
   const rows = shown.map((r) => `<tr>
     <td class="l">${r[9] ? r[9].slice(5).replace("-", "/") + (r[10] ? " " + esc(r[10]) : "") : '<span class="muted">不明</span>'}${REV_SRC[r[11]] ? ` <span class="tag kind" title="${REV_SRC[r[11]]}">約</span>` : ""}</td>
     <td class="l">${D.names[r[1]] ? stockLink(r[1]) : esc(r[1])}</td><td class="l">${esc(r[2])}</td><td class="l">${MARKETS[r[3]] || esc(r[3])}</td>
-    <td class="l">${esc(r[4])}</td><td class="l">${r[0]}</td>
+    <td class="l">${r[0]}</td>
     <td title="${r[5] == null ? "彙總表還沒有這家的數字" : fmt(r[5]) + " 千元"}">${yiRev(r[5])}</td>${pctCell(r[6])}${pctCell(r[7])}${pctCell(r[8])}
     <td class="${cls(r[12])}">${r[12] == null ? '<span class="muted">–</span>' : (r[12] > 0 ? "+" : "") + r[12].toFixed(2) + "%"}${r[14] != null ? ` <span class="muted" title="收盤後公告，${r[15]} 的漲跌幅">次日 <span class="${cls(r[14])}">${(r[14] > 0 ? "+" : "") + r[14].toFixed(2)}%</span></span>` : ""}</td>
     <td>${r[13] == null ? '<span class="muted">–</span>' : r[13].toLocaleString("en-US", { maximumFractionDigits: 1 })}</td>
@@ -719,7 +719,7 @@ function renderRevenue() {
   <div class="panel">
     <h2>${sel === "unknown" ? "公告日不明" : sel || month} 明細 <span class="muted" style="font-weight:400">${shown.length} 家，年增 ${up}、年減 ${down}、歷史新高 ${highN}</span></h2>
     ${rows ? `<div class="scroll"><table>
-      <thead><tr>${th("time", "公告時間", 1)}${th("code", "代號", 1)}<th class="l">公司</th><th class="l">市場</th><th class="l">產業</th><th class="l">營收月份</th>
+      <thead><tr>${th("time", "公告時間", 1)}${th("code", "代號", 1)}<th class="l">公司</th><th class="l">市場</th><th class="l">營收月份</th>
       ${th("rev", "營收（億元）")}${th("mom", "月增率")}${th("yoy", "年增率")}${th("cum", "累計年增率")}${th("chg", "當日漲跌幅")}${th("mcap", "市值（億元）")}${th("high", "歷史新高", 1)}</tr></thead>
       <tbody>${rows}</tbody></table></div>` : `<div class="empty">這個月還沒有公告紀錄</div>`}
   </div>`;
