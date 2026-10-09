@@ -137,9 +137,9 @@ def update(days):
 
 
 def needed_days():
-    """營收公告日（含隔一個交易日）與可轉債公告日，最近 70 天內"""
+    """營收公告日（含隔一個交易日）與可轉債公告日，最近 200 天內"""
     days = {dt.date.today()}
-    cutoff = dt.date.today() - dt.timedelta(days=70)
+    cutoff = dt.date.today() - dt.timedelta(days=200)
     for path, col in ((os.path.join(BASE, "data", "monthly_revenue.csv"), "announce_date"),
                       (os.path.join(BASE, "data", "cb_announcements.csv"), "date")):
         if os.path.exists(path):

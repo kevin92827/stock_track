@@ -116,7 +116,7 @@ def main():
         return [pct, mcap, nxt_pct, nxt]
 
     # 月營收：[營收月份, 代號, 名稱, 市場, 產業, 營收(千元), 月增%, 年增%, 累計年增%, 公告日, 時間, 公告日來源,
-    #          公告日漲跌%, 市值(億), 次一交易日漲跌%, 次一交易日]
+    #          公告日漲跌%, 市值(億), 次一交易日漲跌%, 次一交易日, 是否歷史新高, 之前最高單月營收(千元), 其月份]
     rev = []
     if os.path.exists(REV_PATH):
         with open(REV_PATH, encoding="utf-8-sig", newline="") as f:
@@ -125,7 +125,8 @@ def main():
                 rev.append([r["revenue_month"], r["code"], r["name"], r["market"], r["industry"],
                             int(float(r["revenue"])) if r["revenue"] else None, pct(r["mom"]), pct(r["yoy"]),
                             pct(r["cum_yoy"]), r["announce_date"], r["announce_time"], r["date_source"]]
-                           + (price_info(r["code"], r["announce_date"], r["announce_time"]) if r["announce_date"] else [None] * 4))
+                           + (price_info(r["code"], r["announce_date"], r["announce_time"]) if r["announce_date"] else [None] * 4)
+                           + [r.get("record_high") == "1", int(float(r["prev_high"])) if r.get("prev_high") else None, r.get("prev_high_month") or None])
         keep_months = sorted({r[0] for r in rev})[-MAX_REV_MONTHS:]
         rev = [r for r in rev if r[0] in keep_months]
 

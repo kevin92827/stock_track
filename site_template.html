@@ -58,6 +58,7 @@ tr.click { cursor: pointer; }
 .tag.out, .tag.cut { background: var(--down-bg); color: var(--down); }
 .tag.late { background: var(--warn-bg); color: var(--warn); }
 .tag.kind { background: var(--hover); color: var(--muted); }
+.tag.high { background: var(--up); color: #fff; font-weight: 600; }
 .tag.rb-cutoff { border: 1px solid var(--warn); color: var(--warn); }
 .tag.rb-announce { border: 1px solid var(--accent); color: var(--accent); }
 .tag.rb-effective { background: var(--accent); color: #fff; }
@@ -137,7 +138,7 @@ const state = { tab: "calendar", date: D.dates[D.dates.length - 1], kind: "全�
   etf: D.etfs[0].code, to: null, base: null, onlyChanged: false, q: "", stock: null,
   month: null, calDay: null, calEtf: "全部", calKind: "全部", minAmt: 0, minPct: 1, calOnlyNewOut: false, calSort: null, calDir: 1,
   cbMonth: null, cbDay: null, cbHeld: false,
-  revMonth: null, revDay: null, revHeld: false, revSort: "rev", revDir: 1, revQ: "" };
+  revMonth: null, revDay: null, revHeld: false, revHigh: false, revSort: "rev", revDir: 1, revQ: "" };
 
 const snap = (etf, date) => (D.snaps[etf] || {})[date];
 const datesOf = (etf) => D.dates.filter((d) => snap(etf, d));
@@ -657,14 +658,14 @@ function renderCb() {
 
 // ------------------------------------------------------------ 營收日曆
 // D.rev 每列：[營收月份, 代號, 名稱, 市場, 產業, 營收(千元), 月增%, 年增%, 累計年增%, 公告日, 時間, 公告日來源,
-//              公告日漲跌%, 市值(億), 次一交易日漲跌%, 次一交易日]
+//              公告日漲跌%, 市值(億), 次一交易日漲跌%, 次一交易日, 是否歷史新高, 之前最高單月營收(千元), 其月份]
 const REV_SRC = { mops: "", snapshot: "前一天執行後才申報，沒有確切時間", finmind: "約略日期（第三方資料的入庫日，下午三點後申報的可能晚一天）" };
 const pctCell = (v) => (v == null ? '<td class="muted">–</td>' : `<td class="${cls(v)}">${(v > 0 ? "+" : "") + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</td>`);
 const yiRev = (k) => (k == null ? "–" : (k / 1e5).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 function renderRevenue() {
   if (!D.rev.length) return `<div class="empty">還沒有月營收資料</div>`;
   const q = state.revQ.trim();
-  const list = D.rev.filter((r) => (!state.revHeld || holdersOf(r[1]).length) && (!q || r[1].startsWith(q) || r[2].includes(q)));
+  const list = D.rev.filter((r) => (!state.revHeld || holdersOf(r[1]).length) && (!state.revHigh || r[16]) && (!q || r[1].startsWith(q) || r[2].includes(q)));
   const dated = list.filter((r) => r[9]), unknown = list.filter((r) => !r[9]);
   const allDates = D.rev.filter((r) => r[9]).map((r) => r[9]).sort();
   const months = monthsBetween((allDates[0] || todayStr()).slice(0, 7), todayStr().slice(0, 7));
@@ -676,15 +677,15 @@ function renderRevenue() {
   const grid = monthGrid(month, (d) => {
     const rs = byDay[d];
     if (!rs) return null;
-    const up = rs.filter((r) => r[7] > 0).length, down = rs.filter((r) => r[7] < 0).length;
+    const up = rs.filter((r) => r[7] > 0).length, down = rs.filter((r) => r[7] < 0).length, high = rs.filter((r) => r[16]).length;
     const top = [...rs].sort((x, y) => (y[5] || 0) - (x[5] || 0)).slice(0, 3);
     return { cls: "has" + (d === sel ? " sel" : ""), onclick: `pick({revDay:'${d}'})`, badge: `${rs.length} 家`,
-      html: `<div class="bar" style="grid-template-columns:1fr"><span>年增 <b class="up">${up}</b>　年減 <b class="down">${down}</b></span></div>
-        <div class="top">${top.map((r) => `<div>${esc(r[2])} <span class="${cls(r[7])}">${r[7] == null ? "" : (r[7] > 0 ? "+" : "") + r[7].toFixed(1) + "%"}</span></div>`).join("")}</div>` };
+      html: `<div class="bar" style="grid-template-columns:1fr"><span>年增 <b class="up">${up}</b>　年減 <b class="down">${down}</b>${high ? `　<span class="tag high">新高 ${high}</span>` : ""}</span></div>
+        <div class="top">${top.map((r) => `<div>${r[16] ? '<span class="tag high">新高</span> ' : ""}${esc(r[2])} <span class="${cls(r[7])}">${r[7] == null ? "" : (r[7] > 0 ? "+" : "") + r[7].toFixed(1) + "%"}</span></div>`).join("")}</div>` };
   }, days.some(isWeekend));
 
   const SORTS = { time: (r) => r[9] + r[10], code: (r) => r[1], rev: (r) => r[5] ?? -1, mom: (r) => r[6] ?? -1e18, yoy: (r) => r[7] ?? -1e18, cum: (r) => r[8] ?? -1e18,
-    chg: (r) => r[12] ?? -1e18, mcap: (r) => r[13] ?? -1 };
+    chg: (r) => r[12] ?? -1e18, mcap: (r) => r[13] ?? -1, high: (r) => (r[16] ? 1 : 0) };
   const sk = SORTS[state.revSort] || SORTS.rev;
   const shown = (sel === "unknown" ? unknown : sel ? byDay[sel] : []).slice().sort((x, y) => { const a = sk(x), b = sk(y); return (a < b ? 1 : a > b ? -1 : 0) * state.revDir; });
   const th = (key, label, left) => `<th class="sort${left ? " l" : ""}" title="點一下排序" onclick="pick({revSort:'${key}',revDir:state.revSort==='${key}'?-state.revDir:1})">${label}${state.revSort === key ? (state.revDir > 0 ? " ▼" : " ▲") : ""}</th>`;
@@ -694,7 +695,9 @@ function renderRevenue() {
     <td class="l">${esc(r[4])}</td><td class="l">${r[0]}</td>
     <td title="${r[5] == null ? "彙總表還沒有這家的數字" : fmt(r[5]) + " 千元"}">${yiRev(r[5])}</td>${pctCell(r[6])}${pctCell(r[7])}${pctCell(r[8])}
     <td class="${cls(r[12])}">${r[12] == null ? '<span class="muted">–</span>' : (r[12] > 0 ? "+" : "") + r[12].toFixed(2) + "%"}${r[14] != null ? ` <span class="muted" title="收盤後公告，${r[15]} 的漲跌幅">次日 <span class="${cls(r[14])}">${(r[14] > 0 ? "+" : "") + r[14].toFixed(2)}%</span></span>` : ""}</td>
-    <td>${r[13] == null ? '<span class="muted">–</span>' : r[13].toLocaleString("en-US", { maximumFractionDigits: 1 })}</td></tr>`).join("");
+    <td>${r[13] == null ? '<span class="muted">–</span>' : r[13].toLocaleString("en-US", { maximumFractionDigits: 1 })}</td>
+    <td class="l">${r[16] ? `<span class="tag high" title="之前最高：${r[18] || "–"} ${r[17] != null ? yiRev(r[17]) + " 億" : ""}">歷史新高</span>` : r[17] != null ? `<span class="muted" title="之前最高單月營收 ${r[18]}">前高 ${yiRev(r[17])}</span>` : '<span class="muted">–</span>'}</td></tr>`).join("");
+  const highN = shown.filter((r) => r[16]).length;
   const up = shown.filter((r) => r[7] > 0).length, down = shown.filter((r) => r[7] < 0).length;
   return `
   <div class="controls">
@@ -702,20 +705,22 @@ function renderRevenue() {
     <label>代號或名稱 <input type="text" value="${esc(state.revQ)}" placeholder="例如 2330" style="width:120px"
       onkeydown="if(event.key==='Enter')pick({revQ:this.value})" onblur="if(this.value!==state.revQ)pick({revQ:this.value})"></label>
     <label><input type="checkbox" ${state.revHeld ? "checked" : ""} onchange="pick({revHeld:this.checked})"> 只看追蹤中 ETF 有持有的股票</label>
+    <label><input type="checkbox" ${state.revHigh ? "checked" : ""} onchange="pick({revHigh:this.checked})"> 只看創歷史新高</label>
     ${unknown.length ? `<a class="lnk" onclick="pick({revDay:'unknown'})">公告日不明 ${unknown.length} 家</a>` : ""}
   </div>
   <div class="panel">
     <h2>${month} 月營收公告日曆</h2>
     <p class="hint">每格是當天公布月營收的上市櫃公司家數，以及年增、年減各幾家，下方列出營收最大的三家與年增率。點任一天看明細。
       公告日是每天從公開資訊觀測站的當日申報清單記下來的（觀測站不提供過去的公告日），標「約」的是補上的約略日期。
-      「當日漲跌幅」是公告日當天的收盤漲跌幅，13:30 收盤後才公告的另外附上次一交易日的漲跌幅；市值是公告日收盤價乘以發行股數。</p>
+      「當日漲跌幅」是公告日當天的收盤漲跌幅，13:30 收盤後才公告的另外附上次一交易日的漲跌幅；市值是公告日收盤價乘以發行股數。
+      <span class="tag high">新高</span> 表示該月營收是該公司有紀錄以來的單月最高（2015 年起的資料）。</p>
     ${grid}
   </div>
   <div class="panel">
-    <h2>${sel === "unknown" ? "公告日不明" : sel || month} 明細 <span class="muted" style="font-weight:400">${shown.length} 家，年增 ${up}、年減 ${down}</span></h2>
+    <h2>${sel === "unknown" ? "公告日不明" : sel || month} 明細 <span class="muted" style="font-weight:400">${shown.length} 家，年增 ${up}、年減 ${down}、歷史新高 ${highN}</span></h2>
     ${rows ? `<div class="scroll"><table>
       <thead><tr>${th("time", "公告時間", 1)}${th("code", "代號", 1)}<th class="l">公司</th><th class="l">市場</th><th class="l">產業</th><th class="l">營收月份</th>
-      ${th("rev", "營收（億元）")}${th("mom", "月增率")}${th("yoy", "年增率")}${th("cum", "累計年增率")}${th("chg", "當日漲跌幅")}${th("mcap", "市值（億元）")}</tr></thead>
+      ${th("rev", "營收（億元）")}${th("mom", "月增率")}${th("yoy", "年增率")}${th("cum", "累計年增率")}${th("chg", "當日漲跌幅")}${th("mcap", "市值（億元）")}${th("high", "歷史新高", 1)}</tr></thead>
       <tbody>${rows}</tbody></table></div>` : `<div class="empty">這個月還沒有公告紀錄</div>`}
   </div>`;
 }

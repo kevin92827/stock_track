@@ -10,7 +10,10 @@
            mops      當天從 t51sb10 抓到，有確切時間
            snapshot  昨天執行後才申報、今天才在彙總表出現，記為昨天（沒有時間）
            finmind   FinMind 的入庫日，約略值，下午三點後申報的會晚一天
+           export    從資料庫匯出檔（import_revenue_export.py）匯入的實際發布日
            空白      不知道（例如第一次執行前就已申報）
+  record_high  本月營收是否創歷史新高（1 / 空白），prev_high / prev_high_month 是之前的最高單月營收與月份。
+         歷史基準存在 data/revenue_high.json，由匯出檔建立；之後每個月由程式自己往後推算。
 """
 
 import csv
@@ -29,7 +32,9 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 REV_PATH = os.path.join(BASE, "data", "monthly_revenue.csv")
 STATE_PATH = os.path.join(BASE, "data", "revenue_state.json")
 FIELDS = ["revenue_month", "code", "name", "market", "industry", "revenue", "last_month", "last_year",
-          "mom", "yoy", "cum_revenue", "cum_yoy", "announce_date", "announce_time", "date_source"]
+          "mom", "yoy", "cum_revenue", "cum_yoy", "announce_date", "announce_time", "date_source",
+          "record_high", "prev_high", "prev_high_month"]
+HIGH_PATH = os.path.join(BASE, "data", "revenue_high.json")  # 每家公司歷史最高單月營收的基準（含截止月份）
 MARKETS = ("sii", "otc")
 TODAY_API = "https://mops.twse.com.tw/mops/api/home_page/t51sb10"
 CSV_URL = "https://mopsov.twse.com.tw/nas/t21/{market}/t21sc03_{roc}_{month}.csv"
@@ -48,10 +53,37 @@ def save(rows):
     os.makedirs(os.path.dirname(REV_PATH), exist_ok=True)
     tmp = REV_PATH + ".tmp"
     with open(tmp, "w", encoding="utf-8-sig", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=FIELDS)
+        w = csv.DictWriter(f, fieldnames=FIELDS, extrasaction="ignore")
         w.writeheader()
-        w.writerows(rows[k] for k in sorted(rows))
+        w.writerows({k2: r.get(k2, "") for k2 in FIELDS} for _, r in sorted(rows.items()))
     os.replace(tmp, REV_PATH)
+
+
+def mark_record_highs(rows):
+    """依歷史基準與 CSV 裡更早的月份，標記每筆營收是否創歷史新高。基準月份以前的列不動。"""
+    try:
+        with open(HIGH_PATH, encoding="utf-8") as f:
+            base = json.load(f)
+    except (OSError, ValueError):
+        return 0
+    asof, highs = base.get("asof", ""), base.get("highs", {})
+    by_code = {}
+    for (month, code), r in rows.items():
+        if month > asof and r.get("revenue"):
+            by_code.setdefault(code, []).append((month, r))
+    n = 0
+    for code, items in by_code.items():
+        h = highs.get(code)
+        best, best_month = (float(h["high"]), h["month"]) if h else (None, "")
+        for month, r in sorted(items):
+            rev = float(r["revenue"])
+            r["prev_high"] = int(best) if best is not None else ""
+            r["prev_high_month"] = best_month
+            r["record_high"] = "1" if best is None or rev > best else ""
+            n += r["record_high"] == "1"
+            if best is None or rev > best:
+                best, best_month = rev, month
+    return n
 
 
 def load_state():
@@ -142,6 +174,7 @@ def update():
         if row["date_source"] != "mops":
             new_dates += 1
         row.update(announce_date=today_str, announce_time=tm, date_source="mops")
+    mark_record_highs(rows)
     save(rows)
     with open(STATE_PATH, "w", encoding="utf-8") as f:
         json.dump({"last_run": today_str}, f)
