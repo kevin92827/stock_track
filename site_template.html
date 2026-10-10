@@ -141,7 +141,7 @@ const state = { tab: "calendar", date: D.dates[D.dates.length - 1], kind: "全�
   etf: D.etfs[0].code, to: null, base: null, onlyChanged: false, q: "", stock: null,
   month: null, calDay: null, calEtf: "全部", calKind: "全部", minAmt: 0, minPct: 1, calOnlyNewOut: false, calSort: null, calDir: 1,
   cbMonth: null, cbDay: null, cbHeld: false, cbMethod: "全部",
-  revMonth: null, revDay: null, revHeld: false, revHigh: false, revSort: "rev", revDir: 1, revQ: "", gapView: "all" };
+  revMonth: null, revDay: null, revHeld: false, revHigh: false, revSort: "rev", revDir: 1, revQ: "" };
 
 const snap = (etf, date) => (D.snaps[etf] || {})[date];
 const datesOf = (etf) => D.dates.filter((d) => snap(etf, d));
@@ -735,53 +735,6 @@ function renderRevenue() {
 }
 
 
-// ------------------------------------------------------------ 營收統計：開盤漲幅 vs 日內漲跌幅
-function gapChart(rows, title) {
-  // 長條圖：每個開盤漲幅區間的日內平均漲跌幅；紅＝正、綠＝負（台股慣例），長條上標數字與樣本數
-  const vals = rows.map((r) => r.intraday_mean ?? 0), maxAbs = Math.max(0.5, ...vals.map(Math.abs));
-  const W = 760, H = 280, L = 50, R = 10, T = 44, B = 56, w = (W - L - R) / rows.length, zero = T + (H - T - B) / 2;
-  const sy = (v) => zero - v / maxAbs * (H - T - B) / 2;
-  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;font:12px sans-serif">
-    <text x="${L}" y="16" fill="var(--text)" font-weight="600">${esc(title)}</text>
-    <line x1="${L}" x2="${W - R}" y1="${zero}" y2="${zero}" stroke="var(--line)"/>
-    <text x="${L - 6}" y="${sy(maxAbs) + 4}" text-anchor="end" fill="var(--muted)">+${maxAbs.toFixed(1)}%</text>
-    <text x="${L - 6}" y="${sy(-maxAbs) + 4}" text-anchor="end" fill="var(--muted)">−${maxAbs.toFixed(1)}%</text>
-    <text x="${L - 6}" y="${zero + 4}" text-anchor="end" fill="var(--muted)">0</text>`;
-  rows.forEach((r, i) => {
-    const v = r.intraday_mean ?? 0, x = L + i * w + w * 0.2, bw = w * 0.6, y0 = sy(Math.max(v, 0)), h = Math.abs(sy(v) - zero);
-    s += `<rect x="${x}" y="${y0}" width="${bw}" height="${Math.max(h, 1)}" rx="3" fill="${v >= 0 ? "var(--up)" : "var(--down)"}">
-      <title>${r.bin}：日內平均 ${v.toFixed(2)}%，中位 ${r.intraday_median}%，收高於開 ${r.win}%，樣本 ${r.n}</title></rect>
-      <text x="${x + bw / 2}" y="${v >= 0 ? y0 - 4 : y0 + h + 12}" text-anchor="middle" fill="var(--text)">${v > 0 ? "+" : ""}${v.toFixed(2)}%</text>
-      <text x="${x + bw / 2}" y="${H - B + 16}" text-anchor="middle" fill="var(--text)">${r.bin}</text>
-      <text x="${x + bw / 2}" y="${H - B + 30}" text-anchor="middle" fill="var(--muted)">n=${r.n.toLocaleString()}</text>`;
-  });
-  s += `<text x="${(L + W - R) / 2}" y="${H - 4}" text-anchor="middle" fill="var(--muted)">開盤漲幅（生效日開盤 vs 前一交易日收盤）</text></svg>`;
-  return s;
-}
-const gapTable = (rows) => `<div class="scroll"><table><thead><tr><th class="l">開盤漲幅</th><th>樣本數</th><th>日內平均</th><th>日內中位</th><th>收高於開</th><th>日內跌 ≥3%</th><th>全日平均</th></tr></thead>
-  <tbody>${rows.map((r) => `<tr><td class="l">${r.bin}</td><td>${r.n.toLocaleString()}</td>${pctCell(r.intraday_mean)}${pctCell(r.intraday_median)}
-    <td>${r.win == null ? "–" : r.win + "%"}</td><td>${r.drop3 == null ? "–" : r.drop3 + "%"}</td>${pctCell(r.daily_mean)}</tr>`).join("")}</tbody></table></div>`;
-function renderGapStats() {
-  const G = D.gap;
-  if (!G) return `<div class="empty">還沒有統計資料（請先執行 revenue_gap_stats.py）</div>`;
-  const years = Object.keys(G.by_year).sort();
-  const sel = state.gapView;
-  const sets = sel === "yoy" ? G.by_yoy : sel === "high" ? G.by_high : sel === "year" ? Object.fromEntries(years.map((y) => [y + " 年", G.by_year[y]])) : { "全部樣本": G.overall };
-  const panels = Object.entries(sets).map(([name, rows]) => `<div class="panel"><h2>${esc(name)} <span class="muted" style="font-weight:400">${rows.reduce((t, r) => t + r.n, 0).toLocaleString()} 筆</span></h2>${gapChart(rows, "日內平均漲跌幅（收盤 vs 開盤）")}${gapTable(rows)}</div>`).join("");
-  return `
-  <div class="controls">
-    <label>分組 <select onchange="pick({gapView:this.value})">${["all", "year", "yoy", "high"].map((k) => `<option value="${k}"${k === sel ? " selected" : ""}>${{ all: "全部", year: "依年度", yoy: "依營收年增率正負", high: "依是否創歷史新高" }[k]}</option>`).join("")}</select></label>
-  </div>
-  <div class="panel">
-    <h2>營收公告生效日：開盤漲幅 vs 日內漲跌幅</h2>
-    <p class="hint">樣本：${G.n.toLocaleString()} 筆月營收公告（${G.companies.toLocaleString()} 家，生效日 ${G.range[0]} ～ ${G.range[1]}）。
-      生效日 = 公告日的下一個交易日（歷史資料沒有公告時間，一律當作收盤後公告）。開盤漲幅 = 生效日開盤 ÷ 前一交易日收盤 − 1，
-      日內漲跌幅 = 收盤 ÷ 開盤 − 1，全日 = 收盤 ÷ 前一交易日收盤 − 1。價格為還原權息後的日 K；排除前收 5 元以下、開盤漲幅超過 ±11% 的樣本。
-      兩者的相關係數為 ${G.corr}。統計時間 ${G.built}。</p>
-  </div>
-  ${panels}`;
-}
-
 // ------------------------------------------------------------ 換股規律
 // 把每一次指數審核對照實際持股：新成分股哪天開始出現、舊成分股哪天出清。
 // T 是生效日；持股是每天收盤後的部位，所以「T−1 出現」代表在生效日前一個交易日收盤前買進。
@@ -948,11 +901,11 @@ function renderMonitor() {
 }
 
 // 三個日曆放最前面並加強顯示；第四個欄位 true 代表日曆分頁
-const TABS = [["calendar", "ETF 日曆", renderCalendar, true], ["cb", "可轉債日曆", renderCb, true], ["revenue", "營收日曆", renderRevenue, true], ["gap", "營收統計", renderGapStats],
+const TABS = [["calendar", "ETF 日曆", renderCalendar, true], ["cb", "可轉債日曆", renderCb, true], ["revenue", "營收日曆", renderRevenue, true],
   ["overview", "總覽", renderOverview], ["patterns", "換股規律", renderPatterns], ["etf", "ETF 明細", renderEtf],
   ["stock", "個股查詢", renderStock], ["monitor", "監控面板", renderMonitor]];
 function render() {
-  $("#nav").innerHTML = TABS.map(([k, t, , cal], i) => `${i === 4 ? '<span class="sep"></span>' : ""}<button class="${cal ? "caltab " : ""}${k === state.tab ? "on" : ""}" onclick="go({tab:'${k}'})">${cal ? "📅 " : ""}${t}</button>`).join("");
+  $("#nav").innerHTML = TABS.map(([k, t, , cal], i) => `${i === 3 ? '<span class="sep"></span>' : ""}<button class="${cal ? "caltab " : ""}${k === state.tab ? "on" : ""}" onclick="go({tab:'${k}'})">${cal ? "📅 " : ""}${t}</button>`).join("");
   $("#main").innerHTML = (TABS.find((t) => t[0] === state.tab) || TABS[0])[2]();
   const h = health();
   $("#health").innerHTML = `${light(h.ok)} ${h.ok ? "系統正常" : `${h.bad} 個問題`}`;

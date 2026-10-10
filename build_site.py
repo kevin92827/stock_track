@@ -16,7 +16,6 @@ REBAL_PATH = os.path.join(BASE, "data", "rebalance.json")
 CB_PATH = os.path.join(BASE, "data", "cb_announcements.csv")
 REV_PATH = os.path.join(BASE, "data", "monthly_revenue.csv")
 PX_PATH = os.path.join(BASE, "data", "prices.csv")
-GAP_PATH = os.path.join(BASE, "data", "revenue_gap_stats.json")  # 營收統計頁
 MAX_REV_MONTHS = 8  # 網站載入最近幾個營收月份
 TEMPLATE_PATH = os.path.join(BASE, "site_template.html")
 OUT_PATH = os.path.join(BASE, "docs", "index.html")  # GitHub Pages 從 docs/ 資料夾發布
@@ -146,12 +145,6 @@ def main():
         keep_months = sorted({r[0] for r in rev})[-MAX_REV_MONTHS:]
         rev = [r for r in rev if r[0] in keep_months]
 
-    try:  # 營收公告生效日的開盤漲幅對日內漲跌幅統計（revenue_gap_stats.py 產生）
-        with open(GAP_PATH, encoding="utf-8") as f:
-            gap = json.load(f)
-    except (OSError, ValueError):
-        gap = None
-
     data = {
         "built": dt.datetime.now().strftime("%Y-%m-%d %H:%M"),
         "schedule": SCHEDULE,
@@ -164,7 +157,6 @@ def main():
         "rebal": rebal,
         "cb": cb,
         "rev": rev,
-        "gap": gap,
     }
     with open(TEMPLATE_PATH, encoding="utf-8") as f:
         template = f.read()
