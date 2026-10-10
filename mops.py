@@ -16,7 +16,8 @@ from requests.adapters import HTTPAdapter
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 CB_PATH = os.path.join(BASE, "data", "cb_announcements.csv")
-CB_FIELDS = ["date", "time", "code", "name", "market", "subject", "enter_date", "serial"]
+CB_FIELDS = ["date", "time", "code", "name", "market", "subject", "enter_date", "serial",
+             "method", "method_seq", "method_detail"]  # 承銷方式由 cb_method.py 填
 API = "https://mops.twse.com.tw/mops/api/t05st02"
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
@@ -111,7 +112,7 @@ def save_cb(rows):
     with open(tmp, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.DictWriter(f, fieldnames=CB_FIELDS, extrasaction="ignore")
         w.writeheader()
-        w.writerows(rows)
+        w.writerows({k: r.get(k, "") for k in CB_FIELDS} for r in rows)
     os.replace(tmp, CB_PATH)
     return rows
 

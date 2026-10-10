@@ -88,10 +88,11 @@ def main():
     except (OSError, ValueError):
         rebal = []
 
-    cb = []  # 可轉債代收價款公告：[日期, 時間, 代號, 名稱, 市場, 主旨]
+    cb = []  # 可轉債代收價款公告：[日期, 時間, 代號, 名稱, 市場, 主旨, 承銷方式, 承銷方式依據]
     if os.path.exists(CB_PATH):
         with open(CB_PATH, encoding="utf-8-sig", newline="") as f:
-            cb = [[r["date"], r["time"], r["code"], r["name"], r["market"], r["subject"]] for r in csv.DictReader(f)]
+            cb = [[r["date"], r["time"], r["code"], r["name"], r["market"], r["subject"],
+                   r.get("method") or "未知", r.get("method_detail") or ""] for r in csv.DictReader(f)]
         cb.sort()
 
     # 每日行情 {date: {code: (close, pct, shares)}}，給營收日曆算當日漲跌幅與市值

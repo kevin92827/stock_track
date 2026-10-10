@@ -59,6 +59,9 @@ tr.click { cursor: pointer; }
 .tag.late { background: var(--warn-bg); color: var(--warn); }
 .tag.kind { background: var(--hover); color: var(--muted); }
 .tag.high { background: var(--up); color: #fff; font-weight: 600; }
+.tag.mth.bid { background: #7b3fe4; color: #fff; }
+.tag.mth.book { background: #0f8a8a; color: #fff; }
+.tag.mth.unk { background: var(--hover); color: var(--muted); }
 .tag.rb-cutoff { border: 1px solid var(--warn); color: var(--warn); }
 .tag.rb-announce { border: 1px solid var(--accent); color: var(--accent); }
 .tag.rb-effective { background: var(--accent); color: #fff; }
@@ -137,7 +140,7 @@ const tag = (s) => (TAGS[s] ? `<span class="tag ${s}">${TAGS[s]}</span>` : "");
 const state = { tab: "calendar", date: D.dates[D.dates.length - 1], kind: "全部",
   etf: D.etfs[0].code, to: null, base: null, onlyChanged: false, q: "", stock: null,
   month: null, calDay: null, calEtf: "全部", calKind: "全部", minAmt: 0, minPct: 1, calOnlyNewOut: false, calSort: null, calDir: 1,
-  cbMonth: null, cbDay: null, cbHeld: false,
+  cbMonth: null, cbDay: null, cbHeld: false, cbMethod: "全部",
   revMonth: null, revDay: null, revHeld: false, revHigh: false, revSort: "rev", revDir: 1, revQ: "" };
 
 const snap = (etf, date) => (D.snaps[etf] || {})[date];
@@ -616,10 +619,12 @@ const MARKETS = { sii: "上市", otc: "上櫃", rotc: "興櫃", pub: "公開發�
 const holderChips = (code) => holdersOf(code).map((c) => `<span class="tag kind">${etfLink(c)}</span>`).join(" ") || '<span class="muted">–</span>';
 
 // ------------------------------------------------------------ 可轉債日曆
-// D.cb 每列：[日期, 時間, 代號, 名稱, 市場, 主旨]
+// D.cb 每列：[日期, 時間, 代號, 名稱, 市場, 主旨, 承銷方式, 承銷方式依據]
+const METHOD_CLS = { "公開競標": "bid", "詢價圈購": "book" };
+const methodTag = (r) => (r[6] || "未知").split("/").map((m) => `<span class="tag mth ${METHOD_CLS[m] || "unk"}" title="${esc(r[7] || "承銷公告尚未出現（通常在代收價款公告後 1～3 週）")}">${esc(m)}</span>`).join(" ");
 function renderCb() {
   if (!D.cb.length) return `<div class="empty">還沒有可轉債公告資料</div>`;
-  const list = D.cb.filter((r) => !state.cbHeld || holdersOf(r[2]).length);
+  const list = D.cb.filter((r) => (!state.cbHeld || holdersOf(r[2]).length) && (state.cbMethod === "全部" || (r[6] || "未知").includes(state.cbMethod)));
   const months = monthsBetween(D.cb[0][0].slice(0, 7), todayStr().slice(0, 7));
   const month = months.includes(state.cbMonth) ? state.cbMonth : months[months.length - 1];
   const inMonth = list.filter((r) => r[0].startsWith(month));
@@ -630,28 +635,30 @@ function renderCb() {
     const rs = byDay[d];
     if (!rs) return null;
     return { cls: "has" + (d === sel ? " sel" : ""), onclick: `pick({cbDay:'${d === sel ? "" : d}'})`, badge: `${rs.length} 筆`,
-      html: `<div class="top">${rs.slice(0, 5).map((r) => `<div>${holdersOf(r[2]).length ? "★ " : ""}${esc(r[2])} ${esc(r[3])}</div>`).join("")}${rs.length > 5 ? `<div>…還有 ${rs.length - 5} 筆</div>` : ""}</div>` };
+      html: `<div class="top">${rs.slice(0, 5).map((r) => `<div>${methodTag(r)} ${holdersOf(r[2]).length ? "★ " : ""}${esc(r[2])} ${esc(r[3])}</div>`).join("")}${rs.length > 5 ? `<div>…還有 ${rs.length - 5} 筆</div>` : ""}</div>` };
   }, inMonth.some((r) => isWeekend(r[0])));
   const shown = (sel ? byDay[sel] : inMonth).slice().sort((x, y) => (y[0] + y[1]).localeCompare(x[0] + x[1]));
   const rows = shown.map((r) => { const [y, m, d] = r[0].split("-").map(Number);
     return `<tr><td class="l">${r[0]}</td><td class="l">${esc(r[1].slice(0, 5))}</td><td class="l">${D.names[r[2]] ? stockLink(r[2]) : esc(r[2])}</td><td class="l">${esc(r[3])}</td>
-      <td class="l">${MARKETS[r[4]] || esc(r[4])}</td><td class="l wrap" style="min-width:380px">${esc(r[5])}</td><td class="l">${holderChips(r[2])}</td>
+      <td class="l">${MARKETS[r[4]] || esc(r[4])}</td><td class="l">${methodTag(r)}</td><td class="l wrap" style="min-width:380px">${esc(r[5])}</td><td class="l">${holderChips(r[2])}</td>
       <td class="l"><a class="lnk" target="_blank" rel="noopener" href="https://mops.twse.com.tw/mops/#/web/t05st02?year=${y - 1911}&month=${m}&day=${d}">當日公告</a></td></tr>`; }).join("");
   return `
   <div class="controls">
     <label>月份 <select onchange="pick({cbMonth:this.value,cbDay:null})">${options([...months].reverse(), month)}</select></label>
+    <label>承銷方式 <select onchange="pick({cbMethod:this.value,cbDay:null})">${options(["全部", "公開競標", "詢價圈購", "未知"], state.cbMethod)}</select></label>
     <label><input type="checkbox" ${state.cbHeld ? "checked" : ""} onchange="pick({cbHeld:this.checked})"> 只看追蹤中 ETF 有持有的股票</label>
   </div>
   <div class="panel">
     <h2>${month} 可轉債代收價款公告</h2>
     <p class="hint">公開資訊觀測站重大訊息中，主旨是「轉換公司債代收價款及存儲專戶行庫」這類的公告（公司發行可轉債時發布）。各公司用語不一，
-      這裡收錄主旨含「轉換公司債」且含「代收」或「存儲」的公告，涵蓋上市、上櫃、興櫃。★ 表示追蹤中的 ETF 目前有持有。點任一天只看當天，再點一次看整個月。</p>
+      這裡收錄主旨含「轉換公司債」且含「代收」或「存儲」的公告，涵蓋上市、上櫃、興櫃。★ 表示追蹤中的 ETF 目前有持有。點任一天只看當天，再點一次看整個月。
+      <span class="tag mth bid">公開競標</span><span class="tag mth book">詢價圈購</span> 是承銷方式，來自證券商公會的承銷公告，通常在代收價款公告後 1～3 週才出現，之前顯示「未知」；滑鼠移到標籤上可看依據與競拍的投標期間。</p>
     ${grid}
   </div>
   <div class="panel">
     <h2>${sel || month} 公告明細 <span class="muted" style="font-weight:400">${shown.length} 筆</span></h2>
     ${rows ? `<div class="scroll"><table>
-      <thead><tr><th class="l">日期</th><th class="l">時間</th><th class="l">代號</th><th class="l">公司</th><th class="l">市場</th><th class="l">主旨</th><th class="l">持有的 ETF</th><th class="l">原文</th></tr></thead>
+      <thead><tr><th class="l">日期</th><th class="l">時間</th><th class="l">代號</th><th class="l">公司</th><th class="l">市場</th><th class="l">承銷方式</th><th class="l">主旨</th><th class="l">持有的 ETF</th><th class="l">原文</th></tr></thead>
       <tbody>${rows}</tbody></table></div>` : `<div class="empty">這個月沒有符合的公告</div>`}
   </div>`;
 }

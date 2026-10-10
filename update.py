@@ -186,6 +186,11 @@ def extra_steps(run):
         # 清單偶爾隔天才補齊，所以連前兩天一起重抓
         added, total = mops.update_cb([today - dt.timedelta(days=i) for i in (2, 1, 0)])
         steps["cb"] = {"ok": True, "msg": f"新增 {added} 筆，共 {total} 筆"}
+        try:
+            import cb_method
+            steps["cb"]["msg"] += "；" + cb_method.update()
+        except Exception as e:  # 承銷方式查不到不算抓取失敗
+            steps["cb"]["msg"] += f"；承銷方式比對失敗（{type(e).__name__}）"
     except Exception as e:
         steps["cb"] = {"ok": False, "msg": f"{type(e).__name__}: {e}"[:200]}
         run["problems"].append(f"可轉債公告: {steps['cb']['msg']}")
