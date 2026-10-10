@@ -739,7 +739,7 @@ function renderRevenue() {
 function gapChart(rows, title) {
   // 長條圖：每個開盤漲幅區間的日內平均漲跌幅；紅＝正、綠＝負（台股慣例），長條上標數字與樣本數
   const vals = rows.map((r) => r.intraday_mean ?? 0), maxAbs = Math.max(0.5, ...vals.map(Math.abs));
-  const W = 760, H = 260, L = 50, R = 10, T = 28, B = 56, w = (W - L - R) / rows.length, zero = T + (H - T - B) / 2;
+  const W = 760, H = 280, L = 50, R = 10, T = 44, B = 56, w = (W - L - R) / rows.length, zero = T + (H - T - B) / 2;
   const sy = (v) => zero - v / maxAbs * (H - T - B) / 2;
   let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;font:12px sans-serif">
     <text x="${L}" y="16" fill="var(--text)" font-weight="600">${esc(title)}</text>
