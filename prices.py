@@ -77,18 +77,21 @@ def quotes(day, shares_l=None):
             code, close, sign, diff = row[0].strip(), num(row[8]), row[9], num(row[10])
             if not close or diff is None:
                 continue
-            signed = -diff if "-" in re.sub(r"<[^>]+>", "", sign) else diff if "+" in sign else 0.0
+            sign = re.sub(r"<[^>]+>", "", sign)
+            signed = -diff if "-" in sign else diff if "+" in sign else 0.0
             prev = close - signed
-            out[code] = {"close": close, "pct": round(signed / prev * 100, 2) if prev else None,
+            # 「X」是除權息、減資恢復買賣等不比價的日子，漲跌幅留空（網站會改用參考價計算）
+            out[code] = {"close": close, "pct": round(signed / prev * 100, 2) if prev and "X" not in sign else None,
                          "shares": (shares_l or {}).get(code)}
     j = _get(TPEX, date=day.strftime("%Y/%m/%d"), type="EW", response="json")
     for t in j.get("tables") or []:
         for row in t.get("data") or []:
             code, close, chg, shares = row[0].strip(), num(row[2]), num(row[3]), num(row[14]) if len(row) > 14 else None
-            if not close or chg is None:
+            if not close:
                 continue
-            prev = close - chg
-            out[code] = {"close": close, "pct": round(chg / prev * 100, 2) if prev else None,
+            # 除權息、減資恢復買賣等不比價的日子，漲跌欄是文字（「除息」等），漲跌幅留空
+            prev = close - (chg or 0)
+            out[code] = {"close": close, "pct": round(chg / prev * 100, 2) if prev and chg is not None else None,
                          "shares": int(shares) if shares else None}
     return out
 
@@ -137,17 +140,18 @@ def update(days):
 
 
 def needed_days():
-    """營收公告日（含隔一個交易日）與可轉債公告日，最近 200 天內"""
+    """營收公告日（含隔一個交易日）、可轉債公告日與除權息減資生效日，最近 200 天內"""
     days = {dt.date.today()}
     cutoff = dt.date.today() - dt.timedelta(days=200)
     for path, col in ((os.path.join(BASE, "data", "monthly_revenue.csv"), "announce_date"),
-                      (os.path.join(BASE, "data", "cb_announcements.csv"), "date")):
+                      (os.path.join(BASE, "data", "cb_announcements.csv"), "date"),
+                      (os.path.join(BASE, "data", "corp_actions.csv"), "date")):
         if os.path.exists(path):
             with open(path, encoding="utf-8-sig", newline="") as f:
                 for r in csv.DictReader(f):
                     if r.get(col):
                         d = dt.date.fromisoformat(r[col])
-                        if d >= cutoff:
+                        if cutoff <= d <= dt.date.today():
                             days.add(d)
                             days.add(d + dt.timedelta(days=1))  # 收盤後公告的，隔天才反映
                             if d.weekday() == 4:

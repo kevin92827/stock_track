@@ -16,6 +16,8 @@ REBAL_PATH = os.path.join(BASE, "data", "rebalance.json")
 CB_PATH = os.path.join(BASE, "data", "cb_announcements.csv")
 REV_PATH = os.path.join(BASE, "data", "monthly_revenue.csv")
 PX_PATH = os.path.join(BASE, "data", "prices.csv")
+CA_PATH = os.path.join(BASE, "data", "corp_actions.csv")
+MAX_CA_DAYS = 400  # 除權息減資日曆載入最近幾天（未來的預告全部載入）
 MAX_REV_MONTHS = 8  # 網站載入最近幾個營收月份
 TEMPLATE_PATH = os.path.join(BASE, "site_template.html")
 OUT_PATH = os.path.join(BASE, "docs", "index.html")  # GitHub Pages 從 docs/ 資料夾發布
@@ -102,6 +104,13 @@ def main():
             for r in csv.DictReader(f):
                 px.setdefault(r["date"], {})[r["code"]] = (num(r["close"]), num(r["pct"]), num(r["shares"]))
     px_dates = sorted(px)
+    # 除權息、減資恢復買賣這些日子交易所不算漲跌，改用官方參考價算當天漲跌幅
+    if os.path.exists(CA_PATH):
+        with open(CA_PATH, encoding="utf-8-sig", newline="") as f:
+            for r in csv.DictReader(f):
+                q = px.get(r["date"], {}).get(r["code"])
+                if q and q[0] and r["ref_price"]:
+                    px[r["date"]][r["code"]] = (q[0], round((q[0] / float(r["ref_price"]) - 1) * 100, 2), q[2])
 
     trading = set(px_dates) | set(dates)
 
@@ -145,6 +154,39 @@ def main():
         keep_months = sorted({r[0] for r in rev})[-MAX_REV_MONTHS:]
         rev = [r for r in rev if r[0] in keep_months]
 
+    def last_close(code, day):
+        """day 之前最近一個交易日的收盤價（只往回找 10 個交易日，停牌太久的不估）"""
+        for d in [x for x in px_dates if x < day][-10:][::-1]:
+            q = px[d].get(code)
+            if q and q[0]:
+                return q[0]
+        return None
+
+    # 除權息、減資、面額變更、ETF 分割：[生效日, 代號, 名稱, 市場, 種類, 標籤, 前收盤, 參考價, 參考價調整%, 是否估算,
+    #   現金股利, 每股配股, 換股率, 每股退還股款, 說明, 停止買賣日, 是否預告, 生效日收盤相對參考價%]
+    ca = []
+    if os.path.exists(CA_PATH):
+        since = (dt.date.today() - dt.timedelta(days=MAX_CA_DAYS)).isoformat()
+        with open(CA_PATH, encoding="utf-8-sig", newline="") as f:
+            for r in csv.DictReader(f):
+                if r["date"] < since:
+                    continue
+                prev, ref = num(r["prev_close"]), num(r["ref_price"])
+                cash, stock, ratio, refund = (num(r[k]) for k in ("cash", "stock", "ratio", "refund"))
+                est = False
+                if not ref:  # 還沒有官方參考價：用最近的收盤價估一個
+                    prev = prev or last_close(r["code"], r["stop_date"] or r["date"])
+                    if prev and r["kind"] == "dividend" and (cash or stock) and not r["reason"]:
+                        ref, est = (prev - (cash or 0)) / (1 + (stock or 0)), True
+                    elif prev and r["kind"] != "dividend" and ratio:
+                        ref, est = (prev - (refund or 0)) / ratio, True
+                adj = round((ref / prev - 1) * 100, 2) if ref and prev else None
+                q = px.get(r["date"], {}).get(r["code"])
+                day_pct = round((q[0] / ref - 1) * 100, 2) if q and q[0] and ref and not est else None
+                ca.append([r["date"], r["code"], r["name"], r["market"], r["kind"], r["label"], prev,
+                           round(ref, 2) if ref else None, adj, est, cash, stock, ratio, refund, r["reason"],
+                           r["stop_date"], r["status"] == "forecast", day_pct])
+
     data = {
         "built": dt.datetime.now().strftime("%Y-%m-%d %H:%M"),
         "schedule": SCHEDULE,
@@ -157,6 +199,7 @@ def main():
         "rebal": rebal,
         "cb": cb,
         "rev": rev,
+        "ca": ca,
     }
     with open(TEMPLATE_PATH, encoding="utf-8") as f:
         template = f.read()

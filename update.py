@@ -176,7 +176,7 @@ def fetch_and_store(args, run):
 
 
 def extra_steps(run):
-    """持股以外的每日資料：可轉債公告、月營收。各自獨立，一個失敗不影響其他步驟。"""
+    """持股以外的每日資料：可轉債公告、月營收、除權息減資、行情。各自獨立，一個失敗不影響其他步驟。"""
     today = dt.date.today()
     steps = run["steps"]
     site = steps.pop("site")  # 讓網站建置維持在最後一步
@@ -203,6 +203,14 @@ def extra_steps(run):
         steps["revenue"] = {"ok": False, "msg": f"{type(e).__name__}: {e}"[:200]}
         run["problems"].append(f"月營收: {steps['revenue']['msg']}")
     print(f"月營收：{steps['revenue']['msg']}")
+
+    try:
+        import corp_actions
+        steps["corp"] = {"ok": True, "msg": corp_actions.update()}
+    except Exception as e:
+        steps["corp"] = {"ok": False, "msg": f"{type(e).__name__}: {e}"[:200]}
+        run["problems"].append(f"除權息減資: {steps['corp']['msg']}")
+    print(f"除權息減資：{steps['corp']['msg']}")
 
     try:
         import prices
