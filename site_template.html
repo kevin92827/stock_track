@@ -66,6 +66,10 @@ tr.click { cursor: pointer; }
 .tag.ca.dividend { border: 1px solid var(--accent); color: var(--accent); }
 .tag.ca.reduction { background: var(--warn); color: #fff; }
 .tag.ca.par, .tag.ca.split { background: #7b3fe4; color: #fff; }
+.tag.ca.issue { background: #0f8a8a; color: #fff; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; background: var(--panel); color: var(--muted); padding: 5px 12px; font: inherit; cursor: pointer; }
+.seg button.on { background: var(--accent); color: #fff; font-weight: 600; }
 .day .top .tag.ca { font-size: 11px; padding: 0 4px; }
 .tag.rb-cutoff { border: 1px solid var(--warn); color: var(--warn); }
 .tag.rb-announce { border: 1px solid var(--accent); color: var(--accent); }
@@ -147,7 +151,7 @@ const state = { tab: "calendar", date: D.dates[D.dates.length - 1], kind: "全�
   month: null, calDay: null, calEtf: "全部", calKind: "全部", minAmt: 0, minPct: 1, calOnlyNewOut: false, calSort: null, calDir: 1,
   cbMonth: null, cbDay: null, cbHeld: false, cbMethod: "全部",
   revMonth: null, revDay: null, revHeld: false, revHigh: false, revSort: "rev", revDir: 1, revQ: "",
-  caMonth: null, caDay: null, caKind: "全部", caTarget: "全部", caMin: 0, caHeld: false, caSort: "adj", caDir: 1, caQ: "" };
+  caMonth: null, caDay: null, caKind: "全部", caTarget: "全部", caMin: 0, caHeld: false, caMode: "eff", caSort: "adj", caDir: 1, caQ: "" };
 
 const snap = (etf, date) => (D.snaps[etf] || {})[date];
 const datesOf = (etf) => D.dates.filter((d) => snap(etf, d));
@@ -630,7 +634,7 @@ const METHOD_CLS = { "公開競標": "bid", "詢價圈購": "book" };
 const methodTag = (r) => (r[6] || "未知").split("/").map((m) => `<span class="tag mth ${METHOD_CLS[m] || "unk"}" title="${esc(r[7] || "承銷公告尚未出現（通常在代收價款公告後 1～3 週）")}">${esc(m)}</span>`).join(" ");
 function renderCb() {
   if (!D.cb.length) return `<div class="empty">還沒有可轉債公告資料</div>`;
-  const list = D.cb.filter((r) => (!state.cbHeld || holdersOf(r[2]).length) && (state.cbMethod === "全部" || (r[6] || "未知").includes(state.cbMethod)));
+  const list = D.cb.filter((r) => (state.cbMethod === "全部" || (r[6] || "未知").includes(state.cbMethod)));
   const months = monthsBetween(D.cb[0][0].slice(0, 7), todayStr().slice(0, 7));
   const month = months.includes(state.cbMonth) ? state.cbMonth : months[months.length - 1];
   const inMonth = list.filter((r) => r[0].startsWith(month));
@@ -641,30 +645,29 @@ function renderCb() {
     const rs = byDay[d];
     if (!rs) return null;
     return { cls: "has" + (d === sel ? " sel" : ""), onclick: `pick({cbDay:'${d === sel ? "" : d}'})`, badge: `${rs.length} 筆`,
-      html: `<div class="top">${rs.slice(0, 5).map((r) => `<div>${methodTag(r)} ${holdersOf(r[2]).length ? "★ " : ""}${esc(r[2])} ${esc(r[3])}</div>`).join("")}${rs.length > 5 ? `<div>…還有 ${rs.length - 5} 筆</div>` : ""}</div>` };
+      html: `<div class="top">${rs.slice(0, 5).map((r) => `<div>${methodTag(r)} ${esc(r[2])} ${esc(r[3])}</div>`).join("")}${rs.length > 5 ? `<div>…還有 ${rs.length - 5} 筆</div>` : ""}</div>` };
   }, inMonth.some((r) => isWeekend(r[0])));
   const shown = (sel ? byDay[sel] : inMonth).slice().sort((x, y) => (y[0] + y[1]).localeCompare(x[0] + x[1]));
   const rows = shown.map((r) => { const [y, m, d] = r[0].split("-").map(Number);
     return `<tr><td class="l">${r[0]}</td><td class="l">${esc(r[1].slice(0, 5))}</td><td class="l">${D.names[r[2]] ? stockLink(r[2]) : esc(r[2])}</td><td class="l">${esc(r[3])}</td>
-      <td class="l">${MARKETS[r[4]] || esc(r[4])}</td><td class="l">${methodTag(r)}</td><td class="l wrap" style="min-width:380px">${esc(r[5])}</td><td class="l">${holderChips(r[2])}</td>
+      <td class="l">${MARKETS[r[4]] || esc(r[4])}</td><td class="l">${methodTag(r)}</td><td class="l wrap" style="min-width:380px">${esc(r[5])}</td>
       <td class="l"><a class="lnk" target="_blank" rel="noopener" href="https://mops.twse.com.tw/mops/#/web/t05st02?year=${y - 1911}&month=${m}&day=${d}">當日公告</a></td></tr>`; }).join("");
   return `
   <div class="controls">
     <label>月份 <select onchange="pick({cbMonth:this.value,cbDay:null})">${options([...months].reverse(), month)}</select></label>
     <label>承銷方式 <select onchange="pick({cbMethod:this.value,cbDay:null})">${options(["全部", "公開競標", "詢價圈購", "未知"], state.cbMethod)}</select></label>
-    <label><input type="checkbox" ${state.cbHeld ? "checked" : ""} onchange="pick({cbHeld:this.checked})"> 只看追蹤中 ETF 有持有的股票</label>
   </div>
   <div class="panel">
     <h2>${month} 可轉債代收價款公告</h2>
     <p class="hint">公開資訊觀測站重大訊息中，主旨是「轉換公司債代收價款及存儲專戶行庫」這類的公告（公司發行可轉債時發布）。各公司用語不一，
-      這裡收錄主旨含「轉換公司債」且含「代收」或「存儲」的公告，涵蓋上市、上櫃、興櫃。★ 表示追蹤中的 ETF 目前有持有。點任一天只看當天，再點一次看整個月。
+      這裡收錄主旨含「轉換公司債」且含「代收」或「存儲」的公告，涵蓋上市、上櫃、興櫃。點任一天只看當天，再點一次看整個月。
       <span class="tag mth bid">公開競標</span><span class="tag mth book">詢價圈購</span> 是承銷方式，來自證券商公會的承銷公告，通常在代收價款公告後 1～3 週才出現，之前顯示「未知」；滑鼠移到標籤上可看依據與競拍的投標期間。</p>
     ${grid}
   </div>
   <div class="panel">
     <h2>${sel || month} 公告明細 <span class="muted" style="font-weight:400">${shown.length} 筆</span></h2>
     ${rows ? `<div class="scroll"><table>
-      <thead><tr><th class="l">日期</th><th class="l">時間</th><th class="l">代號</th><th class="l">公司</th><th class="l">市場</th><th class="l">承銷方式</th><th class="l">主旨</th><th class="l">持有的 ETF</th><th class="l">原文</th></tr></thead>
+      <thead><tr><th class="l">日期</th><th class="l">時間</th><th class="l">代號</th><th class="l">公司</th><th class="l">市場</th><th class="l">承銷方式</th><th class="l">主旨</th><th class="l">原文</th></tr></thead>
       <tbody>${rows}</tbody></table></div>` : `<div class="empty">這個月沒有符合的公告</div>`}
   </div>`;
 }
@@ -680,7 +683,7 @@ const yiRev = (k) => (k == null ? "–" : (k / 1e5).toLocaleString("en-US", { mi
 function renderRevenue() {
   if (!D.rev.length) return `<div class="empty">還沒有月營收資料</div>`;
   const q = state.revQ.trim();
-  const list = D.rev.filter((r) => (!state.revHeld || holdersOf(r[1]).length) && (!state.revHigh || r[16]) && (!q || r[1].startsWith(q) || r[2].includes(q)));
+  const list = D.rev.filter((r) => (!state.revHigh || r[16]) && (!q || r[1].startsWith(q) || r[2].includes(q)));
   const dated = list.filter((r) => r[9]), unknown = list.filter((r) => !r[9]);
   const allDates = D.rev.filter((r) => r[9]).map(effDay).sort();
   const months = monthsBetween((allDates[0] || todayStr()).slice(0, 7), todayStr().slice(0, 7));
@@ -719,7 +722,6 @@ function renderRevenue() {
     <label>月份 <select onchange="pick({revMonth:this.value,revDay:null})">${options([...months].reverse(), month)}</select></label>
     <label>代號或名稱 <input type="text" value="${esc(state.revQ)}" placeholder="例如 2330" style="width:120px"
       onkeydown="if(event.key==='Enter')pick({revQ:this.value})" onblur="if(this.value!==state.revQ)pick({revQ:this.value})"></label>
-    <label><input type="checkbox" ${state.revHeld ? "checked" : ""} onchange="pick({revHeld:this.checked})"> 只看追蹤中 ETF 有持有的股票</label>
     <label><input type="checkbox" ${state.revHigh ? "checked" : ""} onchange="pick({revHigh:this.checked})"> 只看創歷史新高</label>
     ${unknown.length ? `<a class="lnk" onclick="pick({revDay:'unknown'})">公告日不明 ${unknown.length} 家</a>` : ""}
   </div>
@@ -742,10 +744,11 @@ function renderRevenue() {
 
 // ------------------------------------------------------------ 除權息減資日曆
 // D.ca 每列：[生效日, 代號, 名稱, 市場, 種類, 標籤, 前收盤, 參考價, 參考價調整%, 是否估算, 現金股利, 每股配股, 換股率, 每股退還股款,
-//             說明, 停止買賣日, 是否預告, 生效日收盤相對參考價%]
+//             說明, 停止買賣日, 是否預告, 生效日收盤相對參考價%, 公告日, 公告時間]
 // 生效日 = 除權息交易日，或減資／面額變更／分割後的恢復買賣日：第一個用新價格交易的日子。
+// 公告日 = 公司在公開資訊觀測站公告除權息日期的那天（只有上市櫃公司的除權息、現金增資有）。state.caMode 切換日曆用哪一個排。
 const CA_KINDS = { "除權息": ["dividend"], "減資": ["reduction"], "面額變更・分割": ["par", "split"] };
-const caTag = (r) => `<span class="tag ca ${r[4]}">${esc(r[5])}</span>`;
+const caTag = (r) => `<span class="tag ca ${r[5].includes("增資") ? "issue" : r[4]}">${esc(r[5])}</span>`;
 const caAdj = (r, d = 2) => (r[8] == null ? "" : (r[9] ? "約 " : "") + (r[8] > 0 ? "+" : "") + r[8].toFixed(d) + "%");
 const num2 = (v, d = 2) => v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 const trim = (v, d = 4) => String(+v.toFixed(d));
@@ -763,16 +766,20 @@ function caDetail(r) {
 function renderCorp() {
   if (!D.ca || !D.ca.length) return `<div class="empty">還沒有除權息、減資資料</div>`;
   const q = state.caQ.trim(), kinds = CA_KINDS[state.caKind], isEtf = (r) => r[1].startsWith("00");
-  const list = D.ca.filter((r) => (!kinds || kinds.includes(r[4])) && (state.caTarget === "全部" || (state.caTarget === "ETF") === isEtf(r))
+  const ann = state.caMode === "ann", dayOf = (r) => (ann ? r[18] : r[0]);
+  const matched = D.ca.filter((r) => (!kinds || kinds.includes(r[4])) && (state.caTarget === "全部" || (state.caTarget === "ETF") === isEtf(r))
     && (!state.caMin || Math.abs(r[8] ?? 0) >= state.caMin) && (!state.caHeld || holdersOf(r[1]).length) && (!q || r[1].startsWith(q) || r[2].includes(q)));
-  const today = todayStr(), lastDate = D.ca.reduce((m, r) => (r[0] > m ? r[0] : m), today);
-  const months = monthsBetween(D.ca[0][0].slice(0, 7), lastDate.slice(0, 7));
+  const list = ann ? matched.filter((r) => r[18]) : matched, noAnn = matched.length - list.length;
+  const today = todayStr(), allDays = D.ca.map(dayOf).filter(Boolean);
+  const firstDate = allDays.reduce((m, d) => (d < m ? d : m), today), lastDate = allDays.reduce((m, d) => (d > m ? d : m), today);
+  const months = monthsBetween(firstDate.slice(0, 7), lastDate.slice(0, 7));
   const month = months.includes(state.caMonth) ? state.caMonth : today.slice(0, 7);
   const byDay = {};
-  for (const r of list) if (r[0].startsWith(month)) (byDay[r[0]] = byDay[r[0]] || []).push(r);
+  for (const r of list) { const d = dayOf(r); if (d.startsWith(month)) (byDay[d] = byDay[d] || []).push(r); }
   const days = Object.keys(byDay).sort();
-  // 預設選今天；今天沒有事件就選之後最近的一天，再沒有就選這個月最後一天
-  const sel = state.caDay === "all" ? null : byDay[state.caDay] ? state.caDay : days.find((d) => d >= today) || days[days.length - 1] || null;
+  // 生效日版預設選今天；今天沒有事件就選之後最近的一天，再沒有就選這個月最後一天。公告日版預設選最近一個有公告的日子
+  const sel = state.caDay === "all" ? null : byDay[state.caDay] ? state.caDay
+    : (ann ? [...days].reverse().find((d) => d <= today) : days.find((d) => d >= today)) || days[days.length - 1] || null;
   const mag = (r) => Math.abs(r[8] ?? 0);
   const grid = monthGrid(month, (d) => {
     const rs = byDay[d];
@@ -784,14 +791,16 @@ function renderCorp() {
         <div class="top">${top.map((r) => `<div>${caTag(r)} ${holdersOf(r[1]).length ? "★ " : ""}${esc(r[2])} <span class="${cls(r[8])}">${caAdj(r, 1)}</span></div>`).join("")}</div>` };
   }, days.some(isWeekend));
 
-  const SORTS = { date: (r) => r[0], code: (r) => r[1], kind: (r) => r[5], prev: (r) => r[6] ?? -1, ref: (r) => r[7] ?? -1,
+  const SORTS = { date: (r) => r[0], ann: (r) => (r[18] || "") + (r[19] || ""), code: (r) => r[1], kind: (r) => r[5], prev: (r) => r[6] ?? -1, ref: (r) => r[7] ?? -1,
     adj: mag, signed: (r) => r[8] ?? -1e18, chg: (r) => r[17] ?? -1e18 };
   const sk = SORTS[state.caSort] || SORTS.adj;
-  const shown = (sel ? byDay[sel] : days.flatMap((d) => byDay[d])).slice().sort((x, y) => { const a = sk(x), b = sk(y); return (a < b ? 1 : a > b ? -1 : 0) * state.caDir || x[0].localeCompare(y[0]) || x[1].localeCompare(y[1]); });
+  const shown = (sel ? byDay[sel] : days.flatMap((d) => byDay[d])).slice().sort((x, y) => { const a = sk(x), b = sk(y); return (a < b ? 1 : a > b ? -1 : 0) * state.caDir || dayOf(x).localeCompare(dayOf(y)) || x[1].localeCompare(y[1]); });
   const th = (key, label, left) => `<th class="sort${left ? " l" : ""}" title="點一下排序" onclick="pick({caSort:'${key}',caDir:state.caSort==='${key}'?-state.caDir:1})">${label}${state.caSort === key ? (state.caDir > 0 ? " ▼" : " ▲") : ""}</th>`;
   const md = (d) => d.slice(5).replace("-", "/");
+  const effCell = (r) => `<td class="l">${md(r[0])}${r[16] ? ' <span class="tag late" title="還沒到生效日，交易所尚未公布參考價">預告</span>' : ""}</td>`;
+  const annCell = (r) => `<td class="l">${r[18] ? md(r[18]) + (r[19] ? " " + esc(r[19]) : "") : '<span class="muted">–</span>'}</td>`;
   const rows = shown.map((r) => `<tr>
-    <td class="l">${md(r[0])}${r[16] ? ' <span class="tag late" title="還沒到生效日，交易所尚未公布參考價">預告</span>' : ""}</td>
+    ${ann ? annCell(r) + effCell(r) : effCell(r) + annCell(r)}
     <td class="l">${D.names[r[1]] ? stockLink(r[1]) : esc(r[1])}</td><td class="l">${esc(r[2])}</td><td class="l">${MARKETS[r[3]] || esc(r[3])}</td>
     <td class="l">${caTag(r)}</td><td class="l">${caDetail(r)}</td>
     <td>${r[6] == null ? '<span class="muted">–</span>' : num2(r[6])}</td>
@@ -803,6 +812,7 @@ function renderCorp() {
   const cnt = (ks) => shown.filter((r) => ks.includes(r[4])).length;
   return `
   <div class="controls">
+    <span class="seg"><button class="${ann ? "" : "on"}" onclick="pick({caMode:'eff',caDay:null})">生效日版</button><button class="${ann ? "on" : ""}" onclick="pick({caMode:'ann',caDay:null})">公告日版</button></span>
     <label>月份 <select onchange="pick({caMonth:this.value,caDay:null})">${options([...months].reverse(), month)}</select></label>
     <label>類型 <select onchange="pick({caKind:this.value,caDay:null})">${options(["全部", ...Object.keys(CA_KINDS)], state.caKind)}</select></label>
     <label>標的 <select onchange="pick({caTarget:this.value,caDay:null})">${options(["全部", "個股", "ETF"], state.caTarget)}</select></label>
@@ -812,17 +822,19 @@ function renderCorp() {
     <label><input type="checkbox" ${state.caHeld ? "checked" : ""} onchange="pick({caHeld:this.checked,caDay:null})"> 只看追蹤中 ETF 有持有的股票</label>
   </div>
   <div class="panel">
-    <h2>${month} 除權息、減資、面額變更、分割日曆</h2>
+    <h2>${month} 除權息、減資、面額變更、分割日曆 <span class="muted" style="font-weight:400">依${ann ? "公告日" : "生效日"}</span></h2>
+    ${ann ? `<p class="hint"><b>公告日版</b>：每筆放在公司在公開資訊觀測站公告除權息日期的那一天，明細表有公告時間（同一筆公告過不只一次的取最早那次）。
+      只有上市櫃公司的除權息和現金增資有公告日；ETF 配息、減資、面額變更、分割沒有這項資料，不會出現在這個版本${noAnn ? `（目前的篩選條件下有 ${noAnn} 檔沒列出）` : ""}。</p>` : ""}
     <p class="hint">這些事件會讓股價在一天之內「跳」到新的參考價，看 K 線或算報酬時要留意。每筆放在<b>生效日</b>：除權息是除權息交易日，減資、面額變更、ETF 分割是恢復買賣日，也就是第一個用新價格交易的日子。
       每格列出當天調整幅度最大的四檔；百分比是「參考價 ÷ 前一個交易日收盤價 − 1」，除權息是負的，彌補虧損減資通常是正的。★ 表示追蹤中的 ETF 目前有持有。點任一天只看當天，再點一次看整個月。
-      <span class="tag ca dividend">息</span><span class="tag ca dividend">權</span> 除權息、<span class="tag ca reduction">減資</span>、<span class="tag ca split">面額變更</span><span class="tag ca split">分割</span>。
+      <span class="tag ca dividend">息</span><span class="tag ca dividend">權</span> 除權息、<span class="tag ca issue">增資</span> 現金增資造成的除權、<span class="tag ca reduction">減資</span>、<span class="tag ca split">面額變更</span><span class="tag ca split">分割</span>。
       <span class="tag late">預告</span> 是還沒到生效日、交易所尚未公布參考價的，前面有「約」的數字是用最近的收盤價估算；股利金額還沒公告或現金增資除權的無法估算。</p>
     ${grid}
   </div>
   <div class="panel">
     <h2>${sel || month} 明細 <span class="muted" style="font-weight:400">${shown.length} 檔：除權息 ${cnt(["dividend"])}、減資 ${cnt(["reduction"])}、面額變更與分割 ${cnt(["par", "split"])}</span></h2>
     ${rows ? `<div class="scroll"><table>
-      <thead><tr>${th("date", "生效日", 1)}${th("code", "代號", 1)}<th class="l">名稱</th><th class="l">市場</th>${th("kind", "類型", 1)}<th class="l">內容</th>
+      <thead><tr>${ann ? th("ann", "公告日", 1) + th("date", "生效日", 1) : th("date", "生效日", 1) + th("ann", "公告日", 1)}${th("code", "代號", 1)}<th class="l">名稱</th><th class="l">市場</th>${th("kind", "類型", 1)}<th class="l">內容</th>
       ${th("prev", "前收盤")}${th("ref", "參考價")}${th("adj", "價格調整幅度")}<th class="sort" title="生效日收盤價 ÷ 參考價 − 1：正的代表填息（或減資後上漲）。點一下排序" onclick="pick({caSort:'chg',caDir:state.caSort==='chg'?-state.caDir:1})">當日漲跌（對參考價）${state.caSort === "chg" ? (state.caDir > 0 ? " ▼" : " ▲") : ""}</th>
       <th class="l" title="減資、面額變更的停止買賣期間從這天開始，到生效日前一天">停止買賣</th><th class="l">持有的 ETF</th></tr></thead>
       <tbody>${rows}</tbody></table></div>` : `<div class="empty">這個月沒有符合條件的事件</div>`}

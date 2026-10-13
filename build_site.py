@@ -163,7 +163,7 @@ def main():
         return None
 
     # 除權息、減資、面額變更、ETF 分割：[生效日, 代號, 名稱, 市場, 種類, 標籤, 前收盤, 參考價, 參考價調整%, 是否估算,
-    #   現金股利, 每股配股, 換股率, 每股退還股款, 說明, 停止買賣日, 是否預告, 生效日收盤相對參考價%]
+    #   現金股利, 每股配股, 換股率, 每股退還股款, 說明, 停止買賣日, 是否預告, 生效日收盤相對參考價%, 公告日, 公告時間]
     ca = []
     if os.path.exists(CA_PATH):
         since = (dt.date.today() - dt.timedelta(days=MAX_CA_DAYS)).isoformat()
@@ -185,7 +185,8 @@ def main():
                 day_pct = round((q[0] / ref - 1) * 100, 2) if q and q[0] and ref and not est else None
                 ca.append([r["date"], r["code"], r["name"], r["market"], r["kind"], r["label"], prev,
                            round(ref, 2) if ref else None, adj, est, cash, stock, ratio, refund, r["reason"],
-                           r["stop_date"], r["status"] == "forecast", day_pct])
+                           r["stop_date"], r["status"] == "forecast", day_pct,
+                           r.get("announce_date") or None, r.get("announce_time") or None])
 
     data = {
         "built": dt.datetime.now().strftime("%Y-%m-%d %H:%M"),

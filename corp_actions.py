@@ -4,6 +4,9 @@
 來源是證交所與櫃買中心的預告表和計算結果表。預告的（status=forecast）還沒有參考價，
 到了生效日交易所公布參考價後變成 final。每次更新 11 次請求。
 
+除權息另外從公開資訊觀測站的「股利分派公告資料彙總表」補上公司公告的日期與時間（announce_date、announce_time），
+以及現金增資的認購價；ETF、減資、面額變更沒有這份資料。現金增資造成的除權，標籤改成「增資」。
+
     python corp_actions.py              更新最近兩週與未來的預告（每日執行用）
     python corp_actions.py 2025-10-01   從指定日期開始回補
 """
@@ -14,12 +17,14 @@ import os
 import re
 import sys
 
+import mops
 import prices
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 CA_PATH = os.path.join(BASE, "data", "corp_actions.csv")
 FIELDS = ["date", "code", "name", "market", "kind", "label", "prev_close", "ref_price",
-          "cash", "stock", "ratio", "refund", "reason", "stop_date", "status"]
+          "cash", "stock", "ratio", "refund", "reason", "stop_date", "status",
+          "announce_date", "announce_time"]
 TWSE = "https://www.twse.com.tw/rwd/zh/"
 TPEX = "https://www.tpex.org.tw/www/zh-tw/bulletin/"
 TPEX_FORECAST = "https://www.tpex.org.tw/openapi/v1/tpex_exright_prepost"
@@ -146,7 +151,8 @@ def twse_split(start, end):
 def tpex_dividend(start, end):
     """上櫃除權除息計算結果表"""
     return [row(roc(r[0]), r[1], r[2], "otc", "dividend", LABELS.get(r[8].strip(), r[8].strip()),
-                prev_close=val(r[3]), ref_price=val(r[4]), cash=val(r[13]), stock=per_share(r[14]))
+                prev_close=val(r[3]), ref_price=val(r[4]), cash=val(r[13]), stock=per_share(r[14]),
+                reason=_rights(r[20], r[16]))
             for r in _tpex("exDailyQ", startDate=start.strftime("%Y/%m/%d"), endDate=min(end, dt.date.today()).strftime("%Y/%m/%d"))]
 
 
@@ -197,6 +203,87 @@ SOURCES = [("上市除權息預告", twse_dividend_forecast), ("上櫃除權息�
            ("上市 ETF 分割", twse_split), ("上櫃 ETF 分割", tpex_split)]
 
 
+# ---- 公開資訊觀測站：公司公告除權息的日期 ----
+
+def mops_announcements(market, year, month):
+    """某個月公告的股利分派（market 是 sii 或 otc）-> [{code, dates, announce_date, announce_time, cash_issue, price}]
+    dates 是這則公告裡的除權交易日和除息交易日。"""
+    j = mops._post("https://mops.twse.com.tw/mops/api/redirectToOld",
+                   {"apiName": "ajax_t108sb27", "parameters": {
+                       "encodeURIComponent": 1, "step": 1, "firstin": 1, "off": 1, "TYPEK": market,
+                       "year": str(year - 1911), "month": f"{month:02d}", "type": "1", "co_id": "", "b_date": "", "e_date": ""}})
+    r = mops.request("GET", j["result"]["url"])
+    r.encoding = "utf-8"
+    out = []
+    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", r.text, flags=re.S | re.I):
+        c = [re.sub(r"<[^>]+>|&nbsp;?|\s+", "", x) for x in re.findall(r"<td[^>]*>(.*?)</td>", tr, flags=re.S | re.I)]
+        if len(c) < 18 or not re.fullmatch(r"\w{4,6}", c[0]) or not roc(c[16]):
+            continue
+        out.append({"code": c[0], "dates": {d for d in (roc(c[6]), roc(c[10])) if d}, "announce_date": roc(c[16]),
+                    "announce_time": c[17][:5], "cash_issue": val(c[12]), "price": val(c[14])})
+    return out
+
+
+def add_announcements(rows, months):
+    """把公告日併進 rows（同一筆有多則公告時取最早的）；回傳失敗訊息的 list"""
+    index = {}
+    for k, r in rows.items():
+        if r["kind"] == "dividend":
+            index.setdefault((r["code"], r["date"]), []).append(r)
+    errors = []
+    for market in ("sii", "otc"):
+        for y, m in months:
+            try:
+                found = mops_announcements(market, y, m)
+            except mops.Blocked:
+                return errors + ["公告日（公開資訊觀測站暫時封鎖）"]
+            except Exception as e:
+                errors.append(f"公告日 {market} {y}-{m:02d}（{type(e).__name__}）")
+                continue
+            for a in found:
+                for d in a["dates"]:
+                    for r in index.get((a["code"], d), []):
+                        when = (a["announce_date"], a["announce_time"])
+                        if not r["announce_date"] or when < (r["announce_date"], r["announce_time"]):
+                            r["announce_date"], r["announce_time"] = when
+                        if a["cash_issue"] and not r["reason"]:
+                            r["reason"] = "現金增資" + (f"（認購價 {a['price']:g} 元）" if a["price"] else "")
+    return errors
+
+
+def twse_rights_detail(code, date):
+    """上市除權的明細（結果表沒有）：-> (每股無償配股, 說明)"""
+    j = prices._get(TWSE + "exRight/TWT49UDetail", response="json", STK_NO=code, T1=date.replace("-", ""))
+    d = (j.get("data") or [[]])[0]
+    if len(d) < 8:
+        return None, ""
+    free, bonus, issue, price = (val((x.split() or [""])[0]) for x in d[4:8])
+    reason = "現金增資" + (f"（認購價 {price:g} 元）" if price else "") if issue else "員工紅利轉增資" if bonus else ""
+    return (free / 1000 if free else None), reason
+
+
+def add_rights_detail(rows):
+    """上市的「權」如果既沒有配股率也沒有說明，就查明細分辨是無償配股還是現金增資"""
+    errors = 0
+    for r in rows.values():
+        if (r["market"] == "sii" and r["kind"] == "dividend" and "權" in r["label"] and r["status"] == "final"
+                and r["stock"] == "" and r["reason"] == ""):
+            try:
+                stock, reason = twse_rights_detail(r["code"], r["date"])
+            except Exception:
+                errors += 1
+                continue
+            r["stock"] = "" if stock is None else stock
+            r["reason"] = reason or ("" if stock else "其他除權")
+    return [f"上市除權明細 {errors} 筆"] if errors else []
+
+
+def relabel(r):
+    """現金增資造成的除權不叫「權」：沒有無償配股的改標「增資」（同時配息的標「息＋增資」）"""
+    if r["kind"] == "dividend" and r["reason"].startswith("現金增資") and not val(r["stock"]):
+        r["label"] = {"權": "增資", "權息": "息＋增資"}.get(r["label"], r["label"])
+
+
 def _key(r):
     return (r["date"], r["code"], r["kind"])
 
@@ -205,7 +292,7 @@ def load():
     if not os.path.exists(CA_PATH):
         return {}
     with open(CA_PATH, encoding="utf-8-sig", newline="") as f:
-        return {_key(r): r for r in csv.DictReader(f)}
+        return {_key(r): {k: r.get(k) or "" for k in FIELDS} for r in csv.DictReader(f)}
 
 
 def save(rows):
@@ -221,6 +308,7 @@ def save(rows):
 def update(start=None):
     """抓 start（預設兩週前）到未來 AHEAD 天的事件併進 CSV。回傳訊息；有來源失敗時丟 RuntimeError。"""
     today = dt.date.today()
+    backfill = start is not None
     start = start or today - dt.timedelta(days=14)
     end = today + dt.timedelta(days=AHEAD)
     rows = load()
@@ -244,6 +332,16 @@ def update(start=None):
         merged = {f: r[f] if r[f] != "" else old.get(f, "") for f in FIELDS}
         merged["status"] = "final" if merged["ref_price"] != "" else "forecast"
         rows[k] = merged
+    # 公告日：平常查這個月和上個月公告的；回補時從 start 往前多抓三個月（公告通常比除權息日早幾週）
+    first = (start - dt.timedelta(days=95)) if backfill else (today.replace(day=1) - dt.timedelta(days=1))
+    months, d = [], first.replace(day=1)
+    while d <= today:
+        months.append((d.year, d.month))
+        d = (d + dt.timedelta(days=32)).replace(day=1)
+    errors += add_announcements(rows, months)
+    errors += add_rights_detail(rows)
+    for r in rows.values():
+        relabel(r)
     save(rows)
     upcoming = sum(r["date"] >= today.isoformat() for r in rows.values())
     msg = f"新增 {len(rows) - before} 筆，共 {len(rows)} 筆，今天起 {upcoming} 筆"
