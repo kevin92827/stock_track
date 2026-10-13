@@ -2903,10 +2903,10 @@
 2026-10-12,1565,精華,otc,dividend,息,97.5,91.7,5.8,,,,,,final
 2026-10-12,2323,中環,sii,reduction,減資,11.0,10.88,,,,,退還股款,,final
 2026-10-12,3085,新零售,otc,reduction,減資,12.1,15.59,,,0.77632748,,彌補虧損,2026-10-01,final
-2026-10-13,1727,中華化,sii,dividend,權,,,,,,,現金增資（認購價 81 元）,,forecast
-2026-10-13,2938,床的世界,otc,dividend,息,,,0.61725044,,,,,,forecast
+2026-10-13,1727,中華化,sii,dividend,權,103.5,101.31,,,,,現金增資（認購價 81 元）,,final
+2026-10-13,2938,床的世界,otc,dividend,息,18.85,18.23,0.61725044,,,,,,final
 2026-10-14,4903,聯光通,otc,dividend,息,,,0.3,,,,,,forecast
-2026-10-15,00401A,主動摩根台灣鑫收,sii,dividend,息,,,,,,,,,forecast
+2026-10-15,00401A,主動摩根台灣鑫收,sii,dividend,息,,,0.131,,,,,,forecast
 2026-10-15,1463,強盛新,sii,dividend,息,,,0.1273,,,,,,forecast
 2026-10-15,6548,長科*,otc,dividend,息,,,0.45105516,,,,,,forecast
 2026-10-16,00734B,台新JPM新興債,otc,dividend,息,,,,,,,,,forecast
@@ -2965,7 +2965,7 @@
 2026-10-19,00948B,中信優息投資級債,otc,dividend,息,,,,,,,,,forecast
 2026-10-19,00952,凱基台灣AI50,sii,dividend,息,,,,,,,,,forecast
 2026-10-19,00956,中信日經高股息,sii,dividend,息,,,,,,,,,forecast
-2026-10-19,00957B,兆豐US優選投等債,otc,dividend,息,,,,,,,,,forecast
+2026-10-19,00957B,兆豐US優選投等債,otc,dividend,息,,,0.064,,,,,,forecast
 2026-10-19,00960,野村全球航運龍頭,sii,dividend,息,,,,,,,,,forecast
 2026-10-19,00961,FT臺灣永續高息,sii,dividend,息,,,,,,,,,forecast
 2026-10-19,00963,中信全球高股息,sii,dividend,息,,,,,,,,,forecast
@@ -2991,7 +2991,7 @@
 2026-10-20,00931B,統一美債20年,otc,dividend,息,,,,,,,,,forecast
 2026-10-20,00985D,主動貝萊德優投等,otc,dividend,息,,,,,,,,,forecast
 2026-10-20,00991B,貝萊德A級公司債,sii,dividend,息,,,,,,,,,forecast
-2026-10-20,1711,永光,sii,dividend,權,,,,,,,現金增資,,forecast
+2026-10-20,1711,永光,sii,dividend,權,,,,,,,現金增資（認購價 34 元）,,forecast
 2026-10-21,00408A,主動第一金優股息,sii,dividend,息,,,,,,,,,forecast
 2026-10-21,00789B,復華公司債A3,otc,dividend,息,,,,,,,,,forecast
 2026-10-21,00791B,復華信用債1-5,otc,dividend,息,,,,,,,,,forecast
@@ -3016,8 +3016,12 @@
 2026-10-27,1516,川飛,sii,reduction,減資,,,,,0.7500512,,彌補虧損,2026-10-15,forecast
 2026-10-27,3691,碩禾,otc,dividend,權,,,,,,,現金增資,,forecast
 2026-10-27,6142,友勁,sii,reduction,減資,,,,,0.91966689,,彌補虧損,2026-10-15,forecast
+2026-10-28,00726B,國泰新興投等債,otc,dividend,息,,,,,,,,,forecast
 2026-10-28,00990B,國泰收益非投等債,otc,dividend,息,,,,,,,,,forecast
+2026-10-28,2025,千興,sii,dividend,權,,,,,,,現金增資,,forecast
 2026-10-28,4552,力達-KY,sii,dividend,息,,,0.6,,,,,,forecast
+2026-10-29,2762,世界健身-KY,sii,dividend,息,,,1.807197,,,,,,forecast
+2026-10-29,3563,牧德,sii,dividend,息,,,1.0,,,,,,forecast
 2026-10-29,5522,遠雄,sii,dividend,息,,,1.0,,,,,,forecast
 2026-11-05,5523,豐謙,otc,dividend,息,,,0.5,,,,,,forecast
 2026-11-23,1808,潤隆,sii,reduction,減資,,,,,0.79999999,2.0,退還股款,2026-11-12,forecast
