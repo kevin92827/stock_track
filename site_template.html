@@ -82,6 +82,7 @@ a.lnk { color: var(--accent); cursor: pointer; text-decoration: none; }
 a.lnk:hover { text-decoration: underline; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; white-space: normal; }
 .empty { color: var(--muted); padding: 20px 0; text-align: center; }
+input.etfpick { width: 230px; }
 input[type=number] { font: inherit; color: var(--text); background: var(--panel); width: 64px;
   border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
 /* 燈號：顏色之外一定搭配 ✓／✕ 符號 */
@@ -218,9 +219,27 @@ function openStock(code) { go({ tab: "stock", stock: code, q: code }); }
 const stockLink = (c) => `<a class="lnk" onclick="openStock('${esc(c)}')">${esc(c)}</a>`;
 const etfLink = (c) => `<a class="lnk" onclick="openEtf('${esc(c)}')">${esc(c)}</a>`;
 const options = (list, cur) => list.map((d) => `<option${d === cur ? " selected" : ""}>${esc(d)}</option>`).join("");
-// ETF 下拉選單：依主動／被動／槓桿分組
-const etfGroups = (cur) => ["主動", "被動", "槓桿", "反向"].map((k) => `<optgroup label="${k}式">${D.etfs.filter((x) => x.kind === k)
-  .map((x) => `<option value="${x.code}"${x.code === cur ? " selected" : ""}>${x.code} ${esc(x.name)}</option>`).join("")}</optgroup>`).join("");
+
+// 可輸入搜尋的 ETF 選單：點進去會清空，打代號或名稱的一部分就會篩選；all 為 true 時多一個「全部」。
+// 選好或按 Enter 後呼叫 fn(代號)；沒有符合的就恢復原本的選擇。
+const etfLabel = (c) => (c === "全部" ? "全部" : c + " " + etfOf(c).name);
+function etfPicker(cur, fn, all) {
+  const id = "etf-list" + (all ? "-all" : "");
+  return `<input type="text" class="etfpick" list="${id}" value="${esc(etfLabel(cur))}" data-cur="${esc(etfLabel(cur))}" placeholder="輸入代號或名稱搜尋"
+    onfocus="this.value=''" onclick="try{this.showPicker()}catch(e){}" onblur="if(!this.value.trim())this.value=this.dataset.cur"
+    oninput="if(this.list&&[...this.list.options].some((o)=>o.value===this.value))pickEtfFrom(this,${fn},${!!all})"
+    onkeydown="if(event.key==='Enter')pickEtfFrom(this,${fn},${!!all})" onchange="pickEtfFrom(this,${fn},${!!all})">
+  <datalist id="${id}">${all ? '<option value="全部"></option>' : ""}${D.etfs.map((x) => `<option value="${esc(x.code + " " + x.name)}">${x.kind}式・${x.issuer}</option>`).join("")}</datalist>`;
+}
+function pickEtfFrom(el, fn, all) {
+  const v = el.value.trim();
+  if (!v) return;
+  if (all && v === "全部") return fn("全部");
+  const c = v.split(" ")[0].toUpperCase();
+  const m = etfOf(c) || D.etfs.find((x) => x.code.startsWith(c)) || D.etfs.find((x) => x.name.includes(v));
+  if (m) fn(m.code); else { el.value = el.dataset.cur; el.blur(); }
+}
+const pickCalEtf = (c) => pick({ calEtf: c });
 
 // ------------------------------------------------------------ 總覽
 function renderOverview() {
@@ -295,7 +314,7 @@ function renderEtf() {
   const s = snap(e.code, to);
   const head = `
   <div class="controls">
-    <label>ETF <select onchange="go({etf:this.value,to:null,base:null})">${etfGroups(e.code)}</select></label>
+    <label>ETF ${etfPicker(e.code, "openEtf")}</label>
     <label>資料日 <select onchange="go({to:this.value,base:null})">${options([...ds].reverse(), to)}</select></label>
     ${base ? `<label>比較基準 <select onchange="go({base:this.value})">${options([...earlier].reverse(), base)}</select></label>` : ""}
     <label><input type="checkbox" ${state.onlyChanged ? "checked" : ""} onchange="go({onlyChanged:this.checked})"> 只看有異動</label>
@@ -459,6 +478,13 @@ function streakTag(v, date, short) {
   const text = short ? (s.fromNew ? "新" : "") + "連" + s.n : (s.fromNew ? "新增後" : "") + `連${dir} ${s.n} 天`;
   return `<span class="tag ${v.amt > 0 ? "add" : "cut"} streak${s.fromNew ? " fromnew" : ""}" title="${title}">${text}</span>`;
 }
+// 變動占當天成交量：股數變動 ÷ 該股當天成交股數（D.vol 是張數）
+const dateIdx = new Map(D.dates.map((d, i) => [d, i]));
+function volShare(v, date) {
+  const lots = (D.vol[v.code] || [])[dateIdx.get(date)];
+  return lots ? Math.abs(v.dq) / (lots * 1000) * 100 : null;
+}
+const volText = (x) => (x == null ? '<span class="muted">–</span>' : x < 0.1 ? "<0.1%" : x.toFixed(x < 10 ? 1 : 0) + "%");
 const relText = (v) => (v.status === "new" ? `<span class="muted">占基金</span> ${v.share.toFixed(2)}%` : (v.rel > 0 ? "+" : "−") + (Math.abs(v.rel) * 100).toFixed(1) + "%");
 const yi = (x, d = 1) => (x > 0 ? "+" : x < 0 ? "−" : "") + Math.abs(x).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }) + " 億";
 const yiAbs = (x, d = 1) => Math.abs(x).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }) + " 億";
@@ -543,7 +569,7 @@ function renderCalendar() {
   const head = `
   <div class="controls">
     <label>月份 <select onchange="go({month:this.value,calDay:null})">${options([...months].reverse(), month)}</select></label>
-    <label>ETF <select onchange="pick({calEtf:this.value})"><option value="全部"${state.calEtf === "全部" ? " selected" : ""}>全部</option>${etfGroups(state.calEtf)}</select></label>
+    <label>ETF ${etfPicker(state.calEtf, "pickCalEtf", true)}</label>
     <label>ETF 類型 <select onchange="pick({calKind:this.value})">${options(["全部", "主動", "被動", "槓桿", "反向"], state.calKind)}</select></label>
     <label>變動占原持股 ≥ <input type="number" min="0" step="0.5" value="${state.minPct}" onchange="pick({minPct:+this.value||0})"> %</label>
     <label>且 金額 ≥ <input type="number" min="0" step="0.5" value="${state.minAmt}" onchange="pick({minAmt:+this.value||0})"> 億</label>
@@ -565,22 +591,24 @@ function renderCalendar() {
   // 明細可點欄位標題排序：第一下由大到小，再點一下反過來；預設依金額絕對值
   const SORTS = { etf: (v) => v.etf.code, kind: (v) => v.etf.kind, code: (v) => v.code, status: (v) => v.status,
     dq: (v) => v.dq, amt: (v) => v.amt, rel: (v) => (v.status === "new" ? Infinity : v.rel),
-    streak: (v) => streakOf(v, sel) * Math.sign(v.amt) };
+    streak: (v) => streakOf(v, sel) * Math.sign(v.amt), vol: (v) => volShare(v, sel) ?? -1 };
   const sk = SORTS[state.calSort], evs = [...stats[sel].evs];
   if (sk) evs.sort((x, y) => { const a = sk(x), b = sk(y); return (a < b ? 1 : a > b ? -1 : 0) * state.calDir; });
   const th = (key, label, left) => `<th class="sort${left ? " l" : ""}" title="點一下排序" onclick="pick({calSort:'${key}',calDir:state.calSort==='${key}'?-state.calDir:1})">${label}${state.calSort === key ? (state.calDir > 0 ? " ▼" : " ▲") : ""}</th>`;
-  const rows = evs.map((v) => `<tr><td class="l">${etfLink(v.etf.code)}</td><td class="l">${esc(v.etf.name)}</td>
+  const rows = evs.map((v) => `<tr><td class="l" title="${esc(v.etf.name)}">${etfLink(v.etf.code)}</td>
     <td class="l"><span class="tag kind">${v.etf.kind}</span></td>
     <td class="l">${stockLink(v.code)}</td><td class="l">${esc(nameOf(v.code))}</td><td class="l">${tag(v.status)}</td>
     <td class="l">${streakTag(v, sel) || '<span class="muted">–</span>'}</td>
-    <td class="${cls(v.dq)}">${signed(v.dq)}</td><td class="${cls(v.amt)}">${yi(v.amt, 2)}</td>
+    <td class="${cls(v.dq)}">${signed(v.dq)}</td><td class="${cls(v.dq)}">${volText(volShare(v, sel))}</td><td class="${cls(v.amt)}">${yi(v.amt, 2)}</td>
     <td class="${cls(v.amt)}">${relText(v)}</td></tr>`).join("");
   return head + calPanel + `
   <div class="panel">
     <h2>${sel} 明細 <span class="muted" style="font-weight:400">${evs.length} 筆，買進 ${yiAbs(stats[sel].buy)} ／ 賣出 ${yiAbs(stats[sel].sell)}</span></h2>
-    ${rows ? `<div class="scroll"><table>
-      <thead><tr>${th("etf", "ETF", 1)}<th class="l">名稱</th>${th("kind", "類型", 1)}${th("code", "股票", 1)}<th class="l">名稱</th>${th("status", "狀態", 1)}
-      ${th("streak", "連續", 1)}${th("dq", "股數變動")}${th("amt", "估計金額")}${th("rel", "占原持股比例")}</tr></thead><tbody>${rows}</tbody></table></div>`
+    ${rows ? `<p class="hint">點 ETF 代號看該 ETF 的持股明細（滑鼠停在代號上會顯示名稱）。「占當天成交量」是股數變動 ÷ 這檔股票當天的成交股數；
+      股數變動含申購買回造成的增減，ETF 也可能分好幾天或用盤後、鉅額交易完成，只能當作買賣力道的參考。</p>
+      <div class="scroll"><table>
+      <thead><tr>${th("etf", "ETF", 1)}${th("kind", "類型", 1)}${th("code", "股票", 1)}<th class="l">名稱</th>${th("status", "狀態", 1)}
+      ${th("streak", "連續", 1)}${th("dq", "股數變動")}${th("vol", "占當天成交量")}${th("amt", "估計金額")}${th("rel", "占原持股比例")}</tr></thead><tbody>${rows}</tbody></table></div>`
       : `<div class="empty">${sel === D.dates[0] ? "這是資料的第一天，沒有前一天可以比較" : "這一天沒有達到門檻的異動"}</div>`}
   </div>` + upcomingPanel;
 }

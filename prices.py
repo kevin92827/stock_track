@@ -1,4 +1,4 @@
-"""上市櫃股票每日收盤價、漲跌幅與發行股數，存在 data/prices.csv（營收日曆算當日漲跌幅與市值用）。
+"""上市櫃股票每日收盤價、漲跌幅、成交股數與發行股數，存在 data/prices.csv（營收日曆算當日漲跌幅與市值、ETF 日曆算變動占成交量用）。
 
 來源：證交所每日收盤行情（MI_INDEX）、櫃買中心上櫃每日收盤行情；上市公司的發行股數來自證交所 OpenAPI 公司基本資料，
 上櫃的直接在行情表裡。每個交易日 3 次請求。
@@ -17,7 +17,7 @@ from requests.adapters import HTTPAdapter
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 PX_PATH = os.path.join(BASE, "data", "prices.csv")
-FIELDS = ["date", "code", "close", "pct", "shares"]
+FIELDS = ["date", "code", "close", "pct", "shares", "volume"]
 TWSE = "https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX"
 TPEX = "https://www.tpex.org.tw/www/zh-tw/afterTrading/otc"
 TWSE_SHARES = "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
@@ -67,7 +67,7 @@ def twse_shares():
 
 
 def quotes(day, shares_l=None):
-    """某交易日全部上市櫃股票 -> {code: {close, pct, shares}}；休市日回空 dict"""
+    """某交易日全部上市櫃股票 -> {code: {close, pct, shares, volume}}；休市日回空 dict。volume 是成交股數"""
     out = {}
     j = _get(TWSE, date=day.strftime("%Y%m%d"), type="ALLBUT0999", response="json")
     for t in j.get("tables") or []:
@@ -82,7 +82,7 @@ def quotes(day, shares_l=None):
             prev = close - signed
             # 「X」是除權息、減資恢復買賣等不比價的日子，漲跌幅留空（網站會改用參考價計算）
             out[code] = {"close": close, "pct": round(signed / prev * 100, 2) if prev and "X" not in sign else None,
-                         "shares": (shares_l or {}).get(code)}
+                         "shares": (shares_l or {}).get(code), "volume": int(num(row[2]) or 0)}
     j = _get(TPEX, date=day.strftime("%Y/%m/%d"), type="EW", response="json")
     for t in j.get("tables") or []:
         for row in t.get("data") or []:
@@ -92,7 +92,7 @@ def quotes(day, shares_l=None):
             # 除權息、減資恢復買賣等不比價的日子，漲跌欄是文字（「除息」等），漲跌幅留空
             prev = close - (chg or 0)
             out[code] = {"close": close, "pct": round(chg / prev * 100, 2) if prev and chg is not None else None,
-                         "shares": int(shares) if shares else None}
+                         "shares": int(shares) if shares else None, "volume": int(num(row[7]) or 0)}
     return out
 
 
@@ -130,13 +130,26 @@ def update(days):
         for code, v in q.items():
             rows[(day.isoformat(), code)] = {"date": day.isoformat(), "code": code, "close": v["close"],
                                             "pct": "" if v["pct"] is None else v["pct"],
-                                            "shares": v["shares"] or ""}
+                                            "shares": v["shares"] or "", "volume": v["volume"]}
         fetched.append(day.isoformat())
     save(rows)
     msg = f"補了 {len(fetched)} 個交易日（{', '.join(fetched)}）" if fetched else "沒有新的交易日"
     if empty:
         msg += f"；{', '.join(empty)} 無行情（休市或尚未公布）"
     return msg
+
+
+def backfill_volume():
+    """成交股數是後來才加的欄位：把已有行情、但還沒有成交股數的日子重抓一次"""
+    rows = load()
+    todo = sorted({k[0] for k, r in rows.items() if not r.get("volume")})
+    for day in todo:
+        for code, v in quotes(dt.date.fromisoformat(day)).items():
+            if (day, code) in rows:
+                rows[(day, code)]["volume"] = v["volume"]
+        print(day, flush=True)
+    save(rows)
+    return f"補了 {len(todo)} 個交易日的成交股數"
 
 
 def needed_days():
@@ -161,4 +174,4 @@ def needed_days():
 
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
-    print(update(needed_days()))
+    print(backfill_volume() if "--volume" in sys.argv else update(needed_days()))

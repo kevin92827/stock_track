@@ -98,11 +98,22 @@ def main():
         cb.sort()
 
     # 每日行情 {date: {code: (close, pct, shares)}}，給營收日曆算當日漲跌幅與市值
-    px = {}
+    # 另外記 ETF 持股的每日成交股數，給 ETF 日曆算「變動占當天成交量」
+    px, vol_px = {}, {}
     if os.path.exists(PX_PATH):
         with open(PX_PATH, encoding="utf-8-sig", newline="") as f:
             for r in csv.DictReader(f):
                 px.setdefault(r["date"], {})[r["code"]] = (num(r["close"]), num(r["pct"]), num(r["shares"]))
+                if r.get("volume") and r["date"] in keep and r["code"] in names:
+                    vol_px[(r["code"], r["date"])] = int(r["volume"])
+    # 成交量（張）：{代號: [每個資料日的成交張數]}，順序同 dates；沒有行情的是 null
+    def lots(v):
+        return None if v is None else round(v / 1000) or round(v / 1000, 3)
+    vol = {}
+    for c in sorted(names):
+        arr = [lots(vol_px.get((c, d))) for d in dates]
+        if any(x is not None for x in arr):
+            vol[c] = arr
     px_dates = sorted(px)
     # 除權息、減資恢復買賣這些日子交易所不算漲跌，改用官方參考價算當天漲跌幅
     if os.path.exists(CA_PATH):
@@ -201,6 +212,7 @@ def main():
         "cb": cb,
         "rev": rev,
         "ca": ca,
+        "vol": vol,
     }
     with open(TEMPLATE_PATH, encoding="utf-8") as f:
         template = f.read()
