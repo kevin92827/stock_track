@@ -223,13 +223,22 @@ const options = (list, cur) => list.map((d) => `<option${d === cur ? " selected"
 // 可輸入搜尋的 ETF 選單：點進去會清空，打代號或名稱的一部分就會篩選；all 為 true 時多一個「全部」。
 // 選好或按 Enter 後呼叫 fn(代號)；沒有符合的就恢復原本的選擇。
 const etfLabel = (c) => (c === "全部" ? "全部" : c + " " + etfOf(c).name);
+// 最近一個資料日的基金規模（淨資產，億元），顯示在選單裡
+function aumText(code) {
+  const ds = datesOf(code);
+  for (let i = ds.length - 1; i >= 0; i--) {
+    const n = snap(code, ds[i]).n;
+    if (n != null) return `・規模 ${n.toLocaleString("en-US", { maximumFractionDigits: n >= 100 ? 0 : 1 })} 億`;
+  }
+  return "";
+}
 function etfPicker(cur, fn, all) {
   const id = "etf-list" + (all ? "-all" : "");
   return `<input type="text" class="etfpick" list="${id}" value="${esc(etfLabel(cur))}" data-cur="${esc(etfLabel(cur))}" placeholder="輸入代號或名稱搜尋"
     onfocus="this.value=''" onclick="try{this.showPicker()}catch(e){}" onblur="if(!this.value.trim())this.value=this.dataset.cur"
     oninput="if(this.list&&[...this.list.options].some((o)=>o.value===this.value))pickEtfFrom(this,${fn},${!!all})"
     onkeydown="if(event.key==='Enter')pickEtfFrom(this,${fn},${!!all})" onchange="pickEtfFrom(this,${fn},${!!all})">
-  <datalist id="${id}">${all ? '<option value="全部"></option>' : ""}${D.etfs.map((x) => `<option value="${esc(x.code + " " + x.name)}">${x.kind}式・${x.issuer}</option>`).join("")}</datalist>`;
+  <datalist id="${id}">${all ? '<option value="全部"></option>' : ""}${D.etfs.map((x) => `<option value="${esc(x.code + " " + x.name)}">${x.kind}式・${x.issuer}${aumText(x.code)}</option>`).join("")}</datalist>`;
 }
 function pickEtfFrom(el, fn, all) {
   const v = el.value.trim();
