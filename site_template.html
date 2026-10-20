@@ -32,6 +32,8 @@ nav button.caltab { font-weight: 700; font-size: 15px; color: var(--text); borde
 nav button.caltab.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 nav .sep { width: 1px; height: 22px; background: var(--line); margin: 0 10px; align-self: center; }
 .built { margin-left: auto; color: var(--muted); font-size: 12px; }
+.maplink { font-weight: 700; color: var(--accent); text-decoration: none; border: 1px solid var(--accent); border-radius: 6px; padding: 5px 12px; }
+.maplink:hover { background: var(--accent); color: #fff; }
 main { max-width: 1200px; margin: 0 auto; padding: 16px 20px 60px; }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
 .controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 14px; }
@@ -129,6 +131,7 @@ input[type=number] { font: inherit; color: var(--text); background: var(--panel)
 <header>
   <h1>ETF 持股監控</h1>
   <nav id="nav"></nav>
+  <a class="maplink" href="industry.html">產業地圖</a>
   <span id="health" onclick="go({tab:'monitor'})"></span>
   <span class="built" id="built"></span>
 </header>
@@ -983,8 +986,8 @@ function renderPatterns() {
 // ------------------------------------------------------------ 監控面板
 const light = (ok, big) => `<span class="light ${ok == null ? "none" : ok ? "ok" : "bad"}${big ? " big" : ""}">${ok == null ? "–" : ok ? "✓" : "✕"}</span>`;
 const fullRuns = () => D.runs.filter((r) => !r.partial);
-const STEP_KEYS = ["fetch", "csv", "cb", "revenue", "corp", "prices", "site"];
-const STEP_NAMES = { fetch: "資料抓取", csv: "寫入 CSV", cb: "可轉債公告", revenue: "月營收", corp: "除權息減資", prices: "每日行情", site: "網站建置" };
+const STEP_KEYS = ["fetch", "csv", "cb", "revenue", "corp", "prices", "industry_rev", "site"];
+const STEP_NAMES = { fetch: "資料抓取", csv: "寫入 CSV", cb: "可轉債公告", revenue: "月營收", corp: "除權息減資", prices: "每日行情", industry_rev: "產業地圖營收", site: "網站建置" };
 // 最近一個「應該已經跑完」的排程時間：平日的排程時刻，給 45 分鐘執行緩衝
 function expectedRun() {
   const [h, m] = D.schedule.split(":").map(Number), now = new Date();

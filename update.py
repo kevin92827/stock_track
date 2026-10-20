@@ -220,6 +220,14 @@ def extra_steps(run):
         run["problems"].append(f"每日行情: {steps['prices']['msg']}")
     print(f"每日行情：{steps['prices']['msg']}")
 
+    try:  # 產業地圖用的長期月營收
+        import industry_revenue
+        steps["industry_rev"] = {"ok": True, "msg": industry_revenue.update()}
+    except Exception as e:
+        steps["industry_rev"] = {"ok": False, "msg": f"{type(e).__name__}: {e}"[:200]}
+        run["problems"].append(f"產業地圖營收: {steps['industry_rev']['msg']}")
+    print(f"產業地圖營收：{steps['industry_rev']['msg']}")
+
     steps["site"] = site
 
 
@@ -265,6 +273,13 @@ def main():
             traceback.print_exc()
             run["steps"]["site"] = {"ok": False, "msg": f"{type(e).__name__}: {e}"[:200]}
             run["problems"].append(f"網站建置失敗: {type(e).__name__}: {e}"[:300])
+            save_runs(runs)
+        try:
+            import build_industry
+            build_industry.main()
+        except Exception as e:
+            traceback.print_exc()
+            run["problems"].append(f"產業地圖建置失敗: {type(e).__name__}: {e}"[:300])
             save_runs(runs)
 
     ok = all(s["ok"] for s in run["steps"].values())
