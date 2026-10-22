@@ -123,6 +123,54 @@
      ]
     }
    ]
+  },
+  {
+   "id": "optic",
+   "name": "光通訊／CPO",
+   "title": "光通訊雷射與 CPO 鏈",
+   "focus": "6456",
+   "updated": "2026-10-22",
+   "layers": [
+    {
+     "id": "epi",
+     "name": "磊晶",
+     "desc": "InP／GaAs 化合物半導體磊晶片，雷射晶片的原料",
+     "nodes": [
+      "2455",
+      "4971"
+     ]
+    },
+    {
+     "id": "chip",
+     "name": "雷射晶片",
+     "desc": "CW Laser（CPO 外掛光源）、EML、DFB、光偵測器",
+     "nodes": [
+      "3081",
+      "3234"
+     ]
+    },
+    {
+     "id": "pkg",
+     "name": "雷射封測／光纖元件",
+     "desc": "把雷射晶片封裝、測試、篩選良率；FAU、光纖陣列把光纖接到矽光子光引擎",
+     "nodes": [
+      "6456",
+      "4979",
+      "3363",
+      "3163"
+     ]
+    },
+    {
+     "id": "end",
+     "name": "終端／集團",
+     "desc": "雲端資料中心；GIS-KY 的母集團與觸控本業客戶",
+     "nodes": [
+      "csp",
+      "2317",
+      "apple"
+     ]
+    }
+   ]
   }
  ],
  "sources": {
@@ -193,6 +241,26 @@
   "cmoney8039": {
    "title": "CMoney 股市爆料同學會：台虹的主要客戶是軟板廠和 PCB 廠（網友文章）",
    "url": "https://www.cmoney.tw/forum/article/176231749"
+  },
+  "uaGIS": {
+   "title": "優分析：GIS-KY 漲停 99.6 元！9 月營收月增 46%，砸 50 億搶 800G 光通訊封測",
+   "url": "https://uanalyze.com.tw/articles/8347356543"
+  },
+  "readmoGIS": {
+   "title": "CMoney：GIS-KY 轉機股解析（AI 生成內容）",
+   "url": "https://readmo.cmoney.tw/article/f853979f-60d0-4972-ad9d-4b70079c5781"
+  },
+  "cwLaser": {
+   "title": "CW Laser 概念股有哪些？CPO、矽光子關鍵光源與台股供應鏈",
+   "url": "https://leveragetw.com/cw-laser/"
+  },
+  "top3081": {
+   "title": "聯亞（3081）卡位 CPO「最脆弱的一環」，但估值已透支到 2027？",
+   "url": "https://www.top1markets.com/tw/news/landmark-3081-cpo-cw-laser-valuation-2027"
+  },
+  "udnCPO": {
+   "title": "經濟日報：波若威、華星光衝刺 CPO",
+   "url": "https://money.udn.com/money/story/5607/9465556"
   }
  },
  "nodes": [
@@ -698,6 +766,160 @@
     "穿戴裝置"
    ],
    "src": []
+  },
+  {
+   "id": "6456",
+   "name": "GIS-KY",
+   "tw": true,
+   "role": "鴻海集團觸控模組廠，轉型光通訊雷射封測",
+   "desc": "業成，鴻海集團旗下的觸控與顯示模組廠，過去以筆電、平板等消費性產品為主，長期做指紋辨識模組，累積晶片封裝、精密貼合、光學檢測與自動化測試能力。2026 年轉進 800G 以上光通訊的雷射晶片封裝與測試（CW Laser、EML、高功率雷射），用在 800G／1.6T 光模組與未來的 CPO；CW Laser 與 EML 已具量產能力，客戶只說是「國際大廠」。台灣后里廠 2026 Q4 試量產、小量出貨，越南子公司 2027 年初加入產能；公司預估 2027 Q1 完成客戶驗證，Q2 之後營收貢獻才會明顯。",
+   "products": [
+    "觸控／顯示模組",
+    "指紋辨識模組",
+    "雷射晶片封裝（CW Laser、EML）",
+    "光源晶片測試與篩選"
+   ],
+   "points": [
+    "2026/10/6 漲停 99.6 元；9 月營收 61.6 億，月增 46.4%、年增 30.8%，但前 9 月累計年減 18.5%",
+    "光通訊資本支出由原本約 13 億上修到 40～50 億，全年資本支出上修到 80 億以上",
+    "2026 Q2 毛利率 3.3%、EPS −3.15 元；新設備折舊會先壓抑獲利，機構預估全年 EPS 約 −3.65 元"
+   ],
+   "src": [
+    "uaGIS",
+    "readmoGIS"
+   ]
+  },
+  {
+   "id": "4979",
+   "name": "華星光",
+   "tw": true,
+   "role": "雷射設計到封裝垂直整合，CW Laser",
+   "desc": "光通訊元件廠，從 CW Laser 設計到封裝都自己做；報導指出透過美系網通大廠打入至少三家雲端業者供應鏈，CW Laser 月產能可望放大到 300～400 萬顆。是 GIS-KY 雷射封測業務最直接的同業。",
+   "products": [
+    "CW Laser",
+    "光收發次模組",
+    "雷射封裝"
+   ],
+   "src": [
+    "cwLaser",
+    "udnCPO"
+   ]
+  },
+  {
+   "id": "3081",
+   "name": "聯亞",
+   "tw": true,
+   "role": "InP 雷射磊晶與晶片，CW Laser 主要供應商",
+   "desc": "磷化銦（InP）雷射磊晶與晶片廠，全球少數能穩定供應 CW Laser 的廠商之一；報導指出 2026 年起新增一家美國大型雲端業者直供訂單，並有四年長約與擴產。估值偏高（報導稱本益比近 300 倍），要看 2027 年獲利能否兌現。",
+   "products": [
+    "InP 雷射磊晶",
+    "CW Laser 晶片",
+    "光偵測器"
+   ],
+   "src": [
+    "cwLaser",
+    "top3081"
+   ]
+  },
+  {
+   "id": "2455",
+   "name": "全新",
+   "tw": true,
+   "role": "化合物半導體磊晶（EML、PD、CW Laser）",
+   "desc": "化合物半導體磊晶廠，布局 EML、光偵測器（PD）與 CW Laser 用的磊晶片。",
+   "products": [
+    "InP／GaAs 磊晶片",
+    "EML 磊晶",
+    "PD 磊晶"
+   ],
+   "src": [
+    "cwLaser"
+   ]
+  },
+  {
+   "id": "4971",
+   "name": "IET-KY",
+   "tw": true,
+   "role": "MBE 化合物半導體磊晶",
+   "desc": "以分子束磊晶（MBE）為主的化合物半導體磊晶廠。",
+   "products": [
+    "MBE 磊晶片"
+   ],
+   "src": [
+    "cwLaser"
+   ]
+  },
+  {
+   "id": "3234",
+   "name": "光環",
+   "tw": true,
+   "role": "InP 雷射、PD 與光通訊元件",
+   "desc": "光通訊元件廠，切入 InP 雷射、光偵測器及光通訊元件。",
+   "products": [
+    "InP 雷射",
+    "光偵測器（PD）",
+    "光通訊元件"
+   ],
+   "src": [
+    "cwLaser"
+   ]
+  },
+  {
+   "id": "3363",
+   "name": "上詮",
+   "tw": true,
+   "role": "光纖陣列 FAU、CPO 耦光元件",
+   "desc": "光纖被動元件廠，供應 FAU、DFAU、光纖陣列與精密耦光元件，負責把光纖接上矽光子晶片（光引擎），屬於光纖互連環節而不是雷射光源。",
+   "products": [
+    "FAU／DFAU 光纖陣列",
+    "精密耦光元件"
+   ],
+   "src": [
+    "cwLaser"
+   ]
+  },
+  {
+   "id": "3163",
+   "name": "波若威",
+   "tw": true,
+   "role": "光纖被動元件，衝刺 CPO",
+   "desc": "光纖被動元件與模組廠，報導指出正衝刺 CPO 相關產品。",
+   "products": [
+    "光纖被動元件",
+    "光模組零組件"
+   ],
+   "src": [
+    "udnCPO"
+   ]
+  },
+  {
+   "id": "csp",
+   "name": "美系雲端業者",
+   "tw": false,
+   "market": "Google、Meta 等",
+   "role": "800G／1.6T 光模組與 CPO 的最終買家",
+   "desc": "AI 資料中心需要大量 800G／1.6T 光模組，未來交換器導入 CPO（共同封裝光學）後，雷射光源改成外掛的 CW Laser。台廠多半透過光模組廠或網通大廠間接供貨，也有直接供貨的。",
+   "products": [
+    "AI 資料中心",
+    "光模組採購"
+   ],
+   "src": [
+    "cwLaser"
+   ]
+  },
+  {
+   "id": "2317",
+   "name": "鴻海",
+   "tw": true,
+   "role": "GIS-KY 的母集團；AI 伺服器組裝",
+   "desc": "全球最大電子代工廠，GIS-KY 是旗下的觸控模組廠；鴻海本身也是 AI 伺服器機櫃的主要組裝廠。",
+   "products": [
+    "AI 伺服器",
+    "消費性電子代工"
+   ],
+   "src": [
+    "readmoGIS"
+   ]
   }
  ],
  "edges": [
@@ -969,6 +1191,77 @@
    "from": "4958",
    "to": "apple",
    "label": "手機軟板（手機應用占營收六成以上）",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "2317",
+   "to": "6456",
+   "label": "母集團",
+   "conf": "report",
+   "src": [
+    "readmoGIS"
+   ]
+  },
+  {
+   "from": "6456",
+   "to": "csp",
+   "label": "800G 以上雷射封測（客戶只說是國際大廠，2027 年放量）",
+   "conf": "guess",
+   "src": [
+    "uaGIS"
+   ]
+  },
+  {
+   "from": "6456",
+   "to": "apple",
+   "label": "觸控模組（市場普遍認為主要客戶是蘋果）",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "4979",
+   "to": "csp",
+   "label": "CW Laser（透過美系網通大廠打入至少三家雲端業者）",
+   "conf": "report",
+   "src": [
+    "cwLaser"
+   ]
+  },
+  {
+   "from": "3081",
+   "to": "csp",
+   "label": "CW Laser（新增一家美國大型雲端業者直供）",
+   "conf": "report",
+   "src": [
+    "top3081"
+   ]
+  },
+  {
+   "from": "2455",
+   "to": "3081",
+   "label": "磊晶片",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "4971",
+   "to": "3081",
+   "label": "MBE 磊晶片",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "3081",
+   "to": "6456",
+   "label": "雷射晶片（封測代工對象未公開）",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "3363",
+   "to": "csp",
+   "label": "FAU 光纖陣列（CPO 光引擎耦光）",
    "conf": "guess",
    "src": []
   }
