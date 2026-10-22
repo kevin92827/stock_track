@@ -80,7 +80,7 @@ def main():
     with open(tmp, "w", encoding="utf-8") as f:
         f.write(template.replace("/*__DATA__*/null", payload))
     os.replace(tmp, OUT_PATH)
-    print(f"產業地圖已更新：{OUT_PATH}（{len(m['nodes'])} 家公司、{len(m['edges'])} 條關係）")
+    print(f"產業地圖已更新：{OUT_PATH}（{len(m['chains'])} 條產業鏈、{len(m['nodes'])} 家公司、{len(m['edges'])} 條關係）")
 
 
 if __name__ == "__main__":

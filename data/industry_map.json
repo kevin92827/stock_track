@@ -1,132 +1,976 @@
 {
-  "_說明": "產業地圖的人工整理資料。nodes 是公司（tw=true 的會自動接上月營收、股價、ETF 持股），edges 是上下游關係。edge 的 conf：report = 媒體或研究報導提到；guess = 依產業結構推測、沒有找到直接來源。src 對應 sources 的代號。",
-  "updated": "2026-10-20",
-  "sources": {
-    "ctee1020": {"title": "工商時報：富喬 資金湧入題材受矚（2026-10-20）", "url": "https://www.ctee.com.tw/news/20261020700239-439901"},
-    "cnyesM9": {"title": "鉅亨網：富喬 M9 等級石英布材料進行認證，高階玻纖布下半年動能續強", "url": "https://news.cnyes.com/news/id/6508216"},
-    "cnyesQ": {"title": "鉅亨網：AI 伺服器下一個缺貨材料？這塊「布」價格近翻倍，輝達 M9 升級打開新需求", "url": "https://news.cnyes.com/news/id/6608165"},
-    "mw": {"title": "理財周刊：AI 高階玻纖布缺貨 漲價與 Low Dk 升級 推升富喬獲利", "url": "https://www.moneyweekly.com.tw/ArticleData/Info/Article/242046"},
-    "cmnews": {"title": "CMoney：富喬受惠高階玻纖布缺貨，2026 年迎來漲價紅利", "url": "https://cmnews.com.tw/article/newsyoudeservetoknow-4b0a4beb-046f-11f1-a6d1-5bae3fff96ef"},
-    "vocus3": {"title": "方格子：玻纖布三雄【台玻、富喬、德宏】誰能成為最終霸主？（個人投資文章）", "url": "https://vocus.cc/article/69de350cfd897800016f5a95"},
-    "udn5340": {"title": "經濟日報：建榮相關報導", "url": "https://money.udn.com/money/story/5607/8787797"},
-    "udnPCB": {"title": "經濟日報：金像電、台光電、台燿 花旗挺", "url": "https://money.udn.com/money/story/5607/9553659"}
+ "_說明": "產業地圖的人工整理資料。nodes 是公司（tw=true 的會自動接上月營收、股價、ETF 持股），同一家公司可以出現在好幾條鏈；chains 是每條產業鏈的分層和要放哪些公司；edges 是上下游關係，兩端都在同一條鏈時才畫在那張地圖上。edge 的 conf：report = 媒體或研究報導提到；guess = 依產業結構推測或來源可信度低。src 對應 sources 的代號。",
+ "chains": [
+  {
+   "id": "glass",
+   "name": "玻纖布",
+   "title": "AI 伺服器板材鏈：玻纖布",
+   "focus": "1815",
+   "updated": "2026-10-20",
+   "layers": [
+    {
+     "id": "raw",
+     "name": "上游材料",
+     "desc": "玻纖紗、石英紗、銅箔",
+     "nodes": [
+      "nittobo",
+      "feilihua",
+      "8358"
+     ]
+    },
+    {
+     "id": "cloth",
+     "name": "玻纖布",
+     "desc": "電子級玻纖布：一般 E 布、Low-Dk 1/2、Low-CTE（T 布）、石英布（Q 布）",
+     "nodes": [
+      "1815",
+      "1802",
+      "5475",
+      "5340",
+      "1303"
+     ]
+    },
+    {
+     "id": "ccl",
+     "name": "銅箔基板 CCL",
+     "desc": "玻纖布含浸樹脂再壓上銅箔；M6～M9 是材料等級，數字越大訊號損耗越低",
+     "nodes": [
+      "2383",
+      "6274",
+      "6213"
+     ]
+    },
+    {
+     "id": "pcb",
+     "name": "PCB／載板",
+     "desc": "用 CCL 做成多層電路板；載板是晶片封裝用的",
+     "nodes": [
+      "2368",
+      "3044",
+      "4958",
+      "3037",
+      "8046",
+      "3189"
+     ]
+    },
+    {
+     "id": "end",
+     "name": "終端應用",
+     "desc": "AI 伺服器、交換器、GPU／ASIC",
+     "nodes": [
+      "2382",
+      "6669",
+      "nvidia",
+      "aws"
+     ]
+    }
+   ]
   },
-  "layers": [
-    {"id": "raw", "name": "上游材料", "desc": "玻纖紗、石英紗、銅箔"},
-    {"id": "cloth", "name": "玻纖布", "desc": "電子級玻纖布：一般 E 布、Low-Dk 1/2、Low-CTE（T 布）、石英布（Q 布）"},
-    {"id": "ccl", "name": "銅箔基板 CCL", "desc": "玻纖布含浸樹脂再壓上銅箔；M6～M9 是材料等級，數字越大訊號損耗越低"},
-    {"id": "pcb", "name": "PCB／載板", "desc": "用 CCL 做成多層電路板；載板是晶片封裝用的"},
-    {"id": "end", "name": "終端應用", "desc": "AI 伺服器、交換器、GPU／ASIC"}
-  ],
-  "nodes": [
-    {"id": "nittobo", "name": "日東紡", "layer": "raw", "tw": false, "market": "日本 3110",
-     "role": "高階玻纖紗／布的龍頭",
-     "desc": "日本玻纖大廠，Low-Dk 與 T-glass（低 CTE）玻纖紗、玻纖布的主要供應商；報導估計高階 Low-Dk 布市占約九成，擴產相對保守，是這波缺貨的源頭之一。也是建榮的大股東。",
-     "products": ["Low-Dk 玻纖紗／布", "T-glass（Low-CTE）紗／布", "石英布"], "src": ["vocus3", "cnyesQ", "udn5340"]},
-    {"id": "feilihua", "name": "菲利華", "layer": "raw", "tw": false, "market": "中國 300395",
-     "role": "石英纖維 → Q 布一條龍",
-     "desc": "中國石英材料廠，從石英纖維、石英紗到 Q 布都自己做，報導指出已通過台光電、生益科技等 CCL 廠認證。",
-     "products": ["石英纖維", "石英布（Q 布）"], "src": ["cnyesQ"]},
-    {"id": "8358", "name": "金居", "layer": "raw", "tw": true,
-     "role": "高階銅箔（HVLP）",
-     "desc": "台灣銅箔廠，CCL 的另一項主要原料是銅箔；AI 伺服器板材需要低粗糙度的 HVLP 銅箔，金居主攻這一塊，近期赴馬來西亞擴產。",
-     "products": ["HVLP 銅箔", "RTF 銅箔"], "src": ["ctee1020"]},
-    {"id": "1815", "name": "富喬", "layer": "cloth", "tw": true, "focus": true,
-     "role": "玻纖紗＋玻纖布垂直整合，主攻 Low-Dk／Low-CTE",
-     "desc": "玻纖紗、玻纖布一貫化生產，有自有配方。AI 伺服器、800G 交換器規格升級帶動低介電玻纖布缺貨；二代低介電布（FLD2）出貨增加、報價調漲、良率改善。台灣廠轉做二代低介電布，東莞廠明年第一季起分批升級 E 布產能，泰國廠定位為非中國供應鏈的備援產能。M9 等級石英布已研製成功、進入客戶認證。",
-     "products": ["E 布（一般電子級）", "Low-Dk 1 / Low-Dk 2（FLD2）", "Low-CTE 布", "石英布（認證中）", "玻纖紗"],
-     "points": ["2026 年 E 布全系列報價調漲約 30%、FLD2 約 15%（理財周刊）", "公司目標 2026 年 Low-Dk 與 Low-CTE 產能占比提高到 60% 以上（2025 Q4 約 45%）", "2026/10/19 逆勢漲停收 154 元，TPCA 展期間資金關注"],
-     "src": ["ctee1020", "cnyesM9", "mw", "cmnews", "vocus3"]},
-    {"id": "1802", "name": "台玻", "layer": "cloth", "tw": true,
-     "role": "規模最大的台灣玻纖布廠，Low-Dk 2 已過國際大廠認證",
-     "desc": "平板玻璃與玻纖雙主業，玻纖紗到玻纖布一貫化生產，規模比富喬大。第二代 Low-Dk 布已通過國際大廠認證，被視為日東紡之外的替代供應商，報導指出產品用在 AI GPU 加速卡與核心板。",
-     "products": ["Low-Dk 2 玻纖布", "電子級玻纖布", "玻纖紗", "平板玻璃"], "src": ["vocus3"]},
-    {"id": "5475", "name": "德宏", "layer": "cloth", "tw": true,
-     "role": "台灣唯一同時做石英紗與石英布",
-     "desc": "電子級玻纖布廠，近年轉向石英纖維（Q-glass）：石英紗已穩定供應日系客戶約三年，計畫把楊梅廠轉為 Q 布基地，關鍵在 CCL 客戶認證進度。一般玻纖布原料靠外購。",
-     "products": ["石英紗", "石英布（Q 布）", "電子級玻纖布"], "src": ["cnyesQ", "vocus3"]},
-    {"id": "5340", "name": "建榮", "layer": "cloth", "tw": true,
-     "role": "日東紡持股近半的玻纖布廠",
-     "desc": "電子級與工業級玻纖布廠，日東紡持股約 47.65%，部分以 OEM 協助母公司供應。Low-Dk 產品已完成客戶驗證但占比仍低；T 布（Low-CTE）已取得認證，量產時程取決於原紗到貨。",
-     "products": ["電子級玻纖布", "Low-Dk 布", "T 布（Low-CTE）", "工業級玻纖布"], "src": ["udn5340"]},
-    {"id": "1303", "name": "南亞", "layer": "cloth", "tw": true,
-     "role": "台塑集團，電子材料從玻纖紗、玻纖布、銅箔做到 CCL",
-     "desc": "台塑集團的塑化與電子材料廠，電子材料部門涵蓋玻纖紗、玻纖布、銅箔與銅箔基板，是少數上下游都自己做的廠商；電子材料只占整體營收的一部分，月營收受塑化本業影響大。",
-     "products": ["玻纖紗／玻纖布", "銅箔", "銅箔基板", "塑化產品"], "src": []},
-    {"id": "2383", "name": "台光電", "layer": "ccl", "tw": true,
-     "role": "高階 CCL 龍頭，M8 市占約 75%",
-     "desc": "全球高階無鹵、低損耗 CCL 龍頭。外資報告估 M8 市占約 75%，M8、M9 都是第一個通過客戶認證；報導指出 AWS Trainium 2 的 M8 板材由台光電獨家供應，M9 於 2026 年第三季開始出貨。是各家 Low-Dk 布、Q 布供應商最主要的認證對象。",
-     "products": ["M6～M9 低損耗 CCL", "無鹵 CCL", "IC 載板材料"], "src": ["udnPCB", "cnyesQ", "ctee1020"]},
-    {"id": "6274", "name": "台燿", "layer": "ccl", "tw": true,
-     "role": "高速 CCL，交換器、伺服器板材",
-     "desc": "高頻高速 CCL 廠，產品用在交換器、伺服器與網通設備，近年積極切入 AI 伺服器板材。",
-     "products": ["高速低損耗 CCL", "高頻 CCL"], "src": ["udnPCB"]},
-    {"id": "6213", "name": "聯茂", "layer": "ccl", "tw": true,
-     "role": "CCL，伺服器／網通／車用",
-     "desc": "銅箔基板廠，產品涵蓋伺服器、網通、車用與消費性電子，高速材料比重逐步提高。",
-     "products": ["高速 CCL", "無鹵 CCL", "車用 CCL"], "src": []},
-    {"id": "2368", "name": "金像電", "layer": "pcb", "tw": true,
-     "role": "伺服器 PCB 龍頭",
-     "desc": "伺服器、交換器用高層數 PCB 大廠；AI 伺服器主板尺寸放大、層數增加，高階 PCB 需求超過產能。",
-     "products": ["伺服器主板 PCB", "交換器 PCB", "AI 加速卡 PCB"], "src": ["udnPCB"]},
-    {"id": "3044", "name": "健鼎", "layer": "pcb", "tw": true,
-     "role": "多元 PCB 大廠，伺服器比重提高",
-     "desc": "PCB 大廠，產品分布在伺服器、網通、車用、記憶體模組等，伺服器與網通比重逐步提高。",
-     "products": ["伺服器／網通 PCB", "車用 PCB", "記憶體模組板"], "src": []},
-    {"id": "4958", "name": "臻鼎-KY", "layer": "pcb", "tw": true,
-     "role": "全球最大 PCB 廠，切入伺服器與光通訊",
-     "desc": "鴻海集團旗下的全球最大 PCB 廠，以手機軟板、HDI 為主，近年布局伺服器、高速光通訊 PCB 與載板。",
-     "products": ["軟板", "HDI", "伺服器／光通訊 PCB", "IC 載板"], "src": ["ctee1020"]},
-    {"id": "3037", "name": "欣興", "layer": "pcb", "tw": true,
-     "role": "ABF 載板龍頭",
-     "desc": "ABF 載板龍頭，AI GPU／ASIC 封裝用的大尺寸、高層數載板主要供應商；載板也用到 Low-CTE 玻纖布做成的基材。",
-     "products": ["ABF 載板", "BT 載板", "HDI"], "src": []},
-    {"id": "8046", "name": "南電", "layer": "pcb", "tw": true,
-     "role": "ABF 載板（台塑集團）",
-     "desc": "台塑集團的 ABF 與 BT 載板廠，和欣興、景碩並列台灣三大載板廠。",
-     "products": ["ABF 載板", "BT 載板"], "src": []},
-    {"id": "3189", "name": "景碩", "layer": "pcb", "tw": true,
-     "role": "載板（ABF／BT）",
-     "desc": "IC 載板廠，ABF 與 BT 載板都有，客戶包含網通、AI ASIC 與記憶體。",
-     "products": ["ABF 載板", "BT 載板"], "src": []},
-    {"id": "2382", "name": "廣達", "layer": "end", "tw": true,
-     "role": "AI 伺服器 ODM",
-     "desc": "筆電與伺服器代工大廠，AI 伺服器（GB200/GB300 機櫃）主要組裝廠之一。",
-     "products": ["AI 伺服器", "雲端伺服器", "筆電"], "src": []},
-    {"id": "6669", "name": "緯穎", "layer": "end", "tw": true,
-     "role": "雲端資料中心伺服器 ODM",
-     "desc": "緯創旗下的雲端伺服器廠，主要客戶是美系雲端業者，AI 伺服器與 ASIC 伺服器比重提高。",
-     "products": ["雲端伺服器", "AI 伺服器"], "src": []},
-    {"id": "nvidia", "name": "NVIDIA", "layer": "end", "tw": false, "market": "美國 NVDA",
-     "role": "AI GPU",
-     "desc": "AI GPU 龍頭；GB200 已採用第二代 Low-Dk 布，次世代 Rubin 平台預計導入 M9 等級材料（Q 布），是這波材料升級的主要推手。",
-     "products": ["GPU", "AI 伺服器平台"], "src": ["cnyesQ", "vocus3"]},
-    {"id": "aws", "name": "AWS", "layer": "end", "tw": false, "market": "美國 AMZN",
-     "role": "雲端業者自研 ASIC（Trainium）",
-     "desc": "Amazon 的雲端部門，自研 AI 晶片 Trainium；報導指出 Trainium 2 的 M8 級 CCL 由台光電獨家供應。",
-     "products": ["Trainium", "雲端服務"], "src": ["udnPCB"]}
-  ],
-  "edges": [
-    {"from": "1815", "to": "2383", "label": "Low-Dk 玻纖布", "conf": "report", "src": ["vocus3"]},
-    {"from": "1815", "to": "6274", "label": "Low-Dk 玻纖布", "conf": "report", "src": ["vocus3"]},
-    {"from": "1815", "to": "6213", "label": "玻纖布", "conf": "report", "src": ["vocus3"]},
-    {"from": "1802", "to": "2383", "label": "Low-Dk 2 玻纖布", "conf": "report", "src": ["vocus3"]},
-    {"from": "nittobo", "to": "5340", "label": "母公司（持股 47.65%）、OEM", "conf": "report", "src": ["udn5340"]},
-    {"from": "5475", "to": "nittobo", "label": "石英紗（供應日系客戶）", "conf": "report", "src": ["cnyesQ", "vocus3"]},
-    {"from": "nittobo", "to": "2383", "label": "Low-Dk／T-glass 布", "conf": "guess", "src": []},
-    {"from": "feilihua", "to": "2383", "label": "Q 布（已通過認證）", "conf": "report", "src": ["cnyesQ"]},
-    {"from": "8358", "to": "2383", "label": "HVLP 銅箔", "conf": "guess", "src": []},
-    {"from": "8358", "to": "6274", "label": "銅箔", "conf": "guess", "src": []},
-    {"from": "2383", "to": "2368", "label": "高速 CCL", "conf": "guess", "src": []},
-    {"from": "2383", "to": "3044", "label": "CCL", "conf": "guess", "src": []},
-    {"from": "6274", "to": "2368", "label": "高速 CCL", "conf": "guess", "src": []},
-    {"from": "6213", "to": "3044", "label": "CCL", "conf": "guess", "src": []},
-    {"from": "2383", "to": "4958", "label": "CCL", "conf": "guess", "src": []},
-    {"from": "2383", "to": "aws", "label": "M8 CCL（Trainium 2 獨家）", "conf": "report", "src": ["udnPCB"]},
-    {"from": "2368", "to": "2382", "label": "伺服器主板", "conf": "guess", "src": []},
-    {"from": "2368", "to": "6669", "label": "伺服器主板", "conf": "guess", "src": []},
-    {"from": "3037", "to": "nvidia", "label": "GPU 封裝 ABF 載板", "conf": "guess", "src": []},
-    {"from": "2382", "to": "nvidia", "label": "GB200/GB300 機櫃組裝", "conf": "guess", "src": []},
-    {"from": "6669", "to": "aws", "label": "雲端／ASIC 伺服器", "conf": "guess", "src": []}
-  ]
+  {
+   "id": "fpc",
+   "name": "軟板／PTFE",
+   "title": "軟板與 PTFE 高速材料鏈",
+   "focus": "6269",
+   "updated": "2026-10-22",
+   "layers": [
+    {
+     "id": "raw",
+     "name": "上游材料",
+     "desc": "PI 薄膜、PTFE 與高頻塗佈材料",
+     "nodes": [
+      "3645",
+      "4939",
+      "6672"
+     ]
+    },
+    {
+     "id": "fccl",
+     "name": "銅箔基板（軟板／高速）",
+     "desc": "FCCL 是軟板用的銅箔基板；PTFE CCL 是取代玻纖布、石英布的下一代高速板材",
+     "nodes": [
+      "8039",
+      "2383"
+     ]
+    },
+    {
+     "id": "ic",
+     "name": "IC／模組",
+     "desc": "軟板搭配的 IC",
+     "nodes": [
+      "6568"
+     ]
+    },
+    {
+     "id": "fpc",
+     "name": "軟板（FPC）",
+     "desc": "手機、穿戴、車用，以及 AI 伺服器內的高速傳輸軟板",
+     "nodes": [
+      "6269",
+      "4958",
+      "6153",
+      "2402",
+      "6835",
+      "3321"
+     ]
+    },
+    {
+     "id": "end",
+     "name": "終端應用",
+     "desc": "AI 伺服器（NVLink 交換板、液冷）、消費性電子",
+     "nodes": [
+      "nvidia",
+      "apple"
+     ]
+    }
+   ]
+  }
+ ],
+ "sources": {
+  "ctee1020": {
+   "title": "工商時報：富喬 資金湧入題材受矚（2026-10-20）",
+   "url": "https://www.ctee.com.tw/news/20261020700239-439901"
+  },
+  "cnyesM9": {
+   "title": "鉅亨網：富喬 M9 等級石英布材料進行認證，高階玻纖布下半年動能續強",
+   "url": "https://news.cnyes.com/news/id/6508216"
+  },
+  "cnyesQ": {
+   "title": "鉅亨網：AI 伺服器下一個缺貨材料？這塊「布」價格近翻倍，輝達 M9 升級打開新需求",
+   "url": "https://news.cnyes.com/news/id/6608165"
+  },
+  "mw": {
+   "title": "理財周刊：AI 高階玻纖布缺貨 漲價與 Low Dk 升級 推升富喬獲利",
+   "url": "https://www.moneyweekly.com.tw/ArticleData/Info/Article/242046"
+  },
+  "cmnews": {
+   "title": "CMoney：富喬受惠高階玻纖布缺貨，2026 年迎來漲價紅利",
+   "url": "https://cmnews.com.tw/article/newsyoudeservetoknow-4b0a4beb-046f-11f1-a6d1-5bae3fff96ef"
+  },
+  "vocus3": {
+   "title": "方格子：玻纖布三雄【台玻、富喬、德宏】誰能成為最終霸主？（個人投資文章）",
+   "url": "https://vocus.cc/article/69de350cfd897800016f5a95"
+  },
+  "udn5340": {
+   "title": "經濟日報：建榮相關報導",
+   "url": "https://money.udn.com/money/story/5607/8787797"
+  },
+  "udnPCB": {
+   "title": "經濟日報：金像電、台光電、台燿 花旗挺",
+   "url": "https://money.udn.com/money/story/5607/9553659"
+  },
+  "udnPTFE": {
+   "title": "經濟日報：輝達 NVLink PTFE 看板掀熱議！台虹、台郡跳空漲停",
+   "url": "https://money.udn.com/money/story/5607/9813601"
+  },
+  "btoday": {
+   "title": "今周刊：台郡做什麼的？台虹可以買？入列輝達看板",
+   "url": "https://www.businesstoday.com.tw/article/category/183008/post/202610140041/"
+  },
+  "bnextPTFE": {
+   "title": "數位時代：PTFE 是什麼？PTFE 概念股有哪些？",
+   "url": "https://www.bnext.com.tw/article/92099/ptfe-concept-stocks"
+  },
+  "wantPTFE": {
+   "title": "旺得富：新材料要搶舊材料生意？分析師揭 PTFE 量產前「市場忽略 1 關卡」",
+   "url": "https://wantrich.chinatimes.com/news/20261015900008-420101"
+  },
+  "mwFPC": {
+   "title": "理財周刊：台灣軟板一條龍迎轉型機遇，台郡直面陣痛全力攻堅次世代高頻傳輸",
+   "url": "https://www.moneyweekly.com.tw/ArticleData/Info/Article/238429"
+  },
+  "yamFPC": {
+   "title": "蕃新聞：AI 伺服器帶動硬板股飆漲後！台灣軟板供應鏈蓄勢待發",
+   "url": "https://n.yam.com/Article/20260723179884"
+  },
+  "vocus6269": {
+   "title": "方格子：台郡 6269 2026/05/08 法人說明會（個人整理）",
+   "url": "https://vocus.cc/article/69fd8c40fd897800018d7d7e"
+  },
+  "pocketFPC": {
+   "title": "口袋學堂：軟板 (FPC) 廠營收大噴發，2026 台股軟板概念股有誰？",
+   "url": "https://www.pocket.tw/school/articles/7201/"
+  },
+  "cmoney8039": {
+   "title": "CMoney 股市爆料同學會：台虹的主要客戶是軟板廠和 PCB 廠（網友文章）",
+   "url": "https://www.cmoney.tw/forum/article/176231749"
+  }
+ },
+ "nodes": [
+  {
+   "id": "nittobo",
+   "name": "日東紡",
+   "tw": false,
+   "market": "日本 3110",
+   "role": "高階玻纖紗／布的龍頭",
+   "desc": "日本玻纖大廠，Low-Dk 與 T-glass（低 CTE）玻纖紗、玻纖布的主要供應商；報導估計高階 Low-Dk 布市占約九成，擴產相對保守，是這波缺貨的源頭之一。也是建榮的大股東。",
+   "products": [
+    "Low-Dk 玻纖紗／布",
+    "T-glass（Low-CTE）紗／布",
+    "石英布"
+   ],
+   "src": [
+    "vocus3",
+    "cnyesQ",
+    "udn5340"
+   ]
+  },
+  {
+   "id": "feilihua",
+   "name": "菲利華",
+   "tw": false,
+   "market": "中國 300395",
+   "role": "石英纖維 → Q 布一條龍",
+   "desc": "中國石英材料廠，從石英纖維、石英紗到 Q 布都自己做，報導指出已通過台光電、生益科技等 CCL 廠認證。",
+   "products": [
+    "石英纖維",
+    "石英布（Q 布）"
+   ],
+   "src": [
+    "cnyesQ"
+   ]
+  },
+  {
+   "id": "8358",
+   "name": "金居",
+   "tw": true,
+   "role": "高階銅箔（HVLP）",
+   "desc": "台灣銅箔廠，CCL 的另一項主要原料是銅箔；AI 伺服器板材需要低粗糙度的 HVLP 銅箔，金居主攻這一塊，近期赴馬來西亞擴產。",
+   "products": [
+    "HVLP 銅箔",
+    "RTF 銅箔"
+   ],
+   "src": [
+    "ctee1020"
+   ]
+  },
+  {
+   "id": "1815",
+   "name": "富喬",
+   "tw": true,
+   "role": "玻纖紗＋玻纖布垂直整合，主攻 Low-Dk／Low-CTE",
+   "desc": "玻纖紗、玻纖布一貫化生產，有自有配方。AI 伺服器、800G 交換器規格升級帶動低介電玻纖布缺貨；二代低介電布（FLD2）出貨增加、報價調漲、良率改善。台灣廠轉做二代低介電布，東莞廠明年第一季起分批升級 E 布產能，泰國廠定位為非中國供應鏈的備援產能。M9 等級石英布已研製成功、進入客戶認證。",
+   "products": [
+    "E 布（一般電子級）",
+    "Low-Dk 1 / Low-Dk 2（FLD2）",
+    "Low-CTE 布",
+    "石英布（認證中）",
+    "玻纖紗"
+   ],
+   "points": [
+    "2026 年 E 布全系列報價調漲約 30%、FLD2 約 15%（理財周刊）",
+    "公司目標 2026 年 Low-Dk 與 Low-CTE 產能占比提高到 60% 以上（2025 Q4 約 45%）",
+    "2026/10/19 逆勢漲停收 154 元，TPCA 展期間資金關注"
+   ],
+   "src": [
+    "ctee1020",
+    "cnyesM9",
+    "mw",
+    "cmnews",
+    "vocus3"
+   ]
+  },
+  {
+   "id": "1802",
+   "name": "台玻",
+   "tw": true,
+   "role": "規模最大的台灣玻纖布廠，Low-Dk 2 已過國際大廠認證",
+   "desc": "平板玻璃與玻纖雙主業，玻纖紗到玻纖布一貫化生產，規模比富喬大。第二代 Low-Dk 布已通過國際大廠認證，被視為日東紡之外的替代供應商，報導指出產品用在 AI GPU 加速卡與核心板。",
+   "products": [
+    "Low-Dk 2 玻纖布",
+    "電子級玻纖布",
+    "玻纖紗",
+    "平板玻璃"
+   ],
+   "src": [
+    "vocus3"
+   ]
+  },
+  {
+   "id": "5475",
+   "name": "德宏",
+   "tw": true,
+   "role": "台灣唯一同時做石英紗與石英布",
+   "desc": "電子級玻纖布廠，近年轉向石英纖維（Q-glass）：石英紗已穩定供應日系客戶約三年，計畫把楊梅廠轉為 Q 布基地，關鍵在 CCL 客戶認證進度。一般玻纖布原料靠外購。",
+   "products": [
+    "石英紗",
+    "石英布（Q 布）",
+    "電子級玻纖布"
+   ],
+   "src": [
+    "cnyesQ",
+    "vocus3"
+   ]
+  },
+  {
+   "id": "5340",
+   "name": "建榮",
+   "tw": true,
+   "role": "日東紡持股近半的玻纖布廠",
+   "desc": "電子級與工業級玻纖布廠，日東紡持股約 47.65%，部分以 OEM 協助母公司供應。Low-Dk 產品已完成客戶驗證但占比仍低；T 布（Low-CTE）已取得認證，量產時程取決於原紗到貨。",
+   "products": [
+    "電子級玻纖布",
+    "Low-Dk 布",
+    "T 布（Low-CTE）",
+    "工業級玻纖布"
+   ],
+   "src": [
+    "udn5340"
+   ]
+  },
+  {
+   "id": "1303",
+   "name": "南亞",
+   "tw": true,
+   "role": "台塑集團，電子材料從玻纖紗、玻纖布、銅箔做到 CCL",
+   "desc": "台塑集團的塑化與電子材料廠，電子材料部門涵蓋玻纖紗、玻纖布、銅箔與銅箔基板，是少數上下游都自己做的廠商；電子材料只占整體營收的一部分，月營收受塑化本業影響大。",
+   "products": [
+    "玻纖紗／玻纖布",
+    "銅箔",
+    "銅箔基板",
+    "塑化產品"
+   ],
+   "src": []
+  },
+  {
+   "id": "2383",
+   "name": "台光電",
+   "tw": true,
+   "role": "高階 CCL 龍頭，M8 市占約 75%",
+   "desc": "全球高階無鹵、低損耗 CCL 龍頭。外資報告估 M8 市占約 75%，M8、M9 都是第一個通過客戶認證；報導指出 AWS Trainium 2 的 M8 板材由台光電獨家供應，M9 於 2026 年第三季開始出貨。是各家 Low-Dk 布、Q 布供應商最主要的認證對象。PTFE 方面，M10 材料送驗中，業界傳聞與台虹合作，未證實。",
+   "products": [
+    "M6～M9 低損耗 CCL",
+    "無鹵 CCL",
+    "IC 載板材料"
+   ],
+   "src": [
+    "bnextPTFE",
+    "cnyesQ",
+    "ctee1020",
+    "udnPCB"
+   ]
+  },
+  {
+   "id": "6274",
+   "name": "台燿",
+   "tw": true,
+   "role": "高速 CCL，交換器、伺服器板材",
+   "desc": "高頻高速 CCL 廠，產品用在交換器、伺服器與網通設備，近年積極切入 AI 伺服器板材。",
+   "products": [
+    "高速低損耗 CCL",
+    "高頻 CCL"
+   ],
+   "src": [
+    "udnPCB"
+   ]
+  },
+  {
+   "id": "6213",
+   "name": "聯茂",
+   "tw": true,
+   "role": "CCL，伺服器／網通／車用",
+   "desc": "銅箔基板廠，產品涵蓋伺服器、網通、車用與消費性電子，高速材料比重逐步提高。",
+   "products": [
+    "高速 CCL",
+    "無鹵 CCL",
+    "車用 CCL"
+   ],
+   "src": []
+  },
+  {
+   "id": "2368",
+   "name": "金像電",
+   "tw": true,
+   "role": "伺服器 PCB 龍頭",
+   "desc": "伺服器、交換器用高層數 PCB 大廠；AI 伺服器主板尺寸放大、層數增加，高階 PCB 需求超過產能。",
+   "products": [
+    "伺服器主板 PCB",
+    "交換器 PCB",
+    "AI 加速卡 PCB"
+   ],
+   "src": [
+    "udnPCB"
+   ]
+  },
+  {
+   "id": "3044",
+   "name": "健鼎",
+   "tw": true,
+   "role": "多元 PCB 大廠，伺服器比重提高",
+   "desc": "PCB 大廠，產品分布在伺服器、網通、車用、記憶體模組等，伺服器與網通比重逐步提高。",
+   "products": [
+    "伺服器／網通 PCB",
+    "車用 PCB",
+    "記憶體模組板"
+   ],
+   "src": []
+  },
+  {
+   "id": "4958",
+   "name": "臻鼎-KY",
+   "tw": true,
+   "role": "全球最大 PCB 廠，切入伺服器與光通訊",
+   "desc": "鴻海集團旗下的全球最大 PCB 廠，以手機軟板、HDI 為主，近年布局伺服器、高速光通訊 PCB 與載板。報導指出也打入輝達供應鏈，提供 AI 伺服器 UBB、OAM 加速卡板與機櫃內高頻軟板。",
+   "products": [
+    "軟板",
+    "HDI",
+    "伺服器／光通訊 PCB",
+    "IC 載板"
+   ],
+   "src": [
+    "ctee1020",
+    "yamFPC"
+   ]
+  },
+  {
+   "id": "3037",
+   "name": "欣興",
+   "tw": true,
+   "role": "ABF 載板龍頭",
+   "desc": "ABF 載板龍頭，AI GPU／ASIC 封裝用的大尺寸、高層數載板主要供應商；載板也用到 Low-CTE 玻纖布做成的基材。",
+   "products": [
+    "ABF 載板",
+    "BT 載板",
+    "HDI"
+   ],
+   "src": []
+  },
+  {
+   "id": "8046",
+   "name": "南電",
+   "tw": true,
+   "role": "ABF 載板（台塑集團）",
+   "desc": "台塑集團的 ABF 與 BT 載板廠，和欣興、景碩並列台灣三大載板廠。",
+   "products": [
+    "ABF 載板",
+    "BT 載板"
+   ],
+   "src": []
+  },
+  {
+   "id": "3189",
+   "name": "景碩",
+   "tw": true,
+   "role": "載板（ABF／BT）",
+   "desc": "IC 載板廠，ABF 與 BT 載板都有，客戶包含網通、AI ASIC 與記憶體。",
+   "products": [
+    "ABF 載板",
+    "BT 載板"
+   ],
+   "src": []
+  },
+  {
+   "id": "2382",
+   "name": "廣達",
+   "tw": true,
+   "role": "AI 伺服器 ODM",
+   "desc": "筆電與伺服器代工大廠，AI 伺服器（GB200/GB300 機櫃）主要組裝廠之一。",
+   "products": [
+    "AI 伺服器",
+    "雲端伺服器",
+    "筆電"
+   ],
+   "src": []
+  },
+  {
+   "id": "6669",
+   "name": "緯穎",
+   "tw": true,
+   "role": "雲端資料中心伺服器 ODM",
+   "desc": "緯創旗下的雲端伺服器廠，主要客戶是美系雲端業者，AI 伺服器與 ASIC 伺服器比重提高。",
+   "products": [
+    "雲端伺服器",
+    "AI 伺服器"
+   ],
+   "src": []
+  },
+  {
+   "id": "nvidia",
+   "name": "NVIDIA",
+   "tw": false,
+   "market": "美國 NVDA",
+   "role": "AI GPU",
+   "desc": "AI GPU 龍頭；GB200 已採用第二代 Low-Dk 布，次世代 Rubin 平台預計導入 M9 等級材料（Q 布），是這波材料升級的主要推手。2026 年 OCP 峰會展出 Vera Rubin 機櫃設計，現場流傳的 NVLink PTFE Board 看板列出台虹、台郡等業者，首波應用預計是 Rubin Ultra 的 NVSwitch 相關板卡。",
+   "products": [
+    "GPU",
+    "AI 伺服器平台"
+   ],
+   "src": [
+    "bnextPTFE",
+    "cnyesQ",
+    "udnPTFE",
+    "vocus3"
+   ]
+  },
+  {
+   "id": "aws",
+   "name": "AWS",
+   "tw": false,
+   "market": "美國 AMZN",
+   "role": "雲端業者自研 ASIC（Trainium）",
+   "desc": "Amazon 的雲端部門，自研 AI 晶片 Trainium；報導指出 Trainium 2 的 M8 級 CCL 由台光電獨家供應。",
+   "products": [
+    "Trainium",
+    "雲端服務"
+   ],
+   "src": [
+    "udnPCB"
+   ]
+  },
+  {
+   "id": "6269",
+   "name": "台郡",
+   "tw": true,
+   "role": "台灣前二大軟板廠，轉型高頻高速傳輸",
+   "desc": "軟性印刷電路板（FPC）大廠，產品用在手機、平板、筆電與穿戴裝置，2025 年主力客戶約占營收九成。公司定位為「高頻高速訊號傳輸解決方案商」，主推 MetaLink 技術與 CPO／NPO 高速傳輸軟板，並切入輝達 AI 伺服器液冷系統的漏液檢測軟板模組；收購宏觀（6568）發展軟板＋IC 模組。2026 年 10 月輝達 OCP 峰會流傳的「NVLink PTFE Board」看板列出台郡，連續漲停，但是否已有正式訂單尚未證實。",
+   "products": [
+    "軟板（FPC）",
+    "MetaLink 高頻傳輸軟板",
+    "CPO／NPO 高速傳輸軟板",
+    "液冷漏液檢測軟板模組",
+    "加成多層板"
+   ],
+   "points": [
+    "2026/10/14 起連續漲停，10/20 漲停價 88.3 元；被列為注意股",
+    "2026 Q1 毛利率 −1.38%、每股虧損 2.6 元；公司目標下半年營業利益率轉正",
+    "管理層原本預期 2026 年非主力客戶占營收 30～40%，法說會承認有延遲",
+    "9 月營收 20.99 億，月增 5.1%、年減 2.7%；營收還看不到 PTFE 題材的貢獻"
+   ],
+   "src": [
+    "udnPTFE",
+    "btoday",
+    "mwFPC",
+    "vocus6269",
+    "wantPTFE"
+   ]
+  },
+  {
+   "id": "8039",
+   "name": "台虹",
+   "tw": true,
+   "role": "軟性銅箔基板（FCCL）龍頭，開發 PTFE／M9 材料",
+   "desc": "軟性銅箔基板（FCCL）與保護膠片大廠，全球市占估計 15～20%。開發 M9 級超低損耗 FCCL，用在 AI 伺服器機櫃內的扁平軟排線；PTFE 材料採「無玻纖布」設計（PTFE 搭配二氧化矽填料，取代玻纖布與石英布），目前送樣認證中，公司表示最快 2027 年量產。業界傳聞台光電選定台虹為 PTFE 合作夥伴，雙方未證實。",
+   "products": [
+    "軟性銅箔基板（FCCL）",
+    "保護膠片（Coverlay）",
+    "PTFE 高頻材料（認證中）",
+    "M9 級 FCCL"
+   ],
+   "points": [
+    "NVLink PTFE 看板列名，2026/10/14 漲停收 303 元",
+    "今年以來股價漲幅約 274%（數位時代統計）"
+   ],
+   "src": [
+    "udnPTFE",
+    "bnextPTFE",
+    "wantPTFE",
+    "yamFPC"
+   ]
+  },
+  {
+   "id": "3645",
+   "name": "達邁",
+   "tw": true,
+   "role": "聚醯亞胺（PI）薄膜",
+   "desc": "台灣少數的 PI 薄膜廠，PI 膜是軟性銅箔基板與覆蓋膜的基材；布局高頻高耐熱 PI 膜與先進封裝膜材。",
+   "products": [
+    "PI 薄膜",
+    "高頻 PI 膜",
+    "先進封裝膜材"
+   ],
+   "src": [
+    "yamFPC"
+   ]
+  },
+  {
+   "id": "4939",
+   "name": "亞電",
+   "tw": true,
+   "role": "軟板材料，開發 M10 級 PTFE 混合材料",
+   "desc": "軟板材料廠，開發用於 AI 伺服器與高頻傳輸的 M10 級 PTFE 混合材料，以及先進封裝用的抗翹曲平衡膜；PTFE 產品仍在客戶認證，尚未量產。",
+   "products": [
+    "軟板材料",
+    "PTFE 混合材料（認證中）",
+    "抗翹曲平衡膜"
+   ],
+   "src": [
+    "udnPTFE",
+    "bnextPTFE"
+   ]
+  },
+  {
+   "id": "6672",
+   "name": "騰輝電子-KY",
+   "tw": true,
+   "role": "PTFE／碳氫高頻塗佈膜與 CCL",
+   "desc": "高頻材料廠，開發 PTFE 與碳氫（hydrocarbon）塗佈膜，用在 AI、高速運算與光通訊；9 月營收年增約兩倍。",
+   "products": [
+    "PTFE 塗佈膜",
+    "碳氫高頻材料",
+    "高頻 CCL"
+   ],
+   "src": [
+    "udnPTFE"
+   ]
+  },
+  {
+   "id": "6568",
+   "name": "宏觀",
+   "tw": true,
+   "role": "台郡收購的 IC 設計公司",
+   "desc": "射頻與類比 IC 設計公司，被台郡收購後發展「軟板＋IC 模組」。",
+   "products": [
+    "射頻 IC",
+    "IC 模組"
+   ],
+   "src": [
+    "mwFPC"
+   ]
+  },
+  {
+   "id": "6153",
+   "name": "嘉聯益",
+   "tw": true,
+   "role": "老牌全製程軟板廠，蘋果合格供應商",
+   "desc": "全製程軟板廠，屬瀚宇博集團，是蘋果軟板合格供應商之一；聚焦 AI 智慧眼鏡、機器人感測模組、折疊手機等 AI 邊緣裝置。",
+   "products": [
+    "手機軟板",
+    "穿戴裝置軟板",
+    "折疊機軟板"
+   ],
+   "src": [
+    "yamFPC",
+    "pocketFPC"
+   ]
+  },
+  {
+   "id": "2402",
+   "name": "毅嘉",
+   "tw": true,
+   "role": "車用軟板",
+   "desc": "車用軟板大廠，產品用在車載顯示、電動車電池管理系統（BMS）與車用 AI 控制器。",
+   "products": [
+    "車用軟板",
+    "BMS 軟板"
+   ],
+   "src": [
+    "yamFPC"
+   ]
+  },
+  {
+   "id": "6835",
+   "name": "圓裕",
+   "tw": true,
+   "role": "軟板整合線束",
+   "desc": "軟板整合線束廠，主攻軍工、工控與筆電軟板，題材是用軟板取代伺服器內部線束、人形機器人關節軟板。",
+   "products": [
+    "軟板線束",
+    "工控／筆電軟板"
+   ],
+   "src": [
+    "yamFPC"
+   ]
+  },
+  {
+   "id": "3321",
+   "name": "同泰",
+   "tw": true,
+   "role": "軟板（欣興／長興集團投資）",
+   "desc": "欣興、長興集團投資的軟板廠，產品用在 Mini LED 背光模組、車載顯示器與手機。",
+   "products": [
+    "Mini LED 背光軟板",
+    "車載顯示軟板"
+   ],
+   "src": [
+    "yamFPC"
+   ]
+  },
+  {
+   "id": "apple",
+   "name": "Apple",
+   "tw": false,
+   "market": "美國 AAPL",
+   "role": "手機、平板、筆電、穿戴裝置",
+   "desc": "台灣軟板廠最大的終端客戶群。台郡法說會只說「主力客戶」，沒有點名，市場普遍認為是蘋果。",
+   "products": [
+    "iPhone",
+    "iPad",
+    "Mac",
+    "穿戴裝置"
+   ],
+   "src": []
+  }
+ ],
+ "edges": [
+  {
+   "from": "1815",
+   "to": "2383",
+   "label": "Low-Dk 玻纖布",
+   "conf": "report",
+   "src": [
+    "vocus3"
+   ]
+  },
+  {
+   "from": "1815",
+   "to": "6274",
+   "label": "Low-Dk 玻纖布",
+   "conf": "report",
+   "src": [
+    "vocus3"
+   ]
+  },
+  {
+   "from": "1815",
+   "to": "6213",
+   "label": "玻纖布",
+   "conf": "report",
+   "src": [
+    "vocus3"
+   ]
+  },
+  {
+   "from": "1802",
+   "to": "2383",
+   "label": "Low-Dk 2 玻纖布",
+   "conf": "report",
+   "src": [
+    "vocus3"
+   ]
+  },
+  {
+   "from": "nittobo",
+   "to": "5340",
+   "label": "母公司（持股 47.65%）、OEM",
+   "conf": "report",
+   "src": [
+    "udn5340"
+   ]
+  },
+  {
+   "from": "5475",
+   "to": "nittobo",
+   "label": "石英紗（供應日系客戶）",
+   "conf": "report",
+   "src": [
+    "cnyesQ",
+    "vocus3"
+   ]
+  },
+  {
+   "from": "nittobo",
+   "to": "2383",
+   "label": "Low-Dk／T-glass 布",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "feilihua",
+   "to": "2383",
+   "label": "Q 布（已通過認證）",
+   "conf": "report",
+   "src": [
+    "cnyesQ"
+   ]
+  },
+  {
+   "from": "8358",
+   "to": "2383",
+   "label": "HVLP 銅箔",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "8358",
+   "to": "6274",
+   "label": "銅箔",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "2383",
+   "to": "2368",
+   "label": "高速 CCL",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "2383",
+   "to": "3044",
+   "label": "CCL",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "6274",
+   "to": "2368",
+   "label": "高速 CCL",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "6213",
+   "to": "3044",
+   "label": "CCL",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "2383",
+   "to": "4958",
+   "label": "CCL",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "2383",
+   "to": "aws",
+   "label": "M8 CCL（Trainium 2 獨家）",
+   "conf": "report",
+   "src": [
+    "udnPCB"
+   ]
+  },
+  {
+   "from": "2368",
+   "to": "2382",
+   "label": "伺服器主板",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "2368",
+   "to": "6669",
+   "label": "伺服器主板",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "3037",
+   "to": "nvidia",
+   "label": "GPU 封裝 ABF 載板",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "2382",
+   "to": "nvidia",
+   "label": "GB200/GB300 機櫃組裝",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "6669",
+   "to": "aws",
+   "label": "雲端／ASIC 伺服器",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "6269",
+   "to": "nvidia",
+   "label": "NVLink PTFE 看板列名（是否有訂單未證實）",
+   "conf": "report",
+   "src": [
+    "udnPTFE",
+    "btoday"
+   ]
+  },
+  {
+   "from": "6269",
+   "to": "nvidia",
+   "label": "AI 伺服器液冷漏液檢測軟板模組",
+   "conf": "report",
+   "src": [
+    "mwFPC",
+    "yamFPC"
+   ]
+  },
+  {
+   "from": "8039",
+   "to": "nvidia",
+   "label": "NVLink PTFE 看板列名（2027 年量產目標）",
+   "conf": "report",
+   "src": [
+    "udnPTFE",
+    "wantPTFE"
+   ]
+  },
+  {
+   "from": "8039",
+   "to": "2383",
+   "label": "PTFE 合作（業界傳聞，雙方未證實）",
+   "conf": "report",
+   "src": [
+    "bnextPTFE"
+   ]
+  },
+  {
+   "from": "8039",
+   "to": "6269",
+   "label": "軟性銅箔基板（FCCL）",
+   "conf": "guess",
+   "src": [
+    "cmoney8039"
+   ]
+  },
+  {
+   "from": "8039",
+   "to": "4958",
+   "label": "軟性銅箔基板（FCCL）",
+   "conf": "guess",
+   "src": [
+    "cmoney8039"
+   ]
+  },
+  {
+   "from": "3645",
+   "to": "8039",
+   "label": "PI 薄膜（FCCL 基材）",
+   "conf": "guess",
+   "src": []
+  },
+  {
+   "from": "6568",
+   "to": "6269",
+   "label": "子公司，IC 模組",
+   "conf": "report",
+   "src": [
+    "mwFPC"
+   ]
+  },
+  {
+   "from": "4958",
+   "to": "nvidia",
+   "label": "UBB、OAM 加速卡板、機櫃高頻軟板",
+   "conf": "report",
+   "src": [
+    "yamFPC"
+   ]
+  },
+  {
+   "from": "6269",
+   "to": "apple",
+   "label": "主力客戶（約占營收九成，市場認為是蘋果）",
+   "conf": "guess",
+   "src": [
+    "vocus6269"
+   ]
+  },
+  {
+   "from": "6153",
+   "to": "apple",
+   "label": "軟板（合格供應商）",
+   "conf": "report",
+   "src": [
+    "pocketFPC"
+   ]
+  },
+  {
+   "from": "4958",
+   "to": "apple",
+   "label": "手機軟板（手機應用占營收六成以上）",
+   "conf": "guess",
+   "src": []
+  }
+ ]
 }

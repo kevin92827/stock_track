@@ -39,12 +39,18 @@ main { max-width: 1280px; margin: 0 auto; padding: 16px 16px 60px; }
 .tag.report { background: var(--accent-bg); color: var(--accent); }
 .tag.guess { border: 1px dashed var(--edge); color: var(--muted); }
 .tag.layer { background: var(--hover); color: var(--muted); }
+.chains { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.chains button { border: 1px solid var(--line); background: var(--bg); color: var(--text); padding: 6px 14px; border-radius: 8px;
+  font: inherit; font-weight: 600; cursor: pointer; }
+.chains button span { font-weight: 400; color: var(--muted); font-size: 12px; margin-left: 4px; }
+.chains button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chains button.on span { color: #fff; opacity: .85; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; font-size: 12.5px; color: var(--muted); }
 .legend svg { vertical-align: middle; }
 
 /* 地圖 */
 .mapwrap { overflow-x: auto; margin: 0 -4px; padding: 0 4px 6px; }
-.map { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0 40px; min-width: 1010px; }
+.map { position: relative; display: grid; gap: 0 40px; }
 .map svg.edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
 .col { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 10px; }
 .colhead { padding: 4px 2px 6px; border-bottom: 2px solid var(--line); margin-bottom: 2px; }
@@ -118,8 +124,15 @@ tbody tr.sel { background: var(--accent-bg); }
 const D = /*__DATA__*/null;
 const M = D.map;
 const NODES = new Map(M.nodes.map((n) => [n.id, n]));
-const LAYERS = M.layers.map((l) => l.id);
-const layerOf = (n) => LAYERS.indexOf(n.layer);
+// 目前顯示哪一條產業鏈：同一家公司可以出現在好幾條鏈，層級跟著鏈走
+let CH, CH_LAYER, CH_EDGES;
+function useChain(id) {
+  CH = M.chains.find((c) => c.id === id) || M.chains[0];
+  CH_LAYER = new Map(CH.layers.flatMap((l, i) => l.nodes.map((n) => [n, i])));
+  CH_EDGES = M.edges.map((e, i) => i).filter((i) => CH_LAYER.has(M.edges[i].from) && CH_LAYER.has(M.edges[i].to));
+}
+const layerOf = (n) => CH_LAYER.get(n.id ?? n);
+const chainsOf = (id) => M.chains.filter((c) => c.layers.some((l) => l.nodes.includes(id)));
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const cls = (x) => (x > 0 ? "up" : x < 0 ? "down" : "");
 const pct = (x, d = 1) => (x == null || !isFinite(x) ? "–" : (x > 0 ? "+" : x < 0 ? "−" : "") + Math.abs(x).toFixed(d) + "%");
@@ -162,15 +175,19 @@ const S = new Map(M.nodes.filter((n) => n.tw).map((n) => [n.id, stats(n.id)]));
 // ---------- 狀態（記在網址 # 後面）
 const state = { sel: null, hover: null, sort: "yoy", dir: 1 };
 (function readHash() {
-  const id = new URLSearchParams(location.hash.slice(1)).get("id");
-  state.sel = NODES.has(id) ? id : (M.nodes.find((n) => n.focus) || M.nodes[0]).id;
+  const h = new URLSearchParams(location.hash.slice(1)), id = h.get("id");
+  useChain(h.get("chain") || (NODES.has(id) && chainsOf(id)[0] || M.chains[0]).id);
+  state.sel = CH_LAYER.has(id) ? id : CH.focus;
 })();
+function writeHash() { history.replaceState(null, "", `#chain=${CH.id}&id=${encodeURIComponent(state.sel)}`); }
+// 點到的公司不在目前這條鏈上，就切到它所在的第一條鏈
 function select(id) {
+  if (!CH_LAYER.has(id)) useChain(chainsOf(id)[0].id);
   state.sel = id;
-  history.replaceState(null, "", "#id=" + encodeURIComponent(id));
-  render();
+  writeHash(); render();
   document.getElementById("detail").scrollIntoView({ behavior: "smooth", block: "start" });
 }
+function pickChain(id) { useChain(id); state.sel = CH.focus; writeHash(); render(); }
 
 // 沿著關係往上游、往下游一路找下去
 function chainOf(id) {
@@ -179,8 +196,8 @@ function chainOf(id) {
     const stack = [start];
     while (stack.length) {
       const x = stack.pop();
-      M.edges.forEach((e, i) => {
-        const [a, b] = dir > 0 ? [e.from, e.to] : [e.to, e.from];
+      CH_EDGES.forEach((i) => {
+        const e = M.edges[i], [a, b] = dir > 0 ? [e.from, e.to] : [e.to, e.from];
         if (a === x) { edges.add(i); if (!seen.has(b) && b !== start) { seen.add(b); stack.push(b); } }
       });
     }
@@ -196,15 +213,16 @@ function cardHtml(n) {
   if (!n.tw) mt = `<span class="muted">${esc(n.market)}・非台股</span>`;
   else mt = `<span title="${s.month || ""} 營收年增率">${s.month ? mon(s.month) + "營收 " : "營收 "}<b class="${cls(s.yoy)}">${pct(s.yoy)}</b>${s.high ? ' <span class="tag report" title="近 ' + s.span + ' 個月新高">新高</span>' : ""}</span>
     <span title="近 20 個交易日股價漲跌（未還原除權息）">20日 <b class="${cls(s.r20)}">${pct(s.r20)}</b></span>`;
-  return `<div class="card${n.focus ? " focus" : ""}${n.id === state.sel ? " sel" : ""}" data-id="${esc(n.id)}"
+  return `<div class="card${n.id === CH.focus ? " focus" : ""}${n.id === state.sel ? " sel" : ""}" data-id="${esc(n.id)}"
     onclick="select('${esc(n.id)}')" onmouseenter="hover('${esc(n.id)}')" onmouseleave="hover(null)">
     <div class="nm">${esc(n.name)}<span>${n.tw ? esc(n.id) : ""}</span></div>
     <div class="role">${esc(n.role)}</div><div class="mt">${mt}</div></div>`;
 }
 function mapHtml() {
-  return `<div class="mapwrap"><div class="map" id="map"><svg class="edges" id="edges"></svg>
-    ${M.layers.map((l) => `<div class="col"><div class="colhead"><b>${esc(l.name)}</b><div>${esc(l.desc)}</div></div>
-      ${M.nodes.filter((n) => n.layer === l.id).map(cardHtml).join("")}</div>`).join("")}</div></div>`;
+  const k = CH.layers.length;
+  return `<div class="mapwrap"><div class="map" id="map" style="grid-template-columns:repeat(${k},minmax(0,1fr));min-width:${k * 202}px"><svg class="edges" id="edges"></svg>
+    ${CH.layers.map((l) => `<div class="col"><div class="colhead"><b>${esc(l.name)}</b><div>${esc(l.desc)}</div></div>
+      ${l.nodes.map((id) => cardHtml(NODES.get(id))).join("")}</div>`).join("")}</div></div>`;
 }
 function hover(id) { state.hover = id; paintChain(); }
 function paintChain() {
@@ -221,14 +239,15 @@ function drawEdges(ch) {
     rect[el.dataset.id] = { l: r.left - box.left, r: r.right - box.left, y: (r.top + r.bottom) / 2 - box.top };
   });
   let paths = "";
-  M.edges.forEach((e, i) => {
-    const a = rect[e.from], b = rect[e.to];
+  CH_EDGES.forEach((i) => {
+    const e = M.edges[i], a = rect[e.from], b = rect[e.to];
     if (!a || !b) return;
-    const fwd = layerOf(NODES.get(e.to)) > layerOf(NODES.get(e.from));
-    const x1 = fwd ? a.r : a.l, x2 = fwd ? b.l - 6 : b.r + 6, dx = Math.max(24, Math.abs(x2 - x1) / 2) * (fwd ? 1 : -1);
+    const fwd = layerOf(e.to) > layerOf(e.from), same = layerOf(e.to) === layerOf(e.from);
+    const x1 = fwd || same ? a.r : a.l, x2 = fwd ? b.l - 6 : b.r + 6, dx = Math.max(24, Math.abs(x2 - x1) / 2) * (fwd ? 1 : -1);
     const hi = ch.edges.has(i);
-    paths += `<path class="edge ${e.conf}${hi ? " hi" : " dim"}" marker-end="url(#${hi ? "ah" : "a"})"
-      d="M${x1},${a.y} C${x1 + dx},${a.y} ${x2 - dx},${b.y} ${x2},${b.y}"/>`;
+    // 同一層的兩家（例如台虹 → 台光電）從右側繞出去再接回來
+    const d = same ? `M${x1},${a.y} C${x1 + 30},${a.y} ${x2 + 24},${b.y} ${x2},${b.y}` : `M${x1},${a.y} C${x1 + dx},${a.y} ${x2 - dx},${b.y} ${x2},${b.y}`;
+    paths += `<path class="edge ${e.conf}${hi ? " hi" : " dim"}" marker-end="url(#${hi ? "ah" : "a"})" d="${d}"/>`;
   });
   const mk = (id, c) => `<marker id="${id}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="${c}"/></marker>`;
   svg.innerHTML = `<defs>${mk("a", "var(--edge)")}${mk("ah", "var(--accent)")}</defs>${paths}`;
@@ -301,15 +320,17 @@ function relRows(list, side) {
   if (!list.length) return `<div class="muted" style="padding:6px 0">目前地圖上沒有整理到${side}</div>`;
   return list.map((e) => {
     const other = NODES.get(side === "上游供應商" ? e.from : e.to);
-    return `<div class="rel"><span class="who" onclick="select('${esc(other.id)}')">${esc(other.name)}${other.tw ? " " + esc(other.id) : ""}</span>
+    const away = CH_LAYER.has(other.id) ? "" : ` <span class="tag layer" title="不在目前這張地圖上，點了會切換">${esc(chainsOf(other.id).map((c) => c.name).join("、"))}</span>`;
+    return `<div class="rel"><span class="who" onclick="select('${esc(other.id)}')">${esc(other.name)}${other.tw ? " " + esc(other.id) : ""}</span>${away}
       <span>${esc(e.label)}</span>${confTag(e.conf)}${e.src && e.src.length ? `<span class="src muted">來源：${srcLinks(e.src)}</span>` : ""}</div>`;
   }).join("");
 }
 function detailHtml() {
-  const n = NODES.get(state.sel), s = S.get(n.id), layer = M.layers.find((l) => l.id === n.layer);
+  const n = NODES.get(state.sel), s = S.get(n.id), layer = CH.layers[layerOf(n)];
   TIPS.length = 0;
   const ups = M.edges.filter((e) => e.to === n.id), downs = M.edges.filter((e) => e.from === n.id);
-  const peers = M.nodes.filter((x) => x.layer === n.layer && x.id !== n.id);
+  const peers = layer.nodes.filter((x) => x !== n.id).map((x) => NODES.get(x));
+  const others = chainsOf(n.id).filter((c) => c.id !== CH.id);
   let tiles = "", charts = "", etf = "";
   if (s) {
     const tile = (k, v, sub, c = "") => `<div class="tile"><div class="k">${k}</div><div class="v ${c}">${v}</div><div class="s">${sub || "&nbsp;"}</div></div>`;
@@ -333,7 +354,8 @@ function detailHtml() {
   }
   return `<div class="panel" id="detail">
     <div class="dhead"><h2>${esc(n.name)} ${n.tw ? `<span class="muted" style="font-weight:400">${esc(n.id)}</span>` : `<span class="muted" style="font-weight:400">${esc(n.market)}</span>`}</h2>
-      <span class="tag layer">${esc(layer.name)}</span><span class="muted">${esc(n.role)}</span></div>
+      <span class="tag layer">${esc(layer.name)}</span><span class="muted">${esc(n.role)}</span>
+      ${others.length ? `<span class="muted">也在：${others.map((c) => `<a onclick="useChain('${c.id}');writeHash();render()" style="cursor:pointer">${esc(c.title)}</a>`).join("、")}</span>` : ""}</div>
     ${tiles}
     <p style="margin:8px 0">${esc(n.desc)}</p>
     ${n.products && n.products.length ? `<div class="chips">${n.products.map((p) => `<span class="chip">${esc(p)}</span>`).join("")}</div>` : ""}
@@ -350,7 +372,7 @@ function detailHtml() {
 
 // ---------- 同業比較表
 function peerHtml() {
-  const rows = M.nodes.filter((n) => n.tw).map((n) => ({ n, s: S.get(n.id) }));
+  const rows = M.nodes.filter((n) => n.tw && CH_LAYER.has(n.id)).map((n) => ({ n, s: S.get(n.id) }));
   const KEYS = { layer: (x) => -layerOf(x.n), name: (x) => x.n.id, rev: (x) => x.s.revLast ?? -1e18, yoy: (x) => x.s.yoy ?? -1e9,
     yoy3: (x) => x.s.yoy3 ?? -1e9, yoy12: (x) => x.s.yoy12 ?? -1e9, r20: (x) => x.s.r20 ?? -1e9, r60: (x) => x.s.r60 ?? -1e9,
     mcap: (x) => x.s.mcap ?? -1, held: (x) => x.s.held.length };
@@ -358,11 +380,11 @@ function peerHtml() {
   rows.sort((a, b) => { const x = k(a), y = k(b); return (x < y ? 1 : x > y ? -1 : 0) * state.dir; });
   const th = (key, label, l) => `<th class="sort${l ? " l" : ""}" onclick="sortBy('${key}')">${label}${state.sort === key ? (state.dir > 0 ? " ▼" : " ▲") : ""}</th>`;
   return `<div class="panel"><h2>同業比較</h2>
-    <p class="hint">地圖上的台股公司；點欄位標題排序，點一列看明細。「近 3 個月年增」是最近 3 個月營收合計和去年同期比，比單月年增穩定。股價漲跌未還原除權息。</p>
+    <p class="hint">這張地圖上的台股公司；點欄位標題排序，點一列看明細。「近 3 個月年增」是最近 3 個月營收合計和去年同期比，比單月年增穩定。股價漲跌未還原除權息。</p>
     <div class="scroll"><table><thead><tr>${th("name", "公司", 1)}${th("layer", "層級", 1)}${th("rev", "最新月營收（億）")}${th("yoy", "單月年增")}
       ${th("yoy3", "近 3 個月年增")}${th("yoy12", "近 12 個月年增")}${th("r20", "20 日")}${th("r60", "60 日")}${th("mcap", "市值（億）")}${th("held", "ETF 持有")}</tr></thead><tbody>
     ${rows.map(({ n, s }) => `<tr class="click${n.id === state.sel ? " sel" : ""}" onclick="select('${esc(n.id)}')">
-      <td class="l"><b>${esc(n.name)}</b> <span class="muted">${esc(n.id)}</span></td><td class="l muted">${esc(M.layers.find((l) => l.id === n.layer).name)}</td>
+      <td class="l"><b>${esc(n.name)}</b> <span class="muted">${esc(n.id)}</span></td><td class="l muted">${esc(CH.layers[layerOf(n)].name)}</td>
       <td>${s.revLast ? yi(s.revLast) : "–"} <span class="muted">${s.month ? mon(s.month) : ""}</span></td>
       <td class="${cls(s.yoy)}">${pct(s.yoy)}</td><td class="${cls(s.yoy3)}">${pct(s.yoy3)}</td><td class="${cls(s.yoy12)}">${pct(s.yoy12)}</td>
       <td class="${cls(s.r20)}">${pct(s.r20)}</td><td class="${cls(s.r60)}">${pct(s.r60)}</td><td>${s.mcap ? fmtNum(s.mcap) : "–"}</td><td>${s.held.length}</td></tr>`).join("")}
@@ -372,13 +394,15 @@ function sortBy(k) { state.dir = state.sort === k ? -state.dir : 1; state.sort =
 
 // ---------- 畫面
 function render() {
-  const focus = M.nodes.find((n) => n.focus);
+  const focus = NODES.get(CH.focus);
+  const tabs = M.chains.map((c) => `<button class="${c.id === CH.id ? "on" : ""}" onclick="pickChain('${c.id}')">${esc(c.name)}<span>${esc(NODES.get(c.focus).name)} ${esc(c.focus)}</span></button>`).join("");
   const line = (dash) => `<svg width="34" height="10"><path d="M1,5 H33" stroke="var(--edge)" stroke-width="1.5" ${dash ? 'stroke-dasharray="5 4"' : ""}/></svg>`;
   document.getElementById("app").innerHTML = `
   <div class="panel">
-    <h2>AI 伺服器板材鏈：玻纖布${focus ? `（從 ${esc(focus.name)} ${esc(focus.id)} 出發）` : ""}</h2>
+    <div class="chains">${tabs}</div>
+    <h2>${esc(CH.title)}${focus ? `（從 ${esc(focus.name)} ${esc(focus.id)} 出發）` : ""}</h2>
     <p class="hint">由左到右是上游到下游。滑過或點一家公司，會標出它一路往上游、往下游連到的公司；點了之後下方顯示細節，包括每條關係供應什麼、消息來源。卡片上是最新一個月的營收年增率和近 20 個交易日股價漲跌。
-      上下游關係是人工整理（${esc(M.updated)}），公司通常不公開客戶名單，請以「報導」「推測」標記判斷可信度。</p>
+      上下游關係是人工整理（${esc(CH.updated)}），公司通常不公開客戶名單，請以「報導」「推測」標記判斷可信度。</p>
     <div class="legend"><span>${line(false)} 報導提到的供貨關係</span><span>${line(true)} 依產業結構推測</span>
       <span><span class="tag report">新高</span> 單月營收創資料期間新高</span><span class="up">紅＝上漲／成長</span><span class="down">綠＝下跌／衰退</span></div>
   </div>
