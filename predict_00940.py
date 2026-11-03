@@ -353,6 +353,9 @@ def run(cutoff="2026-04-30", opt=None):
     U["近4季自由現金流(億)"] = fcf / 1e5
     U["自由現金流收益率%"] = np.where(U["金融業"], np.nan, fcf / 1e3 / (U["發行市值(億)"] * 100) * 100)
 
+    # 分母是 0 會算出無限大（例如前一年營收 0），當作沒有資料
+    U = U.replace([np.inf, -np.inf], np.nan)
+
     # --- 股利 ---
     known = div[div["board"] <= cut]
     rows = {}
@@ -449,6 +452,7 @@ def run(cutoff="2026-04-30", opt=None):
     hist = hist.dropna(subset=["ret"]).groupby("code").tail(252)
     dr = hist.groupby("code")["ret"].apply(lambda r: math.sqrt((np.minimum(0, r) ** 2).sum() / len(r)) * math.sqrt(252))
     U["下行風險"] = dr.reindex(U.index)
+    U["下行風險_天數"] = hist.groupby("code").size().reindex(U.index)
     s1 = U[U["通過第一階段"]]
     inv_rank = (1 / s1["下行風險"]).rank(ascending=False, method="min") / len(s1)
     U["通過第二階段"] = False
@@ -593,7 +597,8 @@ def run(cutoff="2026-04-30", opt=None):
         ("權重（股利率）", f"{note_dy}；觸及上限 {int(W['觸及上限'].sum())} 檔；與實際權重相關係數 {corr:.3f}；絕對誤差合計 {mae.sum() * 100:.1f} 個百分點"),
         ("權重（股利率×市值）", f"{note_dm}；與實際權重相關係數 {corr2:.3f}；絕對誤差合計 {mae2.sum() * 100:.1f} 個百分點"),
     ]
-    return dict(summary=summary, R=R, U=U, W=W)
+    return dict(summary=summary, R=R, U=U, W=W, relax=relax, liq_monthly=g, months=months, aum=aum, aum_h=aum_h, P=P,
+                weight_note=note_dy)
 
 
 # ---- 輸出 Excel ------------------------------------------------------------
