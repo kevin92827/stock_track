@@ -20,6 +20,18 @@ PD = os.path.join(BASE, "predict_data")
 
 # ---- 這次審核的參數 ----------------------------------------------------------
 REVIEWS = {
+    "2025-04-30": dict(prev_cutoff="2024-10-31", effective="2025-05-20",
+                       old_date="2025-05-15", new_date="2025-05-27",
+                       q4=["2024/03", "2024/06", "2024/09", "2024/12"],
+                       q4_prev=["2023/03", "2023/06", "2023/09", "2023/12"],
+                       q_growth_base=["2021/03", "2021/06", "2021/09", "2021/12"],
+                       hold_month="2025/03", cha_q="2024/12", may=True),
+    "2025-10-31": dict(prev_cutoff="2025-04-30", effective="2025-11-19",
+                       old_date="2025-11-14", new_date="2025-11-28",
+                       q4=["2024/09", "2024/12", "2025/03", "2025/06"],
+                       q4_prev=["2023/09", "2023/12", "2024/03", "2024/06"],
+                       q_growth_base=["2021/09", "2021/12", "2022/03", "2022/06"],
+                       hold_month="2025/09", cha_q="2025/06", may=False),
     # 截止日: (前次截止日, 生效日, 舊成分股取哪天, 實際新成分股取哪天, 近4季, 去年同期4季, 持股月份, 大陸投資季)
     "2026-04-30": dict(prev_cutoff="2025-10-31", effective="2026-05-20",
                        old_date="2026-05-15", new_date="2026-05-27",
@@ -154,23 +166,70 @@ def load_full_delivery():
     return out
 
 
+def yuanta_holdings():
+    """元大網站匯出的 00940 持股（holding_940_*.csv）。檔案裡的中文已經是亂碼，只用日期、代號、股數、權重。"""
+    import csv
+    import io
+    parts = []
+    for f in sorted(os.listdir(PD)):
+        if f.startswith("holding_940_") and f.endswith(".csv"):
+            lines = open(os.path.join(PD, f), "rb").read().decode("utf-8", "replace").splitlines()
+            rows = list(csv.reader(io.StringIO("\n".join(l for l in lines if l[:2] == "20"))))
+            d = pd.DataFrame([r[:7] for r in rows], columns=["date", "type", "tgt", "qty", "cur", "amt", "weight"])
+            d = d[d["tgt"].str.match(r"^\d{4,6}[A-Z]? ")]          # 期貨的代號不是數字，去掉
+            d["code"] = d["tgt"].str.split(" ").str[0]
+            d["name"] = ""
+            d["date"] = pd.to_datetime(d["date"]).dt.strftime("%Y-%m-%d")
+            parts.append(d[["date", "code", "name", "qty", "weight"]])
+    return pd.concat(parts, ignore_index=True).drop_duplicates(["date", "code"]) if parts else None
+
+
 def etf_holdings(date):
     h = pd.read_csv(os.path.join(BASE, "data", "holdings.csv"), dtype=str, encoding="utf-8-sig")
     h = h[(h["etf"] == "00940") & (h["date"] == date) & (h["type"] == "stock")].copy()
+    if h.empty:
+        y = yuanta_holdings()
+        h = y[y["date"] == date].copy()
+        if h.empty:
+            raise ValueError(f"找不到 00940 在 {date} 的持股")
     h["weight"] = num(h["weight"])
     h["qty"] = num(h["qty"])
     h["w"] = h["weight"] / h["weight"].sum()
     return h.set_index("code")
 
 
-def ex_div_dates():
+def ex_div_dates(start=None, px=None):
+    """除息日。data/corp_actions.csv 只從 2025/10 開始；更早的期間用股價推：
+    TEJ 收盤價是還原價，「還原價 ÷ 原始股價」在除息日會往上跳一階（前後各 3 天的中位數差 > 0.2%）。
+    2026/1～5 驗證：corp_actions 裡的 111 檔大型股抓到 110 檔。"""
     c = pd.read_csv(os.path.join(BASE, "data", "corp_actions.csv"), dtype=str, encoding="utf-8-sig")
     c = c[(c["kind"] == "dividend") & c["label"].str.contains("息")]
     c["date"] = pd.to_datetime(c["date"])
-    return c
+    c["source"] = "corp_actions"
+    if start is None or px is None or c["date"].min() <= pd.Timestamp(start):
+        return c
+    p = px[px["code"].str.match(r"^[1-9]\d{3}$") & (px["date"] >= pd.Timestamp(start) - pd.DateOffset(days=20))
+           & (px["date"] <= pd.Timestamp(start) + pd.DateOffset(months=7))].copy()
+    p["f"] = p["adj"] / p["raw"]
+    g = p.groupby("code")["f"]
+    before = g.transform(lambda s: s.shift(1).rolling(3).median())
+    after = g.transform(lambda s: s[::-1].rolling(3).median()[::-1])
+    p["jump"] = after / before - 1
+    e = p[p["jump"] > 0.002].sort_values("date").drop_duplicates("code")   # 每檔取第一次跳動（只需要知道有沒有除息）
+    e = e[["code", "date"]].assign(source="股價推算")
+    return e
 
 
 # ---- 工具 ------------------------------------------------------------------
+def qshift(qs, n):
+    """季別往後推 n 季，例如 ("2025/12", 1) → "2026/03"。"""
+    out = []
+    for q in qs:
+        k = int(q[:4]) * 4 + int(q[5:]) // 3 - 1 + n
+        out.append(f"{k // 4}/{(k % 4 + 1) * 3:02d}")
+    return out
+
+
 def pct_rank(s, mask=None, ascending=False):
     """名次百分比（1/n～1）。預設值越大排越前面；mask 以外的股票不參與排名、結果為 NaN。"""
     x = s if mask is None else s.where(mask)
@@ -267,7 +326,13 @@ def universe_chain(px, stocks, names, hold_ff, cutoff, full=None):
 # ---- 主流程 ----------------------------------------------------------------
 def run(cutoff="2026-04-30", opt=None):
     o = dict(OPT, **(opt or {}))
-    P = REVIEWS[cutoff]
+    P = dict(REVIEWS[cutoff])
+    qn = o.get("qshift", 0)
+    if isinstance(qn, (tuple, list)):   # (5 月審核, 11 月審核) 分開設定
+        qn = qn[0] if P["may"] else qn[1]
+    if qn:   # 財報季別整體往後推 n 季（測試「用審核當下已公布的最新財報」）
+        P.update({k: qshift(P[k], qn) for k in ("q4", "q4_prev", "q_growth_base")})
+        P["cha_q"] = qshift([P["cha_q"]], qn)[0]
     cut = pd.Timestamp(cutoff)
     D = data()
     px, fin, div, ind = D["px"], D["fin"], D["div"], D["ind"]
@@ -386,7 +451,7 @@ def run(cutoff="2026-04-30", opt=None):
     U["金融業近5年含公積"] = dv["cap5"].astype(bool) & U["金融業"]
 
     eff = pd.Timestamp(P["effective"])
-    exd = ex_div_dates()
+    exd = ex_div_dates(pd.Timestamp(eff.year, 1, 1), px)
     exd = exd[(exd["date"] >= pd.Timestamp(eff.year, 1, 1)) & (exd["date"] < eff)]
     U["生效前已除息日"] = exd.groupby("code")["date"].min().reindex(U.index).dt.strftime("%Y-%m-%d")
     U["5月排除_年配已除息"] = P["may"] & (U["配息型態"] == "A0") & U["生效前已除息日"].notna()
@@ -395,8 +460,9 @@ def run(cutoff="2026-04-30", opt=None):
     U["可持續成長率%"] = np.where(U["近4季EPS"] > 0, U["ROE近4季%"] * (1 - payout), np.nan)
     ni_now, ni_base = fsum("ni", q4), fsum("ni", qb)
     U["稅後淨利3年CAGR%"] = np.where((ni_base > 0) & (ni_now > 0), ((ni_now / ni_base) ** (1 / 3) - 1) * 100, np.nan)
+    U["ROE×保留率%"] = U["ROE近4季%"] * (1 - payout)      # 跟可持續成長率一樣，但虧損股也保留數值（排在後面）
     U["長期成長率%"] = {"sgr": U["可持續成長率%"], "rev": U["營收3年CAGR%"], "ni": U["稅後淨利3年CAGR%"],
-                     "none": pd.Series(1.0, index=U.index)}[o["growth"]]
+                     "sgr_all": U["ROE×保留率%"], "none": pd.Series(1.0, index=U.index)}[o["growth"]]
 
     # --- 第一階段 ---
     grp = U["金融業"]
@@ -408,7 +474,8 @@ def run(cutoff="2026-04-30", opt=None):
     U["稅後淨利_名次%"] = pct_top(U["近4季稅後淨利(億)"], M)
     U["毛利率成長_名次%"] = pct_top(U["毛利率成長(百分點)"], M)
     U["大陸投資_名次%(低到高)"] = pct_rank(U["大陸投資/淨值%"], M, ascending=True)
-    U["長期成長_名次%"] = pct_top(U["長期成長率%"], M)
+    MG = M if o.get("growth_pop", "all") == "all" else (U["在母體"] & ~U["既有成分股"])   # "new" = 只在非既有成分股之間排
+    U["長期成長_名次%"] = pct_top(U["長期成長率%"], MG)
 
     def stage1(relax=0.0):
         c = pd.DataFrame(index=U.index)
@@ -428,7 +495,7 @@ def run(cutoff="2026-04-30", opt=None):
         c["流動性"] = U["通過_流動性"]
         return c
 
-    relax = 0.0
+    relax = o.get("relax_force", 0.0)
     while True:
         C = stage1(relax)
         passed = C.all(axis=1) & U["在母體"]
