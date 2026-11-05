@@ -61,6 +61,9 @@ tr.click { cursor: pointer; }
 .tag.late { background: var(--warn-bg); color: var(--warn); }
 .tag.kind { background: var(--hover); color: var(--muted); }
 .tag.high { background: var(--up); color: #fff; font-weight: 600; }
+.tag.slhit { background: var(--down); color: #fff; font-weight: 600; }
+.tag.slnear { background: var(--warn-bg); color: var(--warn); font-weight: 600; }
+tr.sl-hit td { background: var(--down-bg); }
 .tag.mth.bid { background: #7b3fe4; color: #fff; }
 .tag.mth.book { background: #0f8a8a; color: #fff; }
 .tag.mth.unk { background: var(--hover); color: var(--muted); }
@@ -155,7 +158,8 @@ const state = { tab: "calendar", date: D.dates[D.dates.length - 1], kind: "全�
   month: null, calDay: null, calEtf: "全部", calKind: "全部", minAmt: 0, minPct: 1, calOnlyNewOut: false, calSort: null, calDir: 1,
   cbMonth: null, cbDay: null, cbHeld: false, cbMethod: "全部",
   revMonth: null, revDay: null, revHeld: false, revHigh: false, revSort: "rev", revDir: 1, revQ: "",
-  caMonth: null, caDay: null, caKind: "全部", caTarget: "全部", caMin: 0, caHeld: false, caMode: "eff", caSort: "adj", caDir: 1, caQ: "" };
+  caMonth: null, caDay: null, caKind: "全部", caTarget: "全部", caMin: 0, caHeld: false, caMode: "eff", caSort: "adj", caDir: 1, caQ: "",
+  slIssuer: "全部", slRange: "alert", slMin: 0.1, slSort: "dist", slDir: 1 };
 
 const snap = (etf, date) => (D.snaps[etf] || {})[date];
 const datesOf = (etf) => D.dates.filter((d) => snap(etf, d));
@@ -625,6 +629,111 @@ function renderCalendar() {
   </div>` + upcomingPanel;
 }
 
+// ------------------------------------------------------------ 主動式 ETF 停損預警
+// 持倉成本由 stoploss.py 用先進先出推算；收盤跌破成本 −30% 假設會被停損
+function slRows() {
+  const S = D.sl;
+  return S.pos.map(([etf, code, qty, cost, close, chg, since, avgVol, last, oldest, cross]) => {
+    const e = etfOf(etf), loss = close / cost - 1, stopPx = cost * (1 + S.stop);
+    const r = { etf, e, code, qty, cost, close, chg, since, avgVol, last, oldest, cross, loss, stopPx,
+      dist: stopPx / close - 1, volPct: avgVol ? qty / avgVol : null, amt: qty * close / 1e8 };
+    // 還留著基金第一天的持股（上市前建倉，買進價不明）→ 成本不可靠，不列入預警
+    r.initial = since <= (S.coverage[etf] || [""])[0];
+    r.status = r.initial ? "" : loss <= S.stop ? (cross >= S.recentFrom ? "hit" : "old") : r.dist >= -S.limit ? "near" : "";
+    return r;
+  });
+}
+const SL_TAG = { hit: '<span class="tag slhit">新跌破</span>', near: '<span class="tag slnear">跌停就觸發</span>', old: '<span class="tag kind">早已跌破</span>' };
+const lotsText = (q) => Math.round(q / 1000).toLocaleString("en-US");
+function renderStoploss() {
+  const S = D.sl;
+  if (!S || !S.pos.length) return `<div class="empty">還沒有停損預警資料（每天排程會執行 stoploss.py）</div>`;
+  const all = slRows();
+  // 同一家投信旗下所有主動式 ETF 合計持有同一檔股票的張數
+  const issuerQty = {};
+  for (const r of all) issuerQty[r.e.issuer + r.code] = (issuerQty[r.e.issuer + r.code] || 0) + r.qty;
+  const issuers = ["全部", ...new Set(all.map((r) => r.e.issuer))];
+  const ranges = { alert: "隔天可能停損（新跌破＋跌停就觸發）", old: "早已跌破但還沒賣", 20: "距停損價 20% 以內", all: "全部部位" };
+  let rows = all.filter((r) => (state.slIssuer === "全部" || r.e.issuer === state.slIssuer) && r.amt >= state.slMin
+    && (state.slRange === "all" || (state.slRange === "alert" ? r.status === "hit" || r.status === "near" : state.slRange === "old" ? r.status === "old" : r.dist >= -0.2)));
+  const SORTS = { issuer: (r) => r.e.issuer, etf: (r) => r.etf, code: (r) => r.code, status: (r) => ({ hit: 3, near: 2, old: 1 }[r.status] || 0),
+    qty: (r) => r.qty, cost: (r) => r.cost, close: (r) => r.close, chg: (r) => r.chg ?? -9, loss: (r) => r.loss, dist: (r) => r.dist,
+    vol: (r) => r.volPct ?? -1, ivol: (r) => (r.avgVol ? issuerQty[r.e.issuer + r.code] / r.avgVol : -1), amt: (r) => r.amt, since: (r) => r.since };
+  const sk = SORTS[state.slSort] || SORTS.dist;
+  rows.sort((x, y) => { const a = sk(x), b = sk(y); return (a < b ? 1 : a > b ? -1 : 0) * state.slDir; });
+  const th = (key, label, left, title) => `<th class="sort${left ? " l" : ""}" title="${title || "點一下排序"}" onclick="pick({slSort:'${key}',slDir:state.slSort==='${key}'?-state.slDir:1})">${label}${state.slSort === key ? (state.slDir > 0 ? " ▼" : " ▲") : ""}</th>`;
+  const nm = (c) => esc(S.names[c] || nameOf(c));
+  const pctv = (x, d = 1) => (x == null ? "–" : (x * 100).toFixed(d) + "%");
+  const body = rows.map((r) => {
+    const iq = issuerQty[r.e.issuer + r.code], multi = iq > r.qty;
+    return `<tr class="${r.status ? "sl-" + r.status : ""}"><td class="l">${esc(r.e.issuer)}</td>
+    <td class="l" title="${esc(r.e.name)}">${etfLink(r.etf)}</td><td class="l">${stockLink(r.code)}</td><td class="l">${nm(r.code)}</td>
+    <td class="l">${SL_TAG[r.status] || '<span class="muted">–</span>'}</td>
+    <td>${lotsText(r.qty)}</td><td>${r.cost.toFixed(2)}</td><td>${r.close}</td><td class="${cls(r.chg)}">${pct(r.chg)}</td>
+    <td class="${cls(r.loss)}">${pct(r.loss, 1)}</td><td>${r.stopPx.toFixed(2)}</td>
+    <td class="${r.dist >= 0 ? "down" : ""}">${r.dist >= 0 ? "已跌破" + (r.cross && r.cross < S.recentFrom ? `（${r.cross.slice(5).replace("-", "/")} 起）` : "") : "再跌 " + pctv(-r.dist)}</td>
+    <td>${r.volPct == null ? "–" : pctv(r.volPct)}</td>
+    <td title="${multi ? esc(r.e.issuer) + "旗下主動式 ETF 合計 " + lotsText(iq) + " 張" : ""}">${r.avgVol ? pctv(iq / r.avgVol) + (multi ? " *" : "") : "–"}</td>
+    <td>${r.amt.toFixed(2)}</td><td class="l muted">${r.since}${r.initial ? ' <span class="tag kind" title="成本含基金第一天的持股，不列入預警">首日持股</span>' : ""}</td></tr>`;
+  }).join("");
+  const big = all.filter((r) => r.amt >= state.slMin);  // 卡片數字跟著「部位市值」篩選
+  const hit = big.filter((r) => r.status === "hit"), near = big.filter((r) => r.status === "near"), old = big.filter((r) => r.status === "old");
+
+  // 歷史驗證：第一次收盤跌破 −30% 之後，持股有沒有真的減少
+  const ev = S.events.filter((x) => etfOf(x[0]));
+  const cut1 = ev.filter((x) => x[7] != null && x[7] < -0.005), cut5 = ev.filter((x) => x[9] != null && x[9] < -0.005);
+  const exited = ev.filter((x) => x[10]);
+  const evRows = [...ev].reverse().slice(0, 80).map(([etf, code, d, loss, q, cost, c, d1, d3, d5, exit]) => `<tr>
+    <td class="l">${d}</td><td class="l">${esc(etfOf(etf).issuer)}</td><td class="l" title="${esc(etfOf(etf).name)}">${etfLink(etf)}</td>
+    <td class="l">${stockLink(code)} ${nm(code)}</td><td class="down">${pct(loss, 1)}</td><td>${lotsText(q)}</td>
+    ${[d1, d3, d5].map((x) => `<td class="${cls(x)}">${x == null ? "–" : pct(x, 1)}</td>`).join("")}<td class="l">${exit || '<span class="muted">–</span>'}</td></tr>`).join("");
+  const n1 = ev.filter((x) => x[7] != null).length, n5 = ev.filter((x) => x[9] != null).length;
+  const cov = Object.entries(S.coverage).filter(([c]) => etfOf(c)).sort((a, b) => a[1][0].localeCompare(b[1][0]));
+
+  return `<div class="panel">
+    <h2>主動式 ETF 停損預警 <span class="muted" style="font-weight:400">${S.asof} 收盤</span></h2>
+    <p class="hint">用每天的持股明細推出各檔主動式 ETF 對每檔股票的<b>持倉成本</b>（先進先出：股數增加視為用當天收盤價買進一批，減少就從最早買的那批先賣；
+      剩下批次的加權平均就是成本；配股、減資、分割照比例調整，不當成買賣）。假設收盤跌破成本 <b>${Math.round(S.stop * 100)}%</b> 會被投信強制停損：
+      <span class="tag slhit">新跌破</span> 最近 2 個交易日（${S.recentFrom.slice(5).replace("-", "/")} 起）收盤才剛跌破停損價、持股還在，隔天可能賣；
+      <span class="tag kind">早已跌破</span> 更早就跌破了卻還沒賣，代表這家投信不一定照 −30% 停損，不列入預警；<span class="tag slnear">跌停就觸發</span> 隔天跌停（${Math.round(S.limit * 100)}%）就會跌破停損價。
+      「占 ${S.volDays} 日均量」是這檔 ETF 的持股 ÷ 近 ${S.volDays} 個交易日平均成交股數，代表全部賣掉要吃掉幾天的量；「投信合計」把同一家投信旗下主動式 ETF 的持股加總（有 * 的表示不只一檔持有）。
+      <b>還留著基金第一天持股的部位不列入預警</b>（第一天的持股是上市前建倉，買進價不明），只在「全部部位」裡標「首日持股」。
+      成本是估計值：買進價用收盤價、沒有扣現金股利，申購買回造成的股數增減也算成買賣。</p>
+    <div class="cards">
+      <div class="card warn"><div class="k">新跌破停損價</div><div class="v">${hit.length}</div></div>
+      <div class="card warn"><div class="k">跌停就觸發</div><div class="v">${near.length}</div></div>
+      <div class="card"><div class="k">早已跌破、還沒賣</div><div class="v">${old.length}</div></div>
+      <div class="card"><div class="k">監控部位</div><div class="v">${big.length}</div></div>
+      <div class="card"><div class="k">主動式 ETF</div><div class="v">${new Set(all.map((r) => r.etf)).size} 檔</div></div>
+    </div>
+    <div class="controls">
+      <label>投信 <select onchange="pick({slIssuer:this.value})">${options(issuers, state.slIssuer)}</select></label>
+      <label>範圍 <select onchange="pick({slRange:this.value})">${Object.entries(ranges).map(([k, t]) => `<option value="${k}"${k === String(state.slRange) ? " selected" : ""}>${t}</option>`).join("")}</select></label>
+      <label>部位市值 <select onchange="pick({slMin:+this.value})">${[[0, "不限"], [0.1, "≥ 0.1 億"], [1, "≥ 1 億"], [5, "≥ 5 億"]].map(([v, t]) => `<option value="${v}"${v === state.slMin ? " selected" : ""}>${t}</option>`).join("")}</select></label>
+      <span class="muted">${rows.length} 筆</span>
+    </div>
+    ${rows.length ? `<div class="scroll"><table>
+      <thead><tr>${th("issuer", "投信", 1)}${th("etf", "ETF", 1)}${th("code", "股票", 1)}<th class="l">名稱</th>${th("status", "狀態", 1)}
+      ${th("qty", "持股(張)")}${th("cost", "持倉成本")}${th("close", "收盤")}${th("chg", "當日漲跌")}${th("loss", "損益")}<th>停損價</th>
+      ${th("dist", "距停損價")}${th("vol", `占${S.volDays}日均量`)}${th("ivol", "投信合計占均量", 0, "同一家投信旗下主動式 ETF 合計持股 ÷ 均量")}${th("amt", "市值(億)")}${th("since", "最早一批買進日", 1)}</tr></thead>
+      <tbody>${body}</tbody></table></div>` : `<div class="empty">${state.slRange === "alert" ? "今天沒有隔天可能被停損的部位" : "沒有符合條件的部位"}</div>`}
+  </div>
+  <div class="panel">
+    <h2>歷史驗證 <span class="muted" style="font-weight:400">收盤第一次跌破成本 ${Math.round(S.stop * 100)}% 之後，持股有沒有減少</span></h2>
+    <p class="hint">共 <b>${ev.length}</b> 次跌破事件（同一個部位回升到 −25% 以上之後再跌破才算新的一次）。
+      下一個資料日持股減少的有 <b>${cut1.length}</b> / ${n1} 次；5 個資料日內減少的有 <b>${cut5.length}</b> / ${n5} 次；20 個資料日內出清的有 <b>${exited.length}</b> 次。
+      減少也可能來自買回（贖回），所以這只能用來檢查「跌破 30% 就停損」的假設合不合理。下表列最近 80 次。</p>
+    ${evRows ? `<div class="scroll"><table><thead><tr><th class="l">跌破日</th><th class="l">投信</th><th class="l">ETF</th><th class="l">股票</th><th>損益</th><th>持股(張)</th>
+      <th>隔 1 天持股</th><th>隔 3 天</th><th>隔 5 天</th><th class="l">出清日</th></tr></thead><tbody>${evRows}</tbody></table></div>` : ""}
+  </div>
+  <div class="panel">
+    <h2>持股資料範圍</h2>
+    <p class="hint">成本要從這檔 ETF 第一天的持股算起。起始日晚於上市日的，起始日當天的持股一律當作用當天收盤價買進，成本會不準。</p>
+    <div class="scroll"><table><thead><tr><th class="l">ETF</th><th class="l">投信</th><th class="l">持股資料起始</th><th class="l">最新</th><th>天數</th></tr></thead>
+    <tbody>${cov.map(([c, [a, b, n]]) => `<tr><td class="l">${etfLink(c)} ${esc(etfOf(c).name)}</td><td class="l">${esc(etfOf(c).issuer)}</td><td class="l">${a}</td><td class="l">${b}</td><td>${n}</td></tr>`).join("")}</tbody></table></div>
+  </div>`;
+}
+
 // ------------------------------------------------------------ 共用：月曆格線
 const pad2 = (n) => String(n).padStart(2, "0");
 const todayStr = () => { const t = new Date(); return `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`; };
@@ -986,8 +1095,8 @@ function renderPatterns() {
 // ------------------------------------------------------------ 監控面板
 const light = (ok, big) => `<span class="light ${ok == null ? "none" : ok ? "ok" : "bad"}${big ? " big" : ""}">${ok == null ? "–" : ok ? "✓" : "✕"}</span>`;
 const fullRuns = () => D.runs.filter((r) => !r.partial);
-const STEP_KEYS = ["fetch", "csv", "cb", "revenue", "corp", "prices", "industry_rev", "site"];
-const STEP_NAMES = { fetch: "資料抓取", csv: "寫入 CSV", cb: "可轉債公告", revenue: "月營收", corp: "除權息減資", prices: "每日行情", industry_rev: "產業地圖營收", site: "網站建置" };
+const STEP_KEYS = ["fetch", "csv", "cb", "revenue", "corp", "prices", "industry_rev", "stoploss", "site"];
+const STEP_NAMES = { fetch: "資料抓取", csv: "寫入 CSV", cb: "可轉債公告", revenue: "月營收", corp: "除權息減資", prices: "每日行情", industry_rev: "產業地圖營收", stoploss: "停損預警", site: "網站建置" };
 // 最近一個「應該已經跑完」的排程時間：平日的排程時刻，給 45 分鐘執行緩衝
 function expectedRun() {
   const [h, m] = D.schedule.split(":").map(Number), now = new Date();
@@ -1050,7 +1159,7 @@ function renderMonitor() {
 // 四個日曆放最前面並加強顯示；第四個欄位 true 代表日曆分頁
 const TABS = [["calendar", "ETF 日曆", renderCalendar, true], ["cb", "可轉債日曆", renderCb, true], ["revenue", "營收日曆", renderRevenue, true],
   ["corp", "除權息減資日曆", renderCorp, true],
-  ["overview", "總覽", renderOverview], ["patterns", "換股規律", renderPatterns], ["etf", "ETF 明細", renderEtf],
+  ["overview", "總覽", renderOverview], ["patterns", "換股規律", renderPatterns], ["etf", "ETF 明細", renderEtf], ["stoploss", "停損預警", renderStoploss],
   ["stock", "個股查詢", renderStock], ["monitor", "監控面板", renderMonitor]];
 function render() {
   $("#nav").innerHTML = TABS.map(([k, t, , cal], i) => `${!cal && TABS[i - 1][3] ? '<span class="sep"></span>' : ""}<button class="${cal ? "caltab " : ""}${k === state.tab ? "on" : ""}" onclick="go({tab:'${k}'})">${cal ? "📅 " : ""}${t}</button>`).join("");

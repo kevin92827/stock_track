@@ -228,6 +228,14 @@ def extra_steps(run):
         run["problems"].append(f"產業地圖營收: {steps['industry_rev']['msg']}")
     print(f"產業地圖營收：{steps['industry_rev']['msg']}")
 
+    try:  # 主動式 ETF 持倉成本與停損預警（要在行情之後）
+        import stoploss
+        steps["stoploss"] = {"ok": True, "msg": stoploss.main()}
+    except Exception as e:
+        steps["stoploss"] = {"ok": False, "msg": f"{type(e).__name__}: {e}"[:200]}
+        run["problems"].append(f"停損預警: {steps['stoploss']['msg']}")
+    print(f"停損預警：{steps['stoploss']['msg']}")
+
     steps["site"] = site
 
 

@@ -13,6 +13,7 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE, "data", "holdings.csv")
 RUNS_PATH = os.path.join(BASE, "data", "runs.json")
 REBAL_PATH = os.path.join(BASE, "data", "rebalance.json")
+STOPLOSS_PATH = os.path.join(BASE, "data", "stoploss.json")  # stoploss.py 產生
 CB_PATH = os.path.join(BASE, "data", "cb_announcements.csv")
 REV_PATH = os.path.join(BASE, "data", "monthly_revenue.csv")
 PX_PATH = os.path.join(BASE, "data", "prices.csv")
@@ -213,7 +214,11 @@ def main():
         "rev": rev,
         "ca": ca,
         "vol": vol,
+        "sl": None,
     }
+    if os.path.exists(STOPLOSS_PATH):
+        with open(STOPLOSS_PATH, encoding="utf-8") as f:
+            data["sl"] = json.load(f)
     with open(TEMPLATE_PATH, encoding="utf-8") as f:
         template = f.read()
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
