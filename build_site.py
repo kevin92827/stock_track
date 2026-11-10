@@ -215,7 +215,13 @@ def main():
         "ca": ca,
         "vol": vol,
         "sl": None,
+        "bb": [],
     }
+    try:  # 庫藏股買回：buyback.py 抓的計畫 + 均量、漲跌統計
+        import buyback
+        data["bb"] = buyback.stats()
+    except Exception as e:
+        print(f"庫藏股統計失敗：{type(e).__name__}: {e}")
     if os.path.exists(STOPLOSS_PATH):
         with open(STOPLOSS_PATH, encoding="utf-8") as f:
             data["sl"] = json.load(f)

@@ -228,6 +228,14 @@ def extra_steps(run):
         run["problems"].append(f"產業地圖營收: {steps['industry_rev']['msg']}")
     print(f"產業地圖營收：{steps['industry_rev']['msg']}")
 
+    try:  # 庫藏股買回（重抓最近 150 天決議的，更新執行結果）
+        import buyback
+        steps["buyback"] = {"ok": True, "msg": buyback.update()}
+    except Exception as e:
+        steps["buyback"] = {"ok": False, "msg": f"{type(e).__name__}: {e}"[:200]}
+        run["problems"].append(f"庫藏股: {steps['buyback']['msg']}")
+    print(f"庫藏股：{steps['buyback']['msg']}")
+
     try:  # 主動式 ETF 持倉成本與停損預警（要在行情之後）
         import stoploss
         steps["stoploss"] = {"ok": True, "msg": stoploss.main()}

@@ -160,6 +160,7 @@ const state = { tab: "calendar", date: D.dates[D.dates.length - 1], kind: "全�
   cbMonth: null, cbDay: null, cbHeld: false, cbMethod: "全部",
   revMonth: null, revDay: null, revHeld: false, revHigh: false, revSort: "rev", revDir: 1, revQ: "",
   caMonth: null, caDay: null, caKind: "全部", caTarget: "全部", caMin: 0, caHeld: false, caMode: "eff", caSort: "adj", caDir: 1, caQ: "",
+  bbMode: "ann", bbMonth: null, bbDay: null, bbMarket: "全部", bbPurpose: "全部", bbQ: "", bbHeld: false, bbSort: "vol", bbDir: 1, bbCode: null,
   slIssuer: "全部", slRange: "alert", slMin: 0.1, slSort: "dist", slDir: 1 };
 
 const snap = (etf, date) => (D.snaps[etf] || {})[date];
@@ -1011,6 +1012,154 @@ function renderCorp() {
 }
 
 
+// ------------------------------------------------------------ 庫藏股日曆
+// D.bb 每筆：[0 決議日, 1 代號, 2 名稱, 3 市場, 4 目的, 5 預定股數, 6 價格下限, 7 價格上限, 8 期間起, 9 期間迄, 10 是否完畢,
+//   11 已買回股數, 12 執行率%, 13 買回總金額, 14 平均價格, 15 占已發行%, 16 未完畢原因, 17 決議前 20 日均量(股), 18 期間交易日數,
+//   19 決議日收盤, 20 公告後 5 個交易日漲跌, 21 期間漲跌, 22 最新收盤]
+const BB_PURPOSE = { 1: "轉讓員工", 2: "股權轉換", 3: "維護股東權益" };
+let bbHist = null;
+function bbHistory(code) {
+  if (!bbHist) { bbHist = {}; for (const r of D.bb) (bbHist[r[1]] = bbHist[r[1]] || []).push(r); }
+  return bbHist[code] || [];
+}
+function bbStatus(r, today) {
+  if (r[10] && r[12] != null) return ["done", "已完畢"];
+  if (today < r[8]) return ["wait", "未開始"];
+  if (today > r[9]) return ["over", "期滿待公告"];
+  return ["run", "執行中"];
+}
+const bbVolPct = (r) => (r[17] ? r[5] / r[17] : null);
+const bbDailyPct = (r) => (r[17] && r[18] ? r[5] / r[18] / r[17] : null);
+function bbPastText(r) {
+  const past = bbHistory(r[1]).filter((x) => x[0] < r[0]);
+  const ex = past.filter((x) => x[12] != null);
+  if (!past.length) return '<span class="muted">第一次</span>';
+  const avg = ex.length ? ex.reduce((t, x) => t + x[12], 0) / ex.length : null;
+  return `${past.length} 次${avg != null ? `・平均執行 ${avg.toFixed(0)}%` : ""}`;
+}
+function renderBuyback() {
+  if (!D.bb || !D.bb.length) return `<div class="empty">還沒有庫藏股資料（每天排程會執行 buyback.py）</div>`;
+  const today = todayStr(), per = state.bbMode === "period", q = state.bbQ.trim();
+  const list = D.bb.filter((r) => (state.bbMarket === "全部" || MARKETS[r[3]] === state.bbMarket) && (state.bbPurpose === "全部" || BB_PURPOSE[r[4]] === state.bbPurpose)
+    && (!state.bbHeld || holdersOf(r[1]).length) && (!q || r[1].startsWith(q) || r[2].includes(q)));
+  const first = D.bb[0][0], lastEnd = D.bb.reduce((m, r) => (r[9] > m ? r[9] : m), today);
+  const months = monthsBetween(first.slice(0, 7), (per ? lastEnd : today).slice(0, 7));
+  const month = months.includes(state.bbMonth) ? state.bbMonth : today.slice(0, 7);
+  const mEnd = month + "-31";
+  // 公告版：放在董事會決議日；買回期間版：期間內的每個平日都算「執行中」
+  const inMonth = per ? list.filter((r) => r[8] <= mEnd && r[9] >= month + "-01") : list.filter((r) => r[0].startsWith(month));
+  const onDay = (d) => (per ? inMonth.filter((r) => r[8] <= d && d <= r[9]) : inMonth.filter((r) => r[0] === d));
+  const byDay = {};
+  const [yy, mm] = month.split("-").map(Number), nDays = new Date(yy, mm, 0).getDate();
+  for (let i = 1; i <= nDays; i++) {
+    const d = `${month}-${pad2(i)}`;
+    if (per && isWeekend(d)) continue;
+    const rs = onDay(d);
+    if (rs.length) byDay[d] = rs;
+  }
+  const days = Object.keys(byDay).sort();
+  const sel = state.bbDay === "all" ? null : byDay[state.bbDay] ? state.bbDay
+    : per ? (byDay[today] ? today : null) : [...days].reverse().find((d) => d <= today) || days[days.length - 1] || null;
+  const rank = (r) => (per ? bbDailyPct(r) : bbVolPct(r)) ?? -1;
+  const grid = monthGrid(month, (d) => {
+    const rs = byDay[d];
+    if (!rs) return d === today ? { cls: "sel off" } : null;
+    const top = [...rs].sort((x, y) => rank(y) - rank(x)).slice(0, 3);
+    const starts = per ? rs.filter((r) => r[8] === d).length : 0;
+    return { cls: "has" + (d === sel ? " sel" : ""), onclick: `pick({bbDay:'${d === sel ? "all" : d}'})`,
+      badge: `${d === today ? "今天　" : ""}${rs.length} 檔`,
+      html: `<div class="bar" style="grid-template-columns:1fr"><span>${per ? `執行中 <b>${rs.length}</b>${starts ? `　新開始 <b>${starts}</b>` : ""}` : `公告 <b>${rs.length}</b> 件`}</span></div>
+        <div class="top">${top.map((r) => { const v = per ? bbDailyPct(r) : bbVolPct(r);
+          return `<div>${holdersOf(r[1]).length ? "★ " : ""}${esc(r[2])} <span class="${v >= (per ? 0.1 : 1) ? "up" : "muted"}">${v == null ? "" : (v * 100).toFixed(0) + "%"}</span></div>`; }).join("")}</div>` };
+  }, per ? false : days.some(isWeekend));
+
+  const SORTS = { decide: (r) => r[0], code: (r) => r[1], purpose: (r) => r[4], plan: (r) => r[5] ?? -1, vol: (r) => bbVolPct(r) ?? -1, daily: (r) => bbDailyPct(r) ?? -1,
+    start: (r) => r[8], status: (r) => bbStatus(r, today)[0], ratio: (r) => r[12] ?? -1, r5: (r) => r[20] ?? -9, rp: (r) => r[21] ?? -9,
+    hi: (r) => (r[22] && r[7] && ["run", "wait"].includes(bbStatus(r, today)[0]) ? r[22] / r[7] : -1), amt: (r) => (r[5] && r[22] ? r[5] * r[22] : -1) };
+  const sk = SORTS[state.bbSort] || SORTS.vol;
+  const shown = (sel ? byDay[sel] : inMonth).slice().sort((x, y) => { const a = sk(x), b = sk(y); return (a < b ? 1 : a > b ? -1 : 0) * state.bbDir || x[0].localeCompare(y[0]); });
+  const th = (key, label, left, title) => `<th class="sort${left ? " l" : ""}" title="${title || "點一下排序"}" onclick="pick({bbSort:'${key}',bbDir:state.bbSort==='${key}'?-state.bbDir:1})">${label}${state.bbSort === key ? (state.bbDir > 0 ? " ▼" : " ▲") : ""}</th>`;
+  const md = (d) => d.slice(5).replace("-", "/"), mdy = (d) => d.slice(2).replace(/-/g, "/");
+  const pctv = (x, d = 0) => (x == null ? '<span class="muted">–</span>' : (x * 100).toFixed(d) + "%");
+  const num2 = (x) => (x == null ? "–" : x.toLocaleString("en-US", { maximumFractionDigits: 2 }));
+  const ST_CLS = { done: "kind", wait: "late", over: "late", run: "add" };
+  const row = (r) => {
+    const [st, stText] = bbStatus(r, today), live = st === "run" || st === "wait";
+    const hi = live && r[22] && r[7] ? r[22] / r[7] - 1 : null;
+    return `<tr${state.bbCode === r[1] ? ' class="sl-disc"' : ""}><td class="l">${mdy(r[0])}</td>
+    <td class="l">${D.names[r[1]] ? stockLink(r[1]) : esc(r[1])}</td><td class="l"><a class="lnk" onclick="pick({bbCode:'${esc(r[1])}'})" title="看這家公司歷次買回">${esc(r[2])}</a></td>
+    <td class="l">${MARKETS[r[3]] || esc(r[3])}</td><td class="l"><span class="tag ${r[4] === "3" ? "new" : "kind"}">${BB_PURPOSE[r[4]] || esc(r[4])}</span></td>
+    <td>${r[5] == null ? "–" : fmt(r[5] / 1000)}</td><td class="${bbVolPct(r) >= 1 ? "up" : ""}">${pctv(bbVolPct(r))}</td><td class="${bbDailyPct(r) >= 0.1 ? "up" : ""}">${pctv(bbDailyPct(r), 1)}</td>
+    <td>${num2(r[6])} ～ ${num2(r[7])}</td>
+    <td title="${hi > 0 ? "最新收盤高於買回價格上限，目前買不到" : ""}">${live ? num2(r[22]) : '<span class="muted">–</span>'}${hi == null ? "" : ` <span class="${hi > 0 ? "down" : "muted"}">(${hi > 0 ? "高於上限" : "距上限 " + (hi * 100).toFixed(0) + "%"})</span>`}</td>
+    <td class="l">${mdy(r[8])} ～ ${md(r[9])} <span class="muted">${r[18]} 天</span></td>
+    <td class="l"><span class="tag ${ST_CLS[st]}">${stText}</span></td>
+    <td title="${r[16] ? esc(r[16]) : ""}">${r[12] == null ? '<span class="muted">–</span>' : r[12].toFixed(0) + "%" + (r[16] ? " *" : "")}</td>
+    <td>${r[14] == null ? '<span class="muted">–</span>' : num2(r[14])}</td>
+    <td class="${cls(r[20])}">${r[20] == null ? '<span class="muted">–</span>' : pct(r[20], 1)}</td>
+    <td class="${cls(r[21])}">${r[21] == null ? '<span class="muted">–</span>' : pct(r[21], 1)}</td>
+    <td class="l">${bbPastText(r)}</td></tr>`;
+  };
+  const head = `<thead><tr>${th("decide", "決議日", 1)}${th("code", "代號", 1)}<th class="l">名稱</th><th class="l">市場</th>${th("purpose", "目的", 1)}
+    ${th("plan", "預定買回(張)")}${th("vol", "占20日均量", 0, "預定買回股數 ÷ 決議前 20 個交易日平均成交股數")}${th("daily", "每日需買占均量", 0, "預定股數平均分到買回期間每個交易日 ÷ 20 日均量")}
+    <th>價格區間</th>${th("hi", "最新收盤", 0, "只有執行中、未開始的計畫才顯示，括號是和買回價格上限比")}${th("start", "買回期間", 1)}${th("status", "狀態", 1)}${th("ratio", "執行率")}<th>平均買回價</th>
+    ${th("r5", "公告後5日", 0, "決議日收盤 → 之後第 5 個交易日收盤")}${th("rp", "期間漲跌", 0, "期間開始前一天收盤 → 期間最後一天收盤（進行中算到最新）")}<th class="l">之前買回</th></tr></thead>`;
+
+  // 公司歷次買回
+  let histPanel = "";
+  if (state.bbCode) {
+    const hs = bbHistory(state.bbCode).slice().reverse();
+    if (hs.length) {
+      const ex = hs.filter((r) => r[12] != null), r5s = hs.filter((r) => r[20] != null);
+      const avg = (xs, f) => (xs.length ? xs.reduce((t, x) => t + f(x), 0) / xs.length : null);
+      histPanel = `<div class="panel" id="bbhist">
+        <h2>${esc(hs[0][2])} ${esc(state.bbCode)} 歷次買回 <span class="muted" style="font-weight:400">${hs.length} 次${ex.length ? `，平均執行率 ${avg(ex, (r) => r[12]).toFixed(0)}%，執行率 100% 的 ${ex.filter((r) => r[12] >= 99.5).length} 次` : ""}${r5s.length ? `，公告後 5 日平均 ${pct(avg(r5s, (r) => r[20]), 1)}` : ""}</span>
+          <a class="lnk" style="font-size:13px;font-weight:400;margin-left:8px" onclick="pick({bbCode:null})">關閉</a></h2>
+        <div class="scroll"><table>${head}<tbody>${hs.map(row).join("")}</tbody></table></div></div>`;
+    }
+  }
+
+  // 全市場歷史統計（有行情的 2023 年起才有漲跌）
+  const doneAll = D.bb.filter((r) => r[12] != null);
+  const med = (xs) => { const s = xs.slice().sort((a, b) => a - b); return s.length ? s[Math.floor(s.length / 2)] : null; };
+  const stat = (k) => { const xs = D.bb.filter((r) => r[4] === k && r[20] != null).map((r) => r[20]); const ys = doneAll.filter((r) => r[4] === k).map((r) => r[12]);
+    return `<tr><td class="l">${BB_PURPOSE[k]}</td><td>${D.bb.filter((r) => r[4] === k).length}</td><td>${ys.length ? med(ys).toFixed(0) + "%" : "–"}</td>
+      <td>${ys.length ? ((ys.filter((y) => y >= 99.5).length / ys.length) * 100).toFixed(0) + "%" : "–"}</td>
+      <td>${xs.length}</td><td class="${cls(med(xs))}">${xs.length ? pct(med(xs), 1) : "–"}</td><td>${xs.length ? ((xs.filter((x) => x > 0).length / xs.length) * 100).toFixed(0) + "%" : "–"}</td></tr>`; };
+
+  const sumPlan = shown.reduce((t, r) => t + (r[5] && r[22] ? r[5] * r[22] : 0), 0);
+  return `
+  <div class="controls">
+    <span class="seg"><button class="${per ? "" : "on"}" onclick="pick({bbMode:'ann',bbDay:null})">公告版</button><button class="${per ? "on" : ""}" onclick="pick({bbMode:'period',bbDay:null})">買回期間版</button></span>
+    <label>月份 <select onchange="pick({bbMonth:this.value,bbDay:null})">${options([...months].reverse(), month)}</select></label>
+    <label>市場 <select onchange="pick({bbMarket:this.value,bbDay:null})">${options(["全部", "上市", "上櫃"], state.bbMarket)}</select></label>
+    <label>目的 <select onchange="pick({bbPurpose:this.value,bbDay:null})">${options(["全部", ...Object.values(BB_PURPOSE)], state.bbPurpose)}</select></label>
+    <label>代號或名稱 <input type="text" value="${esc(state.bbQ)}" placeholder="例如 2330" style="width:120px"
+      onkeydown="if(event.key==='Enter')pick({bbQ:this.value})" onblur="if(this.value!==state.bbQ)pick({bbQ:this.value})"></label>
+    <label><input type="checkbox" ${state.bbHeld ? "checked" : ""} onchange="pick({bbHeld:this.checked,bbDay:null})"> 只看追蹤中 ETF 有持有的股票</label>
+  </div>
+  <div class="panel">
+    <h2>${month} 庫藏股日曆 <span class="muted" style="font-weight:400">依${per ? "買回期間" : "公告（董事會決議）日"}</span></h2>
+    <p class="hint">${per ? `<b>買回期間版</b>：每個交易日列出當天還在買回期間內的公司，格子裡的百分比是<b>每日需買占均量</b>（預定股數平均分到期間每個交易日 ÷ 決議前 20 日均量），10% 以上標紅。`
+      : `<b>公告版</b>：每筆放在董事會決議日（公司通常當天公告），格子裡的百分比是<b>預定買回股數占 20 日均量</b>（100% 代表等於一整天的成交量），100% 以上標紅。`}
+      每格列出比例最高的三檔，★ 表示追蹤中的 ETF 有持有。點任一天只看當天，再點一次看整個月；點公司名稱看它歷次買回。
+      執行率、平均買回價要等期限屆滿或執行完畢、公司申報後才有（期間中看不到進度）；執行率後面有 * 的滑鼠停上去可以看未執行完畢的原因。
+      均量與漲跌用的是實際收盤價與成交量，2023 年以前沒有行情資料。資料來源：公開資訊觀測站庫藏股統計彙總表（2010 年起，上市＋上櫃）。</p>
+    ${grid}
+  </div>
+  ${histPanel}
+  <div class="panel">
+    <h2>${sel ? sel + (per ? " 買回期間內" : " 公告") : month + (per ? " 有買回期間的" : " 公告")} <span class="muted" style="font-weight:400">${shown.length} 件，預定買回金額約 ${(sumPlan / 1e8).toFixed(1)} 億（以最新收盤計）</span></h2>
+    ${shown.length ? `<div class="scroll"><table>${head}<tbody>${shown.map(row).join("")}</tbody></table></div>` : `<div class="empty">沒有符合條件的買回計畫</div>`}
+  </div>
+  <div class="panel">
+    <h2>歷史統計 <span class="muted" style="font-weight:400">2010 年以來 ${D.bb.length} 件</span></h2>
+    <p class="hint">執行率是已完畢的計畫實際買回股數 ÷ 預定股數；公告後 5 日漲跌只有 2023 年以後有行情的計畫。都是中位數。</p>
+    <div class="scroll"><table><thead><tr><th class="l">目的</th><th>件數</th><th>執行率中位數</th><th>買滿（≥100%）比例</th><th>有漲跌資料</th><th>公告後 5 日中位數</th><th>公告後 5 日上漲比例</th></tr></thead>
+    <tbody>${["1", "2", "3"].map(stat).join("")}</tbody></table></div>
+  </div>`;
+}
+
 // ------------------------------------------------------------ 換股規律
 // 把每一次指數審核對照實際持股：新成分股哪天開始出現、舊成分股哪天出清。
 // T 是生效日；持股是每天收盤後的部位，所以「T−1 出現」代表在生效日前一個交易日收盤前買進。
@@ -1115,8 +1264,8 @@ function renderPatterns() {
 // ------------------------------------------------------------ 監控面板
 const light = (ok, big) => `<span class="light ${ok == null ? "none" : ok ? "ok" : "bad"}${big ? " big" : ""}">${ok == null ? "–" : ok ? "✓" : "✕"}</span>`;
 const fullRuns = () => D.runs.filter((r) => !r.partial);
-const STEP_KEYS = ["fetch", "csv", "cb", "revenue", "corp", "prices", "industry_rev", "stoploss", "site"];
-const STEP_NAMES = { fetch: "資料抓取", csv: "寫入 CSV", cb: "可轉債公告", revenue: "月營收", corp: "除權息減資", prices: "每日行情", industry_rev: "產業地圖營收", stoploss: "停損預警", site: "網站建置" };
+const STEP_KEYS = ["fetch", "csv", "cb", "revenue", "corp", "prices", "industry_rev", "buyback", "stoploss", "site"];
+const STEP_NAMES = { fetch: "資料抓取", csv: "寫入 CSV", cb: "可轉債公告", revenue: "月營收", corp: "除權息減資", prices: "每日行情", industry_rev: "產業地圖營收", buyback: "庫藏股", stoploss: "停損預警", site: "網站建置" };
 // 最近一個「應該已經跑完」的排程時間：平日的排程時刻，給 45 分鐘執行緩衝
 function expectedRun() {
   const [h, m] = D.schedule.split(":").map(Number), now = new Date();
@@ -1178,7 +1327,7 @@ function renderMonitor() {
 
 // 四個日曆放最前面並加強顯示；第四個欄位 true 代表日曆分頁
 const TABS = [["calendar", "ETF 日曆", renderCalendar, true], ["cb", "可轉債日曆", renderCb, true], ["revenue", "營收日曆", renderRevenue, true],
-  ["corp", "除權息減資日曆", renderCorp, true],
+  ["corp", "除權息減資日曆", renderCorp, true], ["buyback", "庫藏股日曆", renderBuyback, true],
   ["overview", "總覽", renderOverview], ["patterns", "換股規律", renderPatterns], ["etf", "ETF 明細", renderEtf], ["stoploss", "停損預警", renderStoploss],
   ["stock", "個股查詢", renderStock], ["monitor", "監控面板", renderMonitor]];
 function render() {
