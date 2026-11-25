@@ -244,6 +244,14 @@ def extra_steps(run):
         run["problems"].append(f"停損預警: {steps['stoploss']['msg']}")
     print(f"停損預警：{steps['stoploss']['msg']}")
 
+    try:  # 槓桿／反向 ETF 每日 PCF（推算隔天尾盤再平衡口數）
+        import lev_pcf
+        steps["lev"] = {"ok": True, "msg": lev_pcf.update()}
+    except Exception as e:
+        steps["lev"] = {"ok": False, "msg": f"{type(e).__name__}: {e}"[:200]}
+        run["problems"].append(f"槓桿再平衡: {steps['lev']['msg']}")
+    print(f"槓桿再平衡：{steps['lev']['msg']}")
+
     steps["site"] = site
 
 

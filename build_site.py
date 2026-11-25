@@ -216,7 +216,13 @@ def main():
         "vol": vol,
         "sl": None,
         "bb": [],
+        "lev": None,
     }
+    try:  # 槓桿／反向 ETF 再平衡：lev_pcf.py 抓的每日 PCF
+        import lev_pcf
+        data["lev"] = lev_pcf.stats()
+    except Exception as e:
+        print(f"槓桿再平衡統計失敗：{type(e).__name__}: {e}")
     try:  # 庫藏股買回：buyback.py 抓的計畫 + 均量、漲跌統計
         import buyback
         data["bb"] = buyback.stats()

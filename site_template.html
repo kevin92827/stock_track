@@ -161,7 +161,7 @@ const state = { tab: "calendar", date: D.dates[D.dates.length - 1], kind: "全�
   revMonth: null, revDay: null, revHeld: false, revHigh: false, revSort: "rev", revDir: 1, revQ: "",
   caMonth: null, caDay: null, caKind: "全部", caTarget: "全部", caMin: 0, caHeld: false, caMode: "eff", caSort: "adj", caDir: 1, caQ: "",
   bbMode: "ann", bbMonth: null, bbDay: null, bbMarket: "全部", bbPurpose: "全部", bbQ: "", bbHeld: false, bbSort: "vol", bbDir: 1, bbCode: null,
-  slIssuer: "全部", slRange: "alert", slMin: 0.1, slSort: "dist", slDir: 1 };
+  slIssuer: "全部", slRange: "alert", slMin: 0.1, slSort: "dist", slDir: 1, levR: 0 };
 
 const snap = (etf, date) => (D.snaps[etf] || {})[date];
 const datesOf = (etf) => D.dates.filter((d) => snap(etf, d));
@@ -755,6 +755,88 @@ function renderStoploss() {
   </div>`;
 }
 
+// ------------------------------------------------------------ 槓桿 ETF 尾盤再平衡
+const LEV_NAMES = { "00631L": "元大台灣50正2", "00632R": "元大台灣50反1" };
+const LEV_GRID = [-0.1, -0.07, -0.05, -0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1];
+function levNeed(f, r, mult) {
+  // 今天台指期漲跌 r 時，尾盤要調整的台指期口數（不含申購贖回）：A·[(L − e0) + e0·(L − 1)·r] ÷ (P·(1 + r)·200)
+  const { A, e, P } = f.last, L = f.L;
+  return (A * ((L - e) + e * (L - 1) * r)) / (P * (1 + r) * mult);
+}
+function renderLev() {
+  const V = D.lev;
+  if (!V || !V.funds || !Object.keys(V.funds).length) return `<div class="empty">還沒有槓桿 ETF 的資料（每天排程會執行 lev_pcf.py）</div>`;
+  const funds = Object.entries(V.funds), m = V.mult, r = state.levR / 100;
+  const n = (x) => (x > 0 ? "+" : x < 0 ? "−" : "") + Math.abs(Math.round(x)).toLocaleString("en-US");
+  const nc = (x) => `<td class="${cls(Math.round(x))}">${n(x)}</td>`;
+  const ex = (e) => (e * 100).toFixed(1) + "%";
+  const off = (f) => Math.abs(f.last.e - f.L) >= 0.02;
+  const total = (rr) => funds.reduce((s, [, f]) => s + levNeed(f, rr, m), 0);
+  const per1 = (total(0.01) - total(-0.01)) / 2;
+  const yflow = funds.reduce((s, [, f]) => s + (f.hist.length ? f.hist[f.hist.length - 1][5] : 0), 0);
+
+  const now = funds.map(([c, f]) => { const need = levNeed(f, r, m), fl = f.hist.length ? f.hist[f.hist.length - 1][5] : 0;
+    return `<tr><td class="l">${c} ${esc(LEV_NAMES[c] || "")}</td><td>${f.L > 0 ? "+" : ""}${f.L} 倍</td><td>${(f.last.A / 1e8).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
+      <td${off(f) ? ' style="color:#c2410c;font-weight:600"' : ""}>${ex(f.last.e)}</td><td>${fmt(f.last.n_tx)}</td><td>${fmt(f.last.P)}</td>
+      ${nc(levNeed(f, 0, m))}${nc(need)}${nc(fl)}${nc(need + fl)}</tr>`; }).join("");
+  const nowTotal = `<tr style="font-weight:600"><td class="l">合計</td><td></td><td></td><td></td><td></td><td></td>${nc(total(0))}${nc(total(r))}${nc(yflow)}${nc(total(r) + yflow)}</tr>`;
+
+  const grid = LEV_GRID.map((g) => `<tr${Math.abs(g - r) < 1e-9 ? ' style="background:var(--hl,#fff3bf)"' : ""}><td class="${cls(g)}">${pct(g, 0)}</td>
+    ${funds.map(([, f]) => nc(levNeed(f, g, m))).join("")}${nc(total(g))}</tr>`).join("");
+
+  // 歷史：預測準確度
+  const corr = (a, b) => { const k = a.length, ma = a.reduce((s, x) => s + x, 0) / k, mb = b.reduce((s, x) => s + x, 0) / k;
+    let sab = 0, sa = 0, sb = 0; for (let i = 0; i < k; i++) { sab += (a[i] - ma) * (b[i] - mb); sa += (a[i] - ma) ** 2; sb += (b[i] - mb) ** 2; }
+    return sa && sb ? sab / Math.sqrt(sa * sb) : null; };
+  const acc = funds.map(([c, f]) => { const h = f.hist; if (h.length < 10) return "";
+    const c1 = corr(h.map((x) => x[4]), h.map((x) => x[6])), c2 = corr(h.map((x) => x[4] + x[5]), h.map((x) => x[6]));
+    return `${c}：只用前一天曝險和漲跌 <b>${c1.toFixed(2)}</b>，加上當天申購贖回 <b>${c2.toFixed(2)}</b>（${h.length} 天）`; }).filter(Boolean).join("；");
+  const dates = [...new Set(funds.flatMap(([, f]) => f.hist.map((x) => x[0])))].sort().reverse().slice(0, 60);
+  const byDate = Object.fromEntries(funds.map(([c, f]) => [c, Object.fromEntries(f.hist.map((x) => [x[0], x]))]));
+  const histRows = dates.map((d) => { const any = funds.map(([c]) => byDate[c][d]).find(Boolean);
+    return `<tr><td class="l">${d}</td><td class="${cls(any[1])}">${pct(any[1])}</td>${funds.map(([c, f]) => { const x = byDate[c][d];
+      if (!x) return `<td class="muted">–</td>`.repeat(5);
+      const bad = Math.abs(x[3] - f.L) >= 0.02;
+      return `<td class="muted">${ex(x[2])}</td><td${bad ? ' style="color:#c2410c;font-weight:600"' : ""}>${ex(x[3])}</td>${nc(x[4])}${nc(x[5])}${nc(x[6])}`; }).join("")}</tr>`; }).join("");
+
+  return `<div class="panel">
+    <h2>槓桿 ETF 尾盤再平衡 <span class="muted" style="font-weight:400">依 ${V.asof} 收盤部位推算下一個交易日</span></h2>
+    <p class="hint">槓桿／反向 ETF 每天收盤要把曝險調回「淨值 × 倍數」。前一天收盤的實際曝險比例 e₀、規模 A、台指期價格 P 都來自元大每天公布的 PCF，
+      今天台指期漲跌 r 時，尾盤要調整的曝險是 <b>A·[(L − e₀) + e₀·(L − 1)·r]</b>，再除以 P·(1 + r)·200 換成大台口數（正數 = 買進，負數 = 賣出）。
+      正二（L = 2）和反一（L = −1）的係數都是 2，<b>方向相同</b>：漲就買、跌就賣。前一天曝險偏離倍數時（紅字，例如台指期漲跌停買不到），
+      <b>L − e₀</b> 這一項就是今天要先補回的量，平盤也要調整。
+      另外要加上當天的申購贖回（L × 淨申購金額）：收盤後才公布，表裡用「同昨天」當參考；大跌時散戶常大量申購正二，會抵銷一部分賣壓。
+      曝險包含台指期、台灣 50 期貨和台積電現股，但調整幾乎都用台指期；正二追蹤臺灣 50 指數，台指期是加權指數，兩者漲跌略有差異。</p>
+    <div class="cards">
+      <div class="card"><div class="k">資料日（前一天收盤）</div><div class="v">${V.asof}</div></div>
+      ${funds.map(([c, f]) => `<div class="card${off(f) ? " warn" : ""}"><div class="k">${c} 收盤曝險</div><div class="v">${ex(f.last.e)}</div></div>`).join("")}
+      <div class="card${Math.abs(total(0)) >= 500 ? " warn" : ""}"><div class="k">平盤也要調整（合計）</div><div class="v">${n(total(0))} 口</div></div>
+      <div class="card"><div class="k">台指期每漲跌 1%（合計）</div><div class="v">±${Math.round(per1).toLocaleString("en-US")} 口</div></div>
+    </div>
+    <div class="controls">
+      <label>今天台指期漲跌（相對前一天結算價） <input type="number" step="0.1" value="${state.levR}" style="width:80px" onchange="pick({levR:+this.value||0})"> %</label>
+      <span class="muted">輸入後按 Enter；台指期價格約 ${fmt(funds[0][1].last.P * (1 + r))}</span>
+    </div>
+    <div class="scroll"><table>
+      <thead><tr><th class="l">ETF</th><th>倍數</th><th>規模(億)</th><th>前一天收盤曝險</th><th>持有台指期(口)</th><th>台指期結算價</th>
+        <th>平盤需調整</th><th>漲跌 ${pct(r, 1)} 需調整</th><th>申購贖回（同昨天）</th><th>合計（含申購贖回）</th></tr></thead>
+      <tbody>${now}${nowTotal}</tbody></table></div>
+  </div>
+  <div class="panel">
+    <h2>漲跌幅對照表 <span class="muted" style="font-weight:400">不含申購贖回，大台口數</span></h2>
+    <div class="scroll"><table><thead><tr><th class="l">台指期漲跌</th>${funds.map(([c]) => `<th>${c}</th>`).join("")}<th>合計</th></tr></thead><tbody>${grid}</tbody></table></div>
+  </div>
+  <div class="panel">
+    <h2>歷史驗證 <span class="muted" style="font-weight:400">最近 60 個交易日</span></h2>
+    <p class="hint">每天用前一天收盤曝險和當天台指期漲跌算出「再平衡需求」，跟元大當天實際調整的曝險（換成大台口數）比較。預測和實際的相關係數：${acc || "資料還不夠"}。
+      實際調整 = 收盤曝險 − 前一天曝險 × (1 + r)，包含股票和台灣 50 期貨的變動。</p>
+    <div class="scroll"><table>
+      <thead><tr><th class="l" rowspan="2">日期</th><th rowspan="2">台指期漲跌</th>${funds.map(([c]) => `<th colspan="5">${c}</th>`).join("")}</tr>
+      <tr>${funds.map(() => `<th>前一天曝險</th><th>收盤曝險</th><th>再平衡需求</th><th>申購贖回</th><th>實際調整</th>`).join("")}</tr></thead>
+      <tbody>${histRows}</tbody></table></div>
+  </div>`;
+}
+
 // ------------------------------------------------------------ 共用：月曆格線
 const pad2 = (n) => String(n).padStart(2, "0");
 const todayStr = () => { const t = new Date(); return `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`; };
@@ -1264,8 +1346,8 @@ function renderPatterns() {
 // ------------------------------------------------------------ 監控面板
 const light = (ok, big) => `<span class="light ${ok == null ? "none" : ok ? "ok" : "bad"}${big ? " big" : ""}">${ok == null ? "–" : ok ? "✓" : "✕"}</span>`;
 const fullRuns = () => D.runs.filter((r) => !r.partial);
-const STEP_KEYS = ["fetch", "csv", "cb", "revenue", "corp", "prices", "industry_rev", "buyback", "stoploss", "site"];
-const STEP_NAMES = { fetch: "資料抓取", csv: "寫入 CSV", cb: "可轉債公告", revenue: "月營收", corp: "除權息減資", prices: "每日行情", industry_rev: "產業地圖營收", buyback: "庫藏股", stoploss: "停損預警", site: "網站建置" };
+const STEP_KEYS = ["fetch", "csv", "cb", "revenue", "corp", "prices", "industry_rev", "buyback", "stoploss", "lev", "site"];
+const STEP_NAMES = { fetch: "資料抓取", csv: "寫入 CSV", cb: "可轉債公告", revenue: "月營收", corp: "除權息減資", prices: "每日行情", industry_rev: "產業地圖營收", buyback: "庫藏股", stoploss: "停損預警", lev: "槓桿再平衡", site: "網站建置" };
 // 最近一個「應該已經跑完」的排程時間：平日的排程時刻，給 45 分鐘執行緩衝
 function expectedRun() {
   const [h, m] = D.schedule.split(":").map(Number), now = new Date();
@@ -1328,7 +1410,7 @@ function renderMonitor() {
 // 四個日曆放最前面並加強顯示；第四個欄位 true 代表日曆分頁
 const TABS = [["calendar", "ETF 日曆", renderCalendar, true], ["cb", "可轉債日曆", renderCb, true], ["revenue", "營收日曆", renderRevenue, true],
   ["corp", "除權息減資日曆", renderCorp, true], ["buyback", "庫藏股日曆", renderBuyback, true],
-  ["overview", "總覽", renderOverview], ["patterns", "換股規律", renderPatterns], ["etf", "ETF 明細", renderEtf], ["stoploss", "停損預警", renderStoploss],
+  ["overview", "總覽", renderOverview], ["patterns", "換股規律", renderPatterns], ["etf", "ETF 明細", renderEtf], ["stoploss", "停損預警", renderStoploss], ["lev", "槓桿再平衡", renderLev],
   ["stock", "個股查詢", renderStock], ["monitor", "監控面板", renderMonitor]];
 function render() {
   $("#nav").innerHTML = TABS.map(([k, t, , cal], i) => `${!cal && TABS[i - 1][3] ? '<span class="sep"></span>' : ""}<button class="${cal ? "caltab " : ""}${k === state.tab ? "on" : ""}" onclick="go({tab:'${k}'})">${cal ? "📅 " : ""}${t}</button>`).join("");
