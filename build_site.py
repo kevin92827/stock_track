@@ -221,6 +221,10 @@ def main():
     try:  # 槓桿／反向 ETF 再平衡：lev_pcf.py 抓的每日 PCF
         import lev_pcf
         data["lev"] = lev_pcf.stats()
+        live = os.path.join(BASE, "data", "lev_live.json")  # lev_live.py 盤中 13:31 產生
+        if os.path.exists(live):
+            with open(live, encoding="utf-8") as f:
+                data["levLive"] = json.load(f)
     except Exception as e:
         print(f"槓桿再平衡統計失敗：{type(e).__name__}: {e}")
     try:  # 庫藏股買回：buyback.py 抓的計畫 + 均量、漲跌統計

@@ -161,7 +161,8 @@ const state = { tab: "calendar", date: D.dates[D.dates.length - 1], kind: "全�
   revMonth: null, revDay: null, revHeld: false, revHigh: false, revSort: "rev", revDir: 1, revQ: "",
   caMonth: null, caDay: null, caKind: "全部", caTarget: "全部", caMin: 0, caHeld: false, caMode: "eff", caSort: "adj", caDir: 1, caQ: "",
   bbMode: "ann", bbMonth: null, bbDay: null, bbMarket: "全部", bbPurpose: "全部", bbQ: "", bbHeld: false, bbSort: "vol", bbDir: 1, bbCode: null,
-  slIssuer: "全部", slRange: "alert", slMin: 0.1, slSort: "dist", slDir: 1, levR: 0 };
+  slIssuer: "全部", slRange: "alert", slMin: 0.1, slSort: "dist", slDir: 1,
+  levR: D.levLive && D.lev && D.levLive.base === D.lev.asof ? Math.round(D.levLive.r * 10000) / 100 : 0 };
 
 const snap = (etf, date) => (D.snaps[etf] || {})[date];
 const datesOf = (etf) => D.dates.filter((d) => snap(etf, d));
@@ -775,6 +776,25 @@ function renderLev() {
   const per1 = (total(0.01) - total(-0.01)) / 2;
   const yflow = funds.reduce((s, [, f]) => s + (f.hist.length ? f.hist[f.hist.length - 1][5] : 0), 0);
 
+  const LV = D.levLive && D.levLive.base === V.asof ? D.levLive : null;
+  const lock = LV && (LV.last >= LV.ceil ? "漲停" : LV.last <= LV.floor ? "跌停" : "");
+  const liveHtml = LV ? `<div class="panel" style="border:2px solid #f59e0b">
+    <h2>盤中精確估算 <span class="muted" style="font-weight:400">${LV.date} ${LV.time.slice(0, 5)} 更新（報價時間 ${LV.qtime.slice(0, 2)}:${LV.qtime.slice(2, 4)}:${LV.qtime.slice(4, 6)}）</span></h2>
+    <p class="hint">每個交易日 13:31 用台指期（${esc(LV.name)}）即時成交價自動重算，網頁大約 13:33 更新。漲跌幅相對前一天結算價 ${fmt(LV.ref)}；
+      用的是 ${V.asof} 收盤的部位和曝險。不含當天申購贖回（收盤後才公布），「含申購贖回」是假設和前一個交易日一樣。
+      ${lock ? `<b class="down">台指期目前鎖${lock}，基金可能買不到／賣不到，實際調整會比估計少，差額留到下一個交易日。</b>` : ""}</p>
+    <div class="cards">
+      <div class="card"><div class="k">台指期 ${esc(LV.name)}</div><div class="v ${cls(LV.r)}">${fmt(LV.last)} <span style="font-size:15px">${pct(LV.r)}</span></div></div>
+      ${LV.spot ? `<div class="card"><div class="k">加權指數（現貨）</div><div class="v ${cls(LV.spot_r)}">${LV.spot.toLocaleString("en-US", { maximumFractionDigits: 0 })} <span style="font-size:15px">${pct(LV.spot_r)}</span></div></div>` : ""}
+      <div class="card warn"><div class="k">尾盤需調整（合計，不含申購贖回）</div><div class="v ${cls(LV.total)}">${n(LV.total)} 口</div></div>
+      <div class="card"><div class="k">含申購贖回（同前一天）</div><div class="v ${cls(LV.total + LV.total_flow)}">${n(LV.total + LV.total_flow)} 口</div></div>
+    </div>
+    <div class="scroll"><table><thead><tr><th class="l">ETF</th><th>前一天收盤曝險</th><th>尾盤需調整</th><th>申購贖回（同前一天）</th><th>合計</th></tr></thead><tbody>
+      ${Object.entries(LV.funds).map(([c, f]) => `<tr><td class="l">${c} ${esc(LEV_NAMES[c] || "")}</td><td>${ex(f.e)}</td>${nc(f.need)}${nc(f.flow)}${nc(f.need + f.flow)}</tr>`).join("")}
+      <tr style="font-weight:600"><td class="l">合計</td><td></td>${nc(LV.total)}${nc(LV.total_flow)}${nc(LV.total + LV.total_flow)}</tr>
+    </tbody></table></div>
+  </div>` : "";
+
   const now = funds.map(([c, f]) => { const need = levNeed(f, r, m), fl = f.hist.length ? f.hist[f.hist.length - 1][5] : 0;
     return `<tr><td class="l">${c} ${esc(LEV_NAMES[c] || "")}</td><td>${f.L > 0 ? "+" : ""}${f.L} 倍</td><td>${(f.last.A / 1e8).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
       <td${off(f) ? ' style="color:#c2410c;font-weight:600"' : ""}>${ex(f.last.e)}</td><td>${fmt(f.last.n_tx)}</td><td>${fmt(f.last.P)}</td>
@@ -799,7 +819,7 @@ function renderLev() {
       const bad = Math.abs(x[3] - f.L) >= 0.02;
       return `<td class="muted">${ex(x[2])}</td><td${bad ? ' style="color:#c2410c;font-weight:600"' : ""}>${ex(x[3])}</td>${nc(x[4])}${nc(x[5])}${nc(x[6])}`; }).join("")}</tr>`; }).join("");
 
-  return `<div class="panel">
+  return `${liveHtml}<div class="panel">
     <h2>槓桿 ETF 尾盤再平衡 <span class="muted" style="font-weight:400">依 ${V.asof} 收盤部位推算下一個交易日</span></h2>
     <p class="hint">槓桿／反向 ETF 每天收盤要把曝險調回「淨值 × 倍數」。前一天收盤的實際曝險比例 e₀、規模 A、台指期價格 P 都來自元大每天公布的 PCF，
       今天台指期漲跌 r 時，尾盤要調整的曝險是 <b>A·[(L − e₀) + e₀·(L − 1)·r]</b>，再除以 P·(1 + r)·200 換成大台口數（正數 = 買進，負數 = 賣出）。
