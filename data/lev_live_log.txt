@@ -1,5 +1,2 @@
 �����w��s�GC:\Users\kevin\OneDrive\Desktop\�s�W��Ƨ�\etf_tracker\docs\index.html�]140 �ӥ����^
-2026-11-26 13:31:00 臺指期126 39,427（+3.42%）→ 尾盤需調整 +2,975 口（00631L +2,724、00632R +252），不含申購贖回
-To https://github.com/kevin92827/stock_track.git
-   4b94e3e..3c30825  HEAD -> main
-[push] pushed
+2026-11-27 13:31:01 臺指期126 39,405（-0.22%）→ 尾盤需調整 -363 口（00631L -352、00632R -11），不含申購贖回
